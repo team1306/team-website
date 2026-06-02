@@ -21,6 +21,8 @@ The purpose of this document is to outline the features needed to fully supersed
   * Themes (dark/light mode)
   * No picker api and other browser support
   * Budget Integration into UI
+    * Separate Module
+  * Multiple items per request
 
 Old required features
 * Search
@@ -30,8 +32,6 @@ Old required features
     * State
     * Category
   * Sorting
-* Better multi select
-  * For bulk state changing
 * Groups of items
   * Groups should track shipping per group, not per item
   * Group views
@@ -45,5 +45,4 @@ Old required features
   * Caching of tokens
 
 Optional Features
-* Pit display
-* 
+* Optional info display
