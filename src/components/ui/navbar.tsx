@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Package, List, CircleDollarSign, Users, Crown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from 'next/navigation'
 
 type user = {
     userName: string;
@@ -41,6 +42,7 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                 )
         }
     }
+    const router = useRouter();
 
     return (
         <div className="bg-red-900 w-full h-16 flex items-center px-4">
@@ -76,7 +78,7 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                         </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="rounded-md bg-red-400 w-64 flex justify-center">
-                        <Button className="text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
+                        <Button onClick={() => router.push('/login')} className="text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
                     </HoverCardContent>
                 </HoverCard>
             </div>

@@ -66,7 +66,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                 )
             case "purchased":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-blue-400 bg-transparent font-bold text-blue-400">Purchased</Badge>
+                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400">Purchased</Badge>
                 )
             case "recived":
                 return (
