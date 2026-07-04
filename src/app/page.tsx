@@ -46,10 +46,38 @@ import Item from "./itemCard";
 export default function Home() {
 
   const data = [
-    { name: "Spent", value: 1159.9},
-    { name: "Remains", value: 2840.07},
+    { name: "Spent", value: 1000 },
+    { name: "Remains", value: 2840.07 },
+    { name: "Order Cost", value: 1159.9 },
   ];
-  const COLORS = ["#e7000b", "#00bc7d"];
+  const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
+
+  interface ItemData {
+    id: string;
+    ItemName: string;
+    ItemCost: number;
+    ItemQuantity: number;
+    ItemLink: string;
+  }
+
+  const [items, setItems] = useState<ItemData[]>([]);
+
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        ItemName: "New Item",
+        ItemCost: 0,
+        ItemQuantity: 0,
+        ItemLink: "",
+      },
+    ]);
+  };
+
+  const deleteItem = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   return (
     <div className="bg-background min-h-screen">
@@ -121,64 +149,39 @@ export default function Home() {
                               </SelectContent>
                             </Select>
                           </Field>
-                          <Field className="w-full">
-                            <FieldLabel className="mt-3">Group</FieldLabel>
-                            <Select>
-                              <SelectTrigger className="w-full">
-                                <SelectValue className="text-zinc-100" placeholder="Select a group" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Test Group">Test Group</SelectItem>
-                                <SelectItem value="Custom Group"><Input id="name" autoComplete="off" placeholder="New Group" className="w-full p-1" /></SelectItem>
-                              </SelectContent>
-                            </Select>
+                          <Field className="mt-2">
+                            <FieldLabel>Shipping Cost: <span className="text-destructive">*</span></FieldLabel>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-white">$</span>
+                              <Input id="name" autoComplete="off" placeholder="ex: CANivore" className="w-full" />
+                            </div>
                           </Field>
                         </div>
                       </div>
                     </Card>
                     <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0">
-                      <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Add Item</CardTitle>
-                      <div className="p-2 w-full">
-                        <Field>
-                          <FieldLabel>Item Name: <span className="text-destructive">*</span></FieldLabel>
-                          <Input id="name" autoComplete="off" placeholder="ex: CANivore" className="w-full" />
-                        </Field>
-                        <Field className="mt-2">
-                          <FieldLabel>Item Link:</FieldLabel>
-                          <Input id="name" autoComplete="off" placeholder="https://example.com" className="w-full" />
-                        </Field>
-                        <div className="flex gap-5 mt-2">
-                          <Field className="w-full">
-                            <FieldLabel>Quanity <span className="text-destructive">*</span></FieldLabel>
-                            <Input id="name" autoComplete="off" placeholder="ex: CANivore" className="w-full" />
-                          </Field>
-                          <Field className="w-full">
-                            <FieldLabel>Cost Per<span className="text-destructive">*</span></FieldLabel>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-white">$</span>
-                              <Input id="cost" autoComplete="off" className="w-full pl-7" />
-                            </div>
-                          </Field>
-                        </div>
-                        <Button className="bg-emerald-600 mt-4 text-sm hover:bg-emerald-700"><Plus />Add Item</Button>
-                      </div>
+                      <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Best Practices</CardTitle>
                     </Card>
                   </div>
                   <div className="flex flex-col gap-2 h-full">
                     <Card className="w-md gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0">
-                      <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
+                      <div className="flex">
+                        <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
+                        <Button className="ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus/>Add</Button>
+                      </div>
                       <div className="p-2 w-full flex-1 overflow-auto min-h-0">
-                        <Item name="CANivore" cost={299.99} quanity={2} link="ctre.com" />
-                        <Item name="Pigeon 2.0" cost={199.99} quanity={1} link="ctre.com" />
-                        <Item name="CANcoder" cost={89.99} quanity={4} link="ctre.com" />
+                        {items.map((item) => (
+                          <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem}/>
+                        ))}
                       </div>
                     </Card>
                     <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
                       <h2>Order Total:</h2>
                       <div className="flex">
-                      <h1 className="text-2xl text-emerald-400 font-bold">$1,159.93</h1>
-                      <Button className="w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Submit</Button>
+                        <h1 className="text-2xl text-emerald-400 font-bold">$1,159.93</h1>
+                        <Button className="w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Submit</Button>
                       </div>
+
                     </Card>
                   </div>
                 </div>
