@@ -18,36 +18,36 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
             case "Robot":
                 return (
                     <div className="flex items-center gap-2">
-                        <Cog className="size-4 text-yellow-500" />
-                        <h2 className="text-base font-bold text-yellow-500">{catagory}</h2>
+                        <Cog className="size-4 text-yellow-600" />
+                        <h2 className="text-base font-bold text-yellow-600">{catagory}</h2>
                     </div>
                 )
             case "Competition":
                 return (
                     <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-emerald-500" />
-                        <h2 className="text-base font-bold text-emerald-500">{catagory}</h2>
+                        <Swords className="size-4 text-emerald-600" />
+                        <h2 className="text-base font-bold text-emerald-600">{catagory}</h2>
                     </div>
                 )
             case "Tools":
                 return (
                     <div className="flex items-center gap-2">
-                        <Wrench className="size-4 text-rose-500" />
-                        <h2 className="text-base font-bold text-rose-500">{catagory}</h2>
+                        <Wrench className="size-4 text-rose-600" />
+                        <h2 className="text-base font-bold text-rose-600">{catagory}</h2>
                     </div>
                 )
             case "Field":
                 return (
                     <div className="flex items-center gap-2">
-                        <Volleyball className="size-4 text-lime-500" />
-                        <h2 className="text-base font-bold text-lime-500">{catagory}</h2>
+                        <Volleyball className="size-4 text-lime-600" />
+                        <h2 className="text-base font-bold text-lime-600">{catagory}</h2>
                     </div>
                 )
             case "Outreach":
                 return (
                     <div className="flex items-center gap-2">
-                        <Handshake className="size-4 text-cyan-500" />
-                        <h2 className="text-base font-bold text-cyan-500">{catagory}</h2>
+                        <Handshake className="size-4 text-cyan-600" />
+                        <h2 className="text-base font-bold text-cyan-600">{catagory}</h2>
                     </div>
                 )
 

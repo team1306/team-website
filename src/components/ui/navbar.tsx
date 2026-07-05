@@ -57,7 +57,6 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                 Purchasing App
             </h1>
             <Button className="rounded-md text-lg bg-red-400 hover:bg-red-400 ml-5 mr-1 text-zinc-100 font-jetbrains"><Package /> Purchases</Button>
-            <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><List />Categories</Button>
             <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
             <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
             {(userRole == "president" || userRole == "programDirector") && (
