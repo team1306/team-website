@@ -67,6 +67,7 @@ export default function CreatePurchase() {
                 ItemLink: "",
             },
         ]);
+        console.log(items);
     };
 
     const deleteItem = (id: string) => {

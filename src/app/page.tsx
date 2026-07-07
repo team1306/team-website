@@ -1,12 +1,25 @@
 'use client'
 import Navbar from "../components/ui/navbar";
-import Purchase from "./purchaseCard";
+import Purchase from "../components/dispalayPurchase/purchaseCard";
 import { Card} from "@/components/ui/card";
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group"
 import { Cog, Swords, Wrench, Volleyball, Handshake,} from "lucide-react"
-import CreatePurchase from "./createPurchase";
+import CreatePurchase from "../components/createPurchase/createPurchase";
 
 export default function Home() {
+  interface ItemData {
+    id: string;
+    ItemName: string;
+    ItemCost: number;
+    ItemQuantity: number;
+    ItemLink: string;
+    comments: string;
+}
+
+  const items: ItemData[] = [
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: ""},
+    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall"},
+  ];
 
   return (
     <div className="bg-background min-h-screen">
@@ -28,11 +41,11 @@ export default function Home() {
           </div>
         </div>
       </Card>
-      <Purchase itemName="Season Registration" cost={6500} requestor="Example User" catagory="Competition" requestedDate="2026-06-10" status="needsAproval" />
-      <Purchase itemName="CTRE Restock" cost={1258} requestor="Example User" catagory="Robot" requestedDate="2026-06-12" status="aproved" />
-      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" />
-      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" />
-      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" />
+      <Purchase itemName="CTRE Restock" cost={6500} requestor="Example User" catagory="Robot" requestedDate="2026-06-10" status="needsAproval" items={items} shippingCost={20.00}/>
+      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} shippingCost={20.00}/>
+      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} shippingCost={20.00}/>
+      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} shippingCost={20.00}/>
+      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} shippingCost={20.00}/>
     </div>
   );
 }

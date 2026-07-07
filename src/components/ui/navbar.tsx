@@ -28,9 +28,13 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                 return (
                     <Badge className="rounded-md text-base bg-red-600">Mentor</Badge>
                 )
+            case "mentorLead":
+                return (
+                    <Badge className="rounded-md text-base bg-emerald-600">Lead Mentor</Badge>
+                )
             case "studentLead":
                 return (
-                    <Badge className="rounded-md text-base bg-red-600">Student Lead</Badge>
+                    <Badge className="rounded-md text-base bg-emerald-600">Student Lead</Badge>
                 )
             case "president":
                 return (
