@@ -87,7 +87,6 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                         <div className="flex ml-auto">
-                            <Button className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
                             <Button className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" variant="destructive" onClick={() => setEditMode(true)}><Pencil /></Button>
                             <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
                         </div>
@@ -106,7 +105,6 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
             <div className="flex">
                 <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                 <div className="flex ml-auto">
-                    <Button className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
                     <Button className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" variant="destructive" onClick={() => setEditMode(true)}><Pencil /></Button>
                     <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
                 </div>

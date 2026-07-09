@@ -1,7 +1,7 @@
 'use client'
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, ChevronUp, ChevronDown } from "lucide-react"
+import { Cog, Swords, Wrench, Volleyball, Handshake, Pencil } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -26,6 +26,7 @@ type request = {
     status: String
     items: ItemData[];
     shippingCost: number;
+    userRole: string;
 }
 
 interface ItemData {
@@ -35,10 +36,11 @@ interface ItemData {
     ItemQuantity: number;
     ItemLink: string;
     comments: string;
+    userRole: string
 }
 
 
-export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, shippingCost }: request) {
+export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, shippingCost, userRole }: request) {
     const [open, setOpen] = useState(false);
     const CategoryTitle = () => {
         switch (catagory) {
@@ -106,6 +108,30 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
         }
     }
 
+    const calculatePrice = () => {
+        return items.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0) + shippingCost;
+    }
+
+    const purchaseApprovers = () => {
+        if (calculatePrice() > 250) {
+            return (
+                <div>
+                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
+                    <Approver approverName="" approverPicture="" requiredRole="mentorLead" approved={false} userRole={userRole} />
+                    <Approver approverName="" approverPicture="" requiredRole="president" approved={false} userRole={userRole} />
+                </div>
+            )
+        }
+        else {
+            return (
+                <div>
+                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
+                    <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
+                </div>
+            )
+        }
+    }
+
     return (
         <div>
             <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit" onClick={() => setOpen(true)}>
@@ -133,7 +159,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <Card className="p-0 mb-2 bg-mist-800 rounded-t-sm rounded-b-none rounded-tr-none gap-0">
                             <div className="flex items-center justify-start mt-1 pb-0">
                                 <CardTitle className="ml-2 text-2xl p-2 font-jetbrains font-bold text-zinc-100">{itemName}</CardTitle>
-                                <div>
+                                <div className="ml-atuo mr-2">
                                     {statusBadge()}
                                 </div>
                             </div>
@@ -144,16 +170,15 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                 <div>
                                     <Button className="bg-mist-700 text-zinc-100 text-base hover:bg-mist-900 mr-1">Duplicate</Button>
                                     <Button variant="destructive" className="bg-red-700 text-zinc-100 text-base hover:bg-red-900 mr-1">Delete</Button>
-                                    <Button variant="destructive" className="bg-red-700 text-zinc-100 text-base hover:bg-red-900">Reject</Button>
-                                </div>
-                                <div className="ml-auto mr-2">
-                                    <Button className="bg-emerald-600/75 text-zinc-100 text-base hover:bg-emerald-700/50 mr-1"><ChevronUp/></Button>
-                                    <Button className="bg-red-600/75 text-zinc-100 text-base hover:bg-red-700/50"><ChevronDown/></Button>
+                                    <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Reject</Button>
                                 </div>
                             </div>
                         </Card>
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
-                            <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Items</CardTitle>
+                            <div className="flex p-2 pb-0">
+                                <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                <Button className="ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg"><Pencil/></Button>
+                            </div>
                             <div className="p-2 pb-0">
                                 {items.map((item) => (
                                     <Item
@@ -164,8 +189,6 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                         quantity={item.ItemQuantity}
                                         link={item.ItemLink}
                                         comments={item.comments}
-                                        onDelete={() => { }}
-                                        onUpdate={() => { }}
                                     />
                                 ))}
                             </div>
@@ -173,9 +196,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
                             <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
                             <div className="p-2">
-                                <Approver approverName="Example User" approverPicture="" requiredRole="Student Lead" approved={true} userCanApprove={false} />
-                                <Approver approverName="" approverPicture="" requiredRole="Lead Mentor" approved={false} userCanApprove={true} />
-                                <Approver approverName="Example User" approverPicture="" requiredRole="President" approved={true} userCanApprove={false} />
+                                {purchaseApprovers()}
                             </div>
                         </Card>
                     </DrawerContent>

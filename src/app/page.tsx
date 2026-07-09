@@ -5,8 +5,10 @@ import { Card} from "@/components/ui/card";
 import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group"
 import { Cog, Swords, Wrench, Volleyball, Handshake,} from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
+import { useState } from "react";
 
 export default function Home() {
+  const [userRole, setUserRole] = useState(String("studentLead"));//Change User Role
   interface ItemData {
     id: string;
     ItemName: string;
@@ -14,16 +16,17 @@ export default function Home() {
     ItemQuantity: number;
     ItemLink: string;
     comments: string;
+    userRole: string;
 }
 
   const items: ItemData[] = [
-    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: ""},
-    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall"},
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: userRole},
+    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: userRole},
   ];
 
   return (
     <div className="bg-background min-h-screen">
-      <Navbar userName="Example User" userRole="president" userPicture=""></Navbar>
+      <Navbar userName="Andrew Example User" userRole={userRole} userPicture=""></Navbar>
       <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
         <div className="flex justify-between items-start">
           <div>
@@ -41,11 +44,11 @@ export default function Home() {
           </div>
         </div>
       </Card>
-      <Purchase itemName="CTRE Restock" cost={6500} requestor="Example User" catagory="Robot" requestedDate="2026-06-10" status="needsAproval" items={items} shippingCost={20.00}/>
-      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} shippingCost={20.00}/>
-      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} shippingCost={20.00}/>
-      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} shippingCost={20.00}/>
-      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} shippingCost={20.00}/>
+      <Purchase itemName="CTRE Restock" cost={2179.90} requestor="Example User" catagory="Robot" requestedDate="2026-07-06" status="needsAproval" items={items} shippingCost={20.00} userRole={userRole}/>
+      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} shippingCost={20.00} userRole={userRole}/>
+      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} shippingCost={20.00} userRole={userRole}/>
+      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} shippingCost={20.00} userRole={userRole}/>
+      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} shippingCost={20.00} userRole={userRole}/>
     </div>
   );
 }

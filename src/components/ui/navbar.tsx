@@ -26,7 +26,7 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                 )
             case "mentor":
                 return (
-                    <Badge className="rounded-md text-base bg-red-600">Mentor</Badge>
+                    <Badge className="rounded-md text-base bg-emerald-600">Mentor</Badge>
                 )
             case "mentorLead":
                 return (
