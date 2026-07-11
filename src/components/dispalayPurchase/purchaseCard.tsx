@@ -16,6 +16,7 @@ import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
 import Approver from "./approverCard"
 import { Button } from "../ui/button"
+import EditPurchase from "./editPurchase"
 
 type request = {
     itemName: string;
@@ -35,13 +36,15 @@ interface ItemData {
     ItemCost: number;
     ItemQuantity: number;
     ItemLink: string;
-    comments: string;
-    userRole: string
+    comments?: string;
+    userRole?: string
 }
 
 
 export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, shippingCost, userRole }: request) {
+
     const [open, setOpen] = useState(false);
+    const [itemsArray, setItems] = useState(items)
     const CategoryTitle = () => {
         switch (catagory) {
             case "Robot":
@@ -109,11 +112,19 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     }
 
     const calculatePrice = () => {
-        return items.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0) + shippingCost;
+        return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0) + shippingCost;
     }
 
     const purchaseApprovers = () => {
-        if (calculatePrice() > 250) {
+        if (calculatePrice() < 250) {
+            return (
+                <div>
+                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
+                    <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
+                </div>
+            )
+        }
+        else {
             return (
                 <div>
                     <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
@@ -122,15 +133,11 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                 </div>
             )
         }
-        else {
-            return (
-                <div>
-                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
-                    <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
-                </div>
-            )
-        }
     }
+
+    const changeItems = (newItems: ItemData[]) => {
+        setItems(newItems);
+    };
 
     return (
         <div>
@@ -177,10 +184,11 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
                             <div className="flex p-2 pb-0">
                                 <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
-                                <Button className="ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg"><Pencil/></Button>
+                                <div className="flex ml-auto">
+                                </div>
                             </div>
                             <div className="p-2 pb-0">
-                                {items.map((item) => (
+                                {itemsArray.map((item) => (
                                     <Item
                                         key={item.id}
                                         id={item.id}
@@ -188,9 +196,15 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                         cost={item.ItemCost}
                                         quantity={item.ItemQuantity}
                                         link={item.ItemLink}
-                                        comments={item.comments}
+                                        comments={String(item.comments)}
                                     />
                                 ))}
+                            </div>
+                            <div className="flex p-2">
+                                <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice()}</h1>
+                                <div className="ml-auto">
+                                    <EditPurchase itemsArray={itemsArray} changeItems={changeItems}></EditPurchase>
+                                </div>
                             </div>
                         </Card>
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">

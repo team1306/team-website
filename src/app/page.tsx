@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Navbar userName="Andrew Example User" userRole={userRole} userPicture=""></Navbar>
+      <Navbar userName="Example User" userRole={userRole} userPicture=""></Navbar>
       <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
         <div className="flex justify-between items-start">
           <div>
