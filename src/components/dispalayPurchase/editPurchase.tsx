@@ -194,7 +194,7 @@ export default function EditPurchase({ itemsArray, changeItems }: props) {
                             </Card>
                             <div className="p-2 w-full flex-1 overflow-auto min-h-0">
                                 {items.map((item) => (
-                                    <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} />
+                                    <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={false}/>
                                 ))}
                             </div>
                         </Card>

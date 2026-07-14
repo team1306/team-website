@@ -14,10 +14,11 @@ interface Item {
     link: string;
     onDelete: (id: string) => void;
     onUpdate: (id: string, updates: Partial<{ name: string; cost: number; quantity: number; link: string }>) => void;
+    defaultEdit?: boolean;
 }
 
-export default function Item({ id, name, cost, quantity, link, onDelete, onUpdate}: Item) {
-    const [editMode, setEditMode] = useState(true);
+export default function Item({ id, name, cost, quantity, link, onDelete, onUpdate, defaultEdit}: Item) {
+    const [editMode, setEditMode] = useState(defaultEdit);
     const [containsNote, setcontainsNote] = useState(false);
     const [nameValue, setNameValue] = useState(name);
     const [quantityValue, setQuantityValue] = useState(String(quantity));

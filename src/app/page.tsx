@@ -8,7 +8,7 @@ import CreatePurchase from "../components/createPurchase/createPurchase";
 import { useState } from "react";
 
 export default function Home() {
-  const [userRole, setUserRole] = useState(String("studentLead"));//Change User Role
+  const [userRole, setUserRole] = useState(String("programDirector"));//Change User Role
   interface ItemData {
     id: string;
     ItemName: string;
@@ -44,11 +44,11 @@ export default function Home() {
           </div>
         </div>
       </Card>
-      <Purchase itemName="CTRE Restock" cost={2179.90} requestor="Example User" catagory="Robot" requestedDate="2026-07-06" status="needsAproval" items={items} shippingCost={20.00} userRole={userRole}/>
-      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} shippingCost={20.00} userRole={userRole}/>
-      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} shippingCost={20.00} userRole={userRole}/>
-      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} shippingCost={20.00} userRole={userRole}/>
-      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} shippingCost={20.00} userRole={userRole}/>
+      <Purchase itemName="CTRE Restock" cost={2179.90} requestor="Example User" catagory="Robot" requestedDate="2026-07-06" status="needsAproval" items={items} vendor="CTRE" userRole={userRole}/>
+      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} vendor="Other - FIRST" userRole={userRole}/>
+      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} vendor="Digi-Key" userRole={userRole}/>
+      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} vendor="Andy Mark" userRole={userRole}/>
+      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} vendor="Other - Hardware Store" userRole={userRole}/>
     </div>
   );
 }

@@ -25,6 +25,8 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                 return ("Mentor");
             case "president":
                 return ("President");
+            case "Program Director":
+                return ("Program Director");
     }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, Pencil } from "lucide-react"
+import { Cog, Swords, Wrench, Volleyball, Handshake, FastForward } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -26,7 +26,7 @@ type request = {
     requestedDate: String;
     status: String
     items: ItemData[];
-    shippingCost: number;
+    vendor: String;
     userRole: string;
 }
 
@@ -41,10 +41,13 @@ interface ItemData {
 }
 
 
-export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, shippingCost, userRole }: request) {
+export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole }: request) {
 
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
+    const [expieditedRequsted, setExpieditedRequsted] = useState(false);
+    const [expiedited, setExpiedited] = useState(false);
+    const [currentStatus, setStatus] = useState(status);
     const CategoryTitle = () => {
         switch (catagory) {
             case "Robot":
@@ -87,7 +90,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     }
 
     const statusBadge = () => {
-        switch (status) {
+        switch (currentStatus) {
             case "needsAproval":
                 return (
                     <Badge className="text-sm ml-2 w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400">Needs Approval</Badge>
@@ -112,7 +115,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     }
 
     const calculatePrice = () => {
-        return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0) + shippingCost;
+        return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
     }
 
     const purchaseApprovers = () => {
@@ -121,6 +124,12 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                 <div>
                     <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
+                    {(expiedited) && (
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="expiedited" approved={true} userRole={userRole} />
+                    )}
+                    {(expieditedRequsted && !expiedited) && (
+                        <Approver approverName="" approverPicture="" requiredRole="Program Director" approved={false} userRole={userRole} />
+                    )}
                 </div>
             )
         }
@@ -130,6 +139,12 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="mentorLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="president" approved={false} userRole={userRole} />
+                    {(expiedited) && (
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="expiedited" approved={true} userRole={userRole} />
+                    )}
+                    {(expieditedRequsted && !expiedited) && (
+                        <Approver approverName="" approverPicture="" requiredRole="Program Director" approved={false} userRole={userRole} />
+                    )}
                 </div>
             )
         }
@@ -147,12 +162,18 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <div className="flex">
                             <CardTitle className="text-2xl font-bold text-zinc-100">{itemName}</CardTitle>
                             {statusBadge()}
+                            {(!expiedited && expieditedRequsted && userRole == "programDirector") && (
+                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expiedited Requested</Badge>
+                            )}
+                            {(expiedited) && (
+                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400">Expiedited</Badge>
+                            )}
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-22 h-fit mt-2 pt-1 pb-1 ml-auto">
+                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 ml-auto">
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
-                        <h2 className="text-base font-bold text-zinc-100">${cost}</h2>
+                        <h2 className="text-base font-bold text-zinc-100">${cost.toFixed(2)}</h2>
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-42 h-fit mt-2 pt-1 pb-1">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
@@ -172,13 +193,21 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                             </div>
                             <CardDescription className="text-sm pl-4 text-zinc-100 mb-2">Requested By: {requestor}</CardDescription>
                         </Card>
-                        <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
-                            <div className="p-2 flex gap-2">
-                                <div>
-                                    <Button className="bg-mist-700 text-zinc-100 text-base hover:bg-mist-900 mr-1">Duplicate</Button>
-                                    <Button variant="destructive" className="bg-red-700 text-zinc-100 text-base hover:bg-red-900 mr-1">Delete</Button>
-                                    <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Reject</Button>
-                                </div>
+                        <Card className="bg-mist-800 m-1 p-0 rounded-2xl gap-0">
+                            <div className="p-2 pt-0">
+                                {(userRole == "president" || userRole == "programDirector") && (
+                                    <div className="gap-2 mt-2">
+                                        <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-80 mr-1">Delete</Button>
+                                        <Button onClick={() => setStatus("rejected")} variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800 mr-1">Reject</Button>
+                                        <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Override Status</Button>
+                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited) && (
+                                            <div className="flex gap-2 mt-2">
+                                                <Button onClick={() => setExpiedited(true)} className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Expedite</Button>
+                                                <Button onClick={() => setExpieditedRequsted(false)} className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Reject Expedite</Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </Card>
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
@@ -201,7 +230,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                 ))}
                             </div>
                             <div className="flex p-2">
-                                <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice()}</h1>
+                                <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice().toFixed(2)}</h1>
                                 <div className="ml-auto">
                                     <EditPurchase itemsArray={itemsArray} changeItems={changeItems}></EditPurchase>
                                 </div>
@@ -211,6 +240,12 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                             <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
                             <div className="p-2">
                                 {purchaseApprovers()}
+                                <div className="flex">
+                                    <h1 className="text-base text-zinc-100 text-bold justify-items-center mr-2 ml-1">Next Order: 7/14</h1>
+                                    {(!expieditedRequsted) && (
+                                        <Button onClick={() => setExpieditedRequsted(true)} className="bg-yellow-800 text-zinc-100 text-base hover:bg-yellow-900 ml-auto">Request Expedite</Button>
+                                    )}
+                                </div>
                             </div>
                         </Card>
                     </DrawerContent>

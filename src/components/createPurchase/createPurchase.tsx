@@ -22,8 +22,8 @@ import {
     FieldTitle,
 } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
-import { StickyNotePlus, Plus } from "lucide-react"
-import { Card, CardAction, CardDescription, CardTitle } from "@/components/ui/card";
+import { StickyNotePlus, Plus, ArrowDown } from "lucide-react"
+import { Card, CardAction, CardDescription, CardTitle} from "@/components/ui/card";
 import {
     Select,
     SelectContent,
@@ -152,11 +152,20 @@ export default function CreatePurchase() {
                                         </Select>
                                     </Field>
                                     <Field className="mt-2">
-                                        <FieldLabel>Shipping Cost: <span className="text-destructive">*</span></FieldLabel>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-white">$</span>
-                                            <Input id="name" autoComplete="off" placeholder="ex: CANivore" className="w-full" />
-                                        </div>
+                                        <FieldLabel>Supplier:<span className="text-destructive">*</span></FieldLabel>
+                                        <Select>
+                                            <SelectTrigger className="w-full">
+                                                    <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="WCP">WCP</SelectItem>
+                                                <SelectItem value="CTRE">CTRE</SelectItem>
+                                                <SelectItem value="Digi-Key">Digi-Key</SelectItem>
+                                                <SelectItem value="Mouser">Mouser</SelectItem>
+                                                <SelectItem value="Amazon">Amazon</SelectItem>
+                                                <SelectItem value="Amazon">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </Field>
                                 </div>
                             </div>
@@ -170,15 +179,15 @@ export default function CreatePurchase() {
                     </div>
                     <div className="flex flex-col gap-2 h-full">
                         <Card className="w-md gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
-                        <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                            <div className="flex m-1">
-                                <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                                <Button className="ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
-                            </div>
+                            <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
+                                <div className="flex m-1">
+                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
+                                    <Button className="ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                                </div>
                             </Card>
                             <div className="p-2 w-full flex-1 overflow-auto min-h-0">
                                 {items.map((item) => (
-                                    <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} />
+                                    <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
                                 ))}
                             </div>
                         </Card>
