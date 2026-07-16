@@ -1,7 +1,7 @@
 'use client'
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, FastForward } from "lucide-react"
+import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -12,11 +12,21 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
 import Approver from "./approverCard"
 import { Button } from "../ui/button"
 import EditPurchase from "./editPurchase"
+import { Progress } from "@/components/ui/progress"
 
 type request = {
     itemName: string;
@@ -48,6 +58,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     const [expieditedRequsted, setExpieditedRequsted] = useState(false);
     const [expiedited, setExpiedited] = useState(false);
     const [currentStatus, setStatus] = useState(status);
+    const [editMode, setEditMode] = useState(false);
     const CategoryTitle = () => {
         switch (catagory) {
             case "Robot":
@@ -150,8 +161,10 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
         }
     }
 
-    const changeItems = (newItems: ItemData[]) => {
-        setItems(newItems);
+    const updateItem = (updatedItem: ItemData) => {
+        setItems((prev) =>
+            prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+        );
     };
 
     return (
@@ -208,6 +221,38 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                         )}
                                     </div>
                                 )}
+                            <div className="flex">
+                                <div>
+                                    <CardDescription className="text-sm pl-4 text-zinc-100 mb-2">Requested By: {requestor}</CardDescription>
+                                </div>
+                                <div className="ml-auto">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
+                                        <DropdownMenuContent className="w-fit">
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                                {(!expieditedRequsted) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
+                                                <DropdownMenuItem onClick={() => setStatus("rejected")}>Reject</DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            {(userRole == "president" || userRole == "programDirector") && (
+                                                <div>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuGroup>
+                                                        <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem>Overide Status</DropdownMenuItem>
+                                                        {(userRole == "programDirector" && !expiedited) && (
+                                                            <DropdownMenuItem onClick={() => setExpiedited(true)}>Expedite</DropdownMenuItem>
+                                                        )}
+                                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited) && (
+                                                            <DropdownMenuItem>Reject Expedite</DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuGroup>
+                                                </div>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </div>
                         </Card>
                         <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
@@ -219,35 +264,44 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                             <div className="p-2 pb-0">
                                 {itemsArray.map((item) => (
                                     <Item
-                                        key={item.id}
+                                        key={`${item.id}-${editMode}`}
                                         id={item.id}
                                         name={item.ItemName}
                                         cost={item.ItemCost}
                                         quantity={item.ItemQuantity}
                                         link={item.ItemLink}
-                                        comments={String(item.comments)}
+                                        defaultEdit={editMode}
+                                        onUpdate={updateItem}
                                     />
                                 ))}
+                            </div>
+                            <div className="p-2">
+                            <Progress
+                                className=""
+                                max={4000}
+                                value={calculatePrice()}
+                            />
                             </div>
                             <div className="flex p-2">
                                 <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice().toFixed(2)}</h1>
                                 <div className="ml-auto">
-                                    <EditPurchase itemsArray={itemsArray} changeItems={changeItems}></EditPurchase>
-                                </div>
-                            </div>
-                        </Card>
-                        <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
-                            <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
-                            <div className="p-2">
-                                {purchaseApprovers()}
-                                <div className="flex">
-                                    <h1 className="text-base text-zinc-100 text-bold justify-items-center mr-2 ml-1">Next Order: 7/14</h1>
-                                    {(!expieditedRequsted) && (
-                                        <Button onClick={() => setExpieditedRequsted(true)} className="bg-yellow-800 text-zinc-100 text-base hover:bg-yellow-900 ml-auto">Request Expedite</Button>
+                                    {(!editMode) && (
+                                        <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg" onClick={() => setEditMode(true)}><Pencil /></Button>
+                                    )}
+                                    {(editMode) && (
+                                        <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg" onClick={() => setEditMode(false)}>Save</Button>
                                     )}
                                 </div>
                             </div>
                         </Card>
+                        {(!editMode) && (
+                            <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
+                                <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
+                                <div className="p-2">
+                                    {purchaseApprovers()}
+                                </div>
+                            </Card>
+                        )}
                     </DrawerContent>
                 </Drawer>
             </Card>
