@@ -25,7 +25,6 @@ import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
 import Approver from "./approverCard"
 import { Button } from "../ui/button"
-import EditPurchase from "./editPurchase"
 import { Progress } from "@/components/ui/progress"
 
 type request = {
@@ -136,10 +135,10 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
                     {(expiedited) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="expiedited" approved={true} userRole={userRole} />
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
                     )}
                     {(expieditedRequsted && !expiedited) && (
-                        <Approver approverName="" approverPicture="" requiredRole="Program Director" approved={false} userRole={userRole} />
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
                     )}
                 </div>
             )
@@ -151,10 +150,10 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     <Approver approverName="" approverPicture="" requiredRole="mentorLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="president" approved={false} userRole={userRole} />
                     {(expiedited) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="expiedited" approved={true} userRole={userRole} />
+                        <Approver approverName="" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
                     )}
                     {(expieditedRequsted && !expiedited) && (
-                        <Approver approverName="" approverPicture="" requiredRole="Program Director" approved={false} userRole={userRole} />
+                        <Approver approverName="" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
                     )}
                 </div>
             )
@@ -169,7 +168,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
 
     return (
         <div>
-            <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit" onClick={() => setOpen(true)}>
+            <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div>
                         <div className="flex">
@@ -208,19 +207,6 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         </Card>
                         <Card className="bg-mist-800 m-1 p-0 rounded-2xl gap-0">
                             <div className="p-2 pt-0">
-                                {(userRole == "president" || userRole == "programDirector") && (
-                                    <div className="gap-2 mt-2">
-                                        <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-80 mr-1">Delete</Button>
-                                        <Button onClick={() => setStatus("rejected")} variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800 mr-1">Reject</Button>
-                                        <Button variant="destructive" className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Override Status</Button>
-                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited) && (
-                                            <div className="flex gap-2 mt-2">
-                                                <Button onClick={() => setExpiedited(true)} className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Expedite</Button>
-                                                <Button onClick={() => setExpieditedRequsted(false)} className="bg-violet-600 text-zinc-100 text-base hover:bg-violet-800">Reject Expedite</Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
                             <div className="flex">
                                 <div>
                                     <CardDescription className="text-sm pl-4 text-zinc-100 mb-2">Requested By: {requestor}</CardDescription>
@@ -245,7 +231,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                                             <DropdownMenuItem onClick={() => setExpiedited(true)}>Expedite</DropdownMenuItem>
                                                         )}
                                                         {(expieditedRequsted == true && userRole == "programDirector" && !expiedited) && (
-                                                            <DropdownMenuItem>Reject Expedite</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setExpieditedRequsted(false)}>Reject Expedite</DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuGroup>
                                                 </div>

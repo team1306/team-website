@@ -25,45 +25,47 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                 return ("Mentor");
             case "president":
                 return ("President");
-            case "Program Director":
+            case "nProgramDirector":
+                return ("Expedite (Program Director)");
+            case "programDirector":
                 return ("Program Director");
+        }
     }
-}
 
-if (!approved && userCanApprove) {
-    return (
-        <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-            <div className="flex items-center justify-start">
-                <div>
+    if (!approved && userCanApprove && userRole != "nProgramDirector") {
+        return (
+            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+                <div className="flex items-center justify-start">
+                    <div>
+                        <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                        <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                    </div>
+                    <Button className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
+                </div>
+            </Card>
+        );
+    }
+    else if (!approved && !userCanApprove) {
+        return (
+            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+                <div className="">
                     <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                </div>
+            </Card>
+        );
+    }
+    else {
+        return (
+            <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+                <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                <div className="flex items-center justify-start">
+                    <Avatar className="size-10">
+                        <AvatarImage src={approverPicture} />
+                        <AvatarFallback>!</AvatarFallback>
+                    </Avatar>
                     <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                 </div>
-                <Button className="text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
-            </div>
-        </Card>
-    );
-}
-else if (!approved && !userCanApprove) {
-    return (
-        <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-            <div className="">
-                <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
-            </div>
-        </Card>
-    );
-}
-else {
-    return (
-        <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-            <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
-            <div className="flex items-center justify-start">
-                <Avatar className="size-10">
-                    <AvatarImage src={approverPicture} />
-                    <AvatarFallback>!</AvatarFallback>
-                </Avatar>
-                <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-            </div>
-        </Card>
-    );
-}
+            </Card>
+        );
+    }
 }

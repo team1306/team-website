@@ -6,9 +6,13 @@ import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group"
 import { Cog, Swords, Wrench, Volleyball, Handshake,} from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
-  const [userRole, setUserRole] = useState(String("programDirector"));//Change User Role
+  const searchParams = useSearchParams();
+  const user = searchParams.get("user");
+
+  const [userRole, setUserRole] = useState(String(user));//Change User Role
   interface ItemData {
     id: string;
     ItemName: string;
@@ -32,11 +36,11 @@ export default function Home() {
           <div>
             <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
             <ToggleGroup multiple defaultValue={['Robot', "Competition", "Tools", "Field", "Outreach"]}>
-              <ToggleGroupItem value="Robot" className="border-yellow-600 text-yellow-600 border-3 text-base font-bold hover:bg-yellow-500 hover:text-black group aria-pressed:bg-yellow-600 aria-pressed:text-black"><Cog className="size-4 text-yellow-600 group-hover:text-black group-aria-pressed:text-black" /> Robot</ToggleGroupItem>
-              <ToggleGroupItem value="Competition" className="border-emerald-600 text-emerald-600 border-3 text-base font-bold hover:bg-emerald-500 hover:text-black group aria-pressed:bg-emerald-600 aria-pressed:text-black"><Swords className="size-4 text-emerald-600 group-hover:text-black group-aria-pressed:text-black" /> Competition</ToggleGroupItem>
-              <ToggleGroupItem value="Tools" className="border-rose-600 text-rose-600 border-3 text-base font-bold hover:bg-rose-500 hover:text-black group aria-pressed:bg-rose-600 aria-pressed:text-black"><Wrench className="size-4 text-rose-600 group-hover:text-black group-aria-pressed:text-black" /> Tools</ToggleGroupItem>
-              <ToggleGroupItem value="Field" className="border-lime-600 text-lime-600 border-3 text-base font-bold hover:bg-lime-500 hover:text-black group aria-pressed:bg-lime-600 aria-pressed:text-black"><Volleyball className="size-4 text-lime-600 group-hover:text-black group-aria-pressed:text-black" /> Field</ToggleGroupItem>
-              <ToggleGroupItem value="Outreach" className="border-cyan-600 text-cyan-600 border-3 text-base font-bold hover:bg-cyan-500 hover:text-black group aria-pressed:bg-cyan-600 aria-pressed:text-black"><Handshake className="size-4 text-cyan-600 group-hover:text-black group-aria-pressed:text-black" /> Outreach</ToggleGroupItem>
+              <ToggleGroupItem value="Robot" className="cursor-pointer border-yellow-600 text-yellow-600 border-3 text-base font-bold hover:bg-yellow-500 hover:text-black group aria-pressed:bg-yellow-600 aria-pressed:text-black"><Cog className="size-4 text-yellow-600 group-hover:text-black group-aria-pressed:text-black" /> Robot</ToggleGroupItem>
+              <ToggleGroupItem value="Competition" className="cursor-pointer border-emerald-600 text-emerald-600 border-3 text-base font-bold hover:bg-emerald-500 hover:text-black group aria-pressed:bg-emerald-600 aria-pressed:text-black"><Swords className="size-4 text-emerald-600 group-hover:text-black group-aria-pressed:text-black" /> Competition</ToggleGroupItem>
+              <ToggleGroupItem value="Tools" className="cursor-pointer border-rose-600 text-rose-600 border-3 text-base font-bold hover:bg-rose-500 hover:text-black group aria-pressed:bg-rose-600 aria-pressed:text-black"><Wrench className="size-4 text-rose-600 group-hover:text-black group-aria-pressed:text-black" /> Tools</ToggleGroupItem>
+              <ToggleGroupItem value="Field" className="cursor-pointer border-lime-600 text-lime-600 border-3 text-base font-bold hover:bg-lime-500 hover:text-black group aria-pressed:bg-lime-600 aria-pressed:text-black"><Volleyball className="size-4 text-lime-600 group-hover:text-black group-aria-pressed:text-black" /> Field</ToggleGroupItem>
+              <ToggleGroupItem value="Outreach" className="cursor-pointer border-cyan-600 text-cyan-600 border-3 text-base font-bold hover:bg-cyan-500 hover:text-black group aria-pressed:bg-cyan-600 aria-pressed:text-black"><Handshake className="size-4 text-cyan-600 group-hover:text-black group-aria-pressed:text-black" /> Outreach</ToggleGroupItem>
             </ToggleGroup>
           </div>
           <div className="ml-auto">

@@ -94,7 +94,7 @@ export default function CreatePurchase() {
     };
     return (
         <Dialog>
-            <DialogTrigger render={<Button className="text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
+            <DialogTrigger render={<Button className="cursor-pointer text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
             <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                 <h1 className="text-2xl text-zinc-100 font-bold">New Purchase</h1>
                 <div className="flex gap-2 items-stretch">
@@ -137,9 +137,9 @@ export default function CreatePurchase() {
                                 </Field>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field className="w-full">
-                                        <FieldLabel className="mt-2">Catagory <span className="text-destructive">*</span></FieldLabel>
+                                        <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
                                         <Select>
-                                            <SelectTrigger className="w-full">
+                                            <SelectTrigger className="cursor-pointer w-full">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -154,7 +154,7 @@ export default function CreatePurchase() {
                                     <Field className="mt-2">
                                         <FieldLabel>Supplier:<span className="text-destructive">*</span></FieldLabel>
                                         <Select>
-                                            <SelectTrigger className="w-full">
+                                            <SelectTrigger className="cursor-pointer w-full">
                                                     <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -182,7 +182,7 @@ export default function CreatePurchase() {
                             <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                 <div className="flex m-1">
                                     <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                                    <Button className="ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                                    <Button className="cursor-pointer ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
                                 </div>
                             </Card>
                             <div className="p-2 w-full flex-1 overflow-auto min-h-0">
@@ -195,7 +195,7 @@ export default function CreatePurchase() {
                             <h2>Order Total:</h2>
                             <div className="flex">
                                 <h1 className="text-2xl text-emerald-400 font-bold">${orderTotal.toFixed(2)}</h1>
-                                <Button className="w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Submit</Button>
+                                <Button className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
                             </div>
 
                         </Card>

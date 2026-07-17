@@ -60,12 +60,12 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
             <h1 className="text-zinc-100 text-2xl font-bold ml-4">
                 Purchasing App
             </h1>
-            <Button className="rounded-md text-lg bg-red-400 hover:bg-red-400 ml-5 mr-1 text-zinc-100 font-jetbrains"><Package /> Purchases</Button>
-            <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><List />Orders</Button>
-            <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
-            <Button className="rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
+            <Button onClick={() => router.push('/?user=programDirector')} className="cursor-pointer rounded-md text-lg bg-red-400 hover:bg-red-400 ml-5 mr-1 text-zinc-100 font-jetbrains"><Package /> Purchases</Button>
+            <Button onClick={() => router.push('/orders/?user=programDirector')} className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><List />Orders</Button>
+            <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
+            <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
             {(userRole == "president" || userRole == "programDirector") && (
-                <Button className="rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
+                <Button className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
             )}
             <div className="ml-auto flex items-center gap-3">
                 <HoverCard>
@@ -82,7 +82,7 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                         </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="rounded-md bg-red-400 w-64 flex justify-center">
-                        <Button onClick={() => router.push('/login')} className="text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
+                        <Button onClick={() => router.push('/login')} className="cursor-pointer text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
                     </HoverCardContent>
                 </HoverCard>
             </div>

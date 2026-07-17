@@ -2,7 +2,7 @@
 
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trash2, Save, StickyNote } from "lucide-react"
+import { Trash2, Save, StickyNote, Globe } from "lucide-react"
 import { useState } from "react"
 import { Input } from "@base-ui/react/input"
 
@@ -75,13 +75,9 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => setNameValue(String(value))} /></CardTitle>
                         <div className="flex ml-auto">
-<<<<<<< Updated upstream
-                            <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(link, "_blank")}><Globe /></Button>
-=======
                             <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setEditMode(false)}><Save /></Button>
                             <Button type="submit" className="mr-1 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => { setcontainsNote(false); setNotes(""); }}><StickyNote /></Button>
                             <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive"><Trash2 /></Button>
->>>>>>> Stashed changes
                         </div>
                     </div>
                     <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number"/> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number"/></CardDescription>
@@ -104,6 +100,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                         <div className="flex ml-auto">
+                            <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
                         </div>
                     </div>
                     <CardDescription className="text-sm text-zinc-300">x{quantityValue} at ${costValue}</CardDescription>
@@ -120,10 +117,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
             <div className="flex">
                 <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                 <div className="flex ml-auto">
-<<<<<<< Updated upstream
-                    <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(link, "_blank")}><Globe /></Button>
-=======
->>>>>>> Stashed changes
+                    <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
                 </div>
             </div>
             <CardDescription className="text-sm text-zinc-300">x{quantityValue} at ${costValue}</CardDescription>
