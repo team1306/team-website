@@ -11,9 +11,10 @@ interface approvalInfo {
     requiredRole: string;
     approved: boolean;
     userRole: string;
+    rejected?: boolean
 }
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole }: approvalInfo) {
+export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected}: approvalInfo) {
     const userCanApprove = userRole === requiredRole;
     const cleanUserRole = () => {
         switch (requiredRole) {
@@ -32,7 +33,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         }
     }
 
-    if (!approved && userCanApprove && userRole != "nProgramDirector") {
+    if (!approved && userCanApprove && userRole != "nProgramDirector" && !rejected) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex items-center justify-start">
@@ -45,9 +46,18 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
             </Card>
         );
     }
-    else if (!approved && !userCanApprove) {
+    else if (!approved && !userCanApprove && !rejected) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+                <div className="">
+                    <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                </div>
+            </Card>
+        );
+    }
+    else if (rejected) {
+        return (
+            <Card className="bg-red-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="">
                     <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
                 </div>

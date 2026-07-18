@@ -27,7 +27,14 @@ import Approver from "./approverCard"
 import { Button } from "../ui/button"
 import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { Input } from "@base-ui/react/input"
-import { Label } from "../ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 type request = {
     itemName: string;
@@ -57,50 +64,56 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
     const [expieditedRequsted, setExpieditedRequsted] = useState(false);
+    const [expieditedRejected, setExpieditedRejected] = useState(false);
     const [expiedited, setExpiedited] = useState(false);
     const [currentStatus, setStatus] = useState(status);
     const [editMode, setEditMode] = useState(false);
 
+    const calculatePrice = () => {
+        return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
+    }
+
     //track request info
     const [name, setName] = useState(itemName);
-    const [itemCost, setItemCost] = useState(cost);
+    const [requestCost, setRequestCost] = useState(calculatePrice());
     const [itemCatagory, setItemCaragory] = useState(catagory);
+    const [orderVendor, setOrderVendor] = useState(vendor);
 
     const CategoryTitle = () => {
-        switch (catagory) {
+        switch (itemCatagory) {
             case "Robot":
                 return (
                     <div className="flex items-center gap-2">
                         <Cog className="size-4 text-yellow-600" />
-                        <h2 className="text-base font-bold text-yellow-600">{catagory}</h2>
+                        <h2 className="text-base font-bold text-yellow-600">{itemCatagory}</h2>
                     </div>
                 )
             case "Competition":
                 return (
                     <div className="flex items-center gap-2">
                         <Swords className="size-4 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-600">{catagory}</h2>
+                        <h2 className="text-base font-bold text-emerald-600">{itemCatagory}</h2>
                     </div>
                 )
             case "Tools":
                 return (
                     <div className="flex items-center gap-2">
                         <Wrench className="size-4 text-rose-600" />
-                        <h2 className="text-base font-bold text-rose-600">{catagory}</h2>
+                        <h2 className="text-base font-bold text-rose-600">{itemCatagory}</h2>
                     </div>
                 )
             case "Field":
                 return (
                     <div className="flex items-center gap-2">
                         <Volleyball className="size-4 text-lime-600" />
-                        <h2 className="text-base font-bold text-lime-600">{catagory}</h2>
+                        <h2 className="text-base font-bold text-lime-600">{itemCatagory}</h2>
                     </div>
                 )
             case "Outreach":
                 return (
                     <div className="flex items-center gap-2">
                         <Handshake className="size-4 text-cyan-600" />
-                        <h2 className="text-base font-bold text-cyan-600">{catagory}</h2>
+                        <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
                     </div>
                 )
 
@@ -132,8 +145,8 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
         }
     }
 
-    const calculatePrice = () => {
-        return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
+    const calcPercent = () => {
+        return (Math.round(((4000 - calculatePrice()) / 4000) * 100))
     }
 
     const purchaseApprovers = () => {
@@ -147,6 +160,9 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     )}
                     {(expieditedRequsted && !expiedited) && (
                         <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
+                    )}
+                    {(expieditedRejected) && (
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true}/>
                     )}
                 </div>
             )
@@ -163,6 +179,9 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     {(expieditedRequsted && !expiedited) && (
                         <Approver approverName="" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
                     )}
+                                        {(expieditedRejected) && (
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true}/>
+                    )}
                 </div>
             )
         }
@@ -174,17 +193,13 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
         );
     };
 
-    const calcPercent = () => {
-        return (Math.round(((4000 - calculatePrice()) / 4000) * 100))
-    }
-
     return (
         <div>
             <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div>
                         <div className="flex">
-                            <CardTitle className="text-2xl font-bold text-zinc-100">{name}</CardTitle>
+                            <CardTitle className="text-2xl font-bold text-zinc-100">{name || "Untitled Request"}</CardTitle>
                             {statusBadge()}
                             {(!expiedited && expieditedRequsted && userRole == "programDirector") && (
                                 <Badge className="text-sm ml-2 w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
@@ -197,7 +212,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 ml-auto">
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
-                        <h2 className="text-base font-bold text-zinc-100">${cost.toFixed(2)}</h2>
+                        <h2 className="text-base font-bold text-zinc-100">${requestCost.toFixed(2)}</h2>
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-42 h-fit mt-2 pt-1 pb-1">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
@@ -239,7 +254,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                                 {(!editMode) && (
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
-                                                {(!expieditedRequsted) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
+                                                {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
                                                 <DropdownMenuItem onClick={() => setStatus("rejected")}>Reject</DropdownMenuItem>
                                             </DropdownMenuGroup>
                                             {(userRole == "president" || userRole == "programDirector") && (
@@ -250,10 +265,10 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                                         <DropdownMenuItem>Delete</DropdownMenuItem>
                                                         <DropdownMenuItem>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" && !expiedited) && (
-                                                            <DropdownMenuItem onClick={() => setExpiedited(true)}>Expedite</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => {setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true)}}>Expedite</DropdownMenuItem>
                                                         )}
-                                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited) && (
-                                                            <DropdownMenuItem onClick={() => setExpieditedRequsted(false)}>Reject Expedite</DropdownMenuItem>
+                                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
+                                                            <DropdownMenuItem onClick={() => {setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false);}}>Reject Expedite</DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuGroup>
                                                 </div>
@@ -263,6 +278,44 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                 </div>
                             </div>
                         </Card>
+                        {(editMode) && (
+                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-2 rounded-2xl gap-0">
+                                <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Request Info</CardTitle>
+                                <div className="flex">
+                                    <div className="pl-2 pr-2 flex-1 mt-1">
+                                        <h1 className="text-zinc-100 text-xs">Catagory:</h1>
+                                        <Select required value={itemCatagory} onValueChange={(value) => setItemCaragory(String(value))}>
+                                            <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
+                                                <SelectValue className="text-zinc-100" placeholder="Select a category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Robot">Robot</SelectItem>
+                                                <SelectItem value="Competition">Competition</SelectItem>
+                                                <SelectItem value="Tools">Tools</SelectItem>
+                                                <SelectItem value="Field">Field</SelectItem>
+                                                <SelectItem value="Outreach">Outreach</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="pl-2 pr-2 flex-1 mt-1">
+                                        <Select required value={orderVendor} onValueChange={(value) => setOrderVendor(String(value))}>
+                                            <h1 className="text-zinc-100 text-xs">Supplier:</h1>
+                                            <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
+                                                <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="WCP">WCP</SelectItem>
+                                                <SelectItem value="CTRE">CTRE</SelectItem>
+                                                <SelectItem value="Digi-Key">Digi-Key</SelectItem>
+                                                <SelectItem value="Mouser">Mouser</SelectItem>
+                                                <SelectItem value="Amazon">Amazon</SelectItem>
+                                                <SelectItem value="Amazon">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
                         <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-2xl gap-0">
                             <div className="flex p-2 pb-0">
                                 {(!editMode) && (
