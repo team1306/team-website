@@ -41,12 +41,12 @@ type request = {
     cost: number;
     requestor: string;
     catagory: string;
-    requestedDate: String;
-    status: String
+    requestedDate: string;
+    status: string;
     items: ItemData[];
-    vendor: String;
+    vendor: string;
     userRole: string;
-}
+  }
 
 interface ItemData {
     id: string;

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Package, List, CircleDollarSign, Users, Crown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 type user = {
     userName: string;
@@ -18,6 +19,7 @@ type user = {
 }
 
 export default function Navbar({ userName, userRole, userPicture }: user) {
+
     const roleBadge = () => {
         switch (userRole) {
             case "student":
@@ -48,6 +50,15 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
     }
     const router = useRouter();
 
+    const activeCSS = (url: String) => {
+        if(url == usePathname()){
+            return("rounded-md text-lg bg-red-400 hover:bg-red-400 mr-1 text-zinc-100");
+        }
+        else{
+            return("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
+        }
+    }
+
     return (
         <div className="bg-red-900 w-full h-16 flex items-center px-4">
             <Image
@@ -60,13 +71,15 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
             <h1 className="text-zinc-100 text-2xl font-bold ml-4">
                 Purchasing App
             </h1>
-            <Button onClick={() => router.push('/?user=programDirector')} className="cursor-pointer rounded-md text-lg bg-red-400 hover:bg-red-400 ml-5 mr-1 text-zinc-100 font-jetbrains"><Package /> Purchases</Button>
-            <Button onClick={() => router.push('/orders/?user=programDirector')} className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><List />Orders</Button>
+            <div className="ml-3 mt-1">
+            <Button onClick={() => router.push('/?user=programDirector')} className={activeCSS("/")}><Package /> Purchases</Button>
+            <Button onClick={() => router.push('/orders/?user=programDirector')} className={activeCSS("/orders")}><List />Orders</Button>
             <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
             <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
             {(userRole == "president" || userRole == "programDirector") && (
                 <Button className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
             )}
+            </div>
             <div className="ml-auto flex items-center gap-3">
                 <HoverCard>
                     <HoverCardTrigger>

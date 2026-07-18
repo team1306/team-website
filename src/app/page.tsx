@@ -1,9 +1,9 @@
 'use client'
 import Navbar from "../components/ui/navbar";
 import Purchase from "../components/dispalayPurchase/purchaseCard";
-import { Card} from "@/components/ui/card";
-import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group"
-import { Cog, Swords, Wrench, Volleyball, Handshake,} from "lucide-react"
+import { Card } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Cog, Swords, Wrench, Volleyball, Handshake, } from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -21,11 +21,30 @@ export default function Home() {
     ItemLink: string;
     comments: string;
     userRole: string;
-}
+  }
+
+  interface PurchaseData {
+    id: string;
+    cost: number;
+    requestor: string;
+    catagory: string;
+    requestedDate: string;
+    status: string;
+    items: ItemData[];
+    vendor: string;
+  }
 
   const items: ItemData[] = [
-    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: userRole},
-    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: userRole},
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: userRole },
+    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: userRole },
+  ];
+
+  const Purchases: PurchaseData[] = [
+    { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE" },
+    { id: "Season Registration", cost: 1258, requestor: "Example User", catagory: "Competition", requestedDate: "2026-06-12", status: "aproved", items: items, vendor: "Other - FIRST" },
+    { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key" },
+    { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark" },
+    { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "rejected", items: items, vendor: "Other - Hardware Store" },
   ];
 
   return (
@@ -44,15 +63,13 @@ export default function Home() {
             </ToggleGroup>
           </div>
           <div className="ml-auto">
-              <CreatePurchase></CreatePurchase>
+            <CreatePurchase></CreatePurchase>
           </div>
         </div>
       </Card>
-      <Purchase itemName="CTRE Restock" cost={2179.90} requestor="Example User" catagory="Robot" requestedDate="2026-07-06" status="needsAproval" items={items} vendor="CTRE" userRole={userRole}/>
-      <Purchase itemName="Season Registration" cost={1258} requestor="Example User" catagory="Competition" requestedDate="2026-06-12" status="aproved" items={items} vendor="Other - FIRST" userRole={userRole}/>
-      <Purchase itemName="Molex Crimping Tool" cost={499} requestor="Example User" catagory="Tools" requestedDate="2026-06-12" status="purchased" items={items} vendor="Digi-Key" userRole={userRole}/>
-      <Purchase itemName="BIOCORE Scoring Elements" cost={169} requestor="Example User" catagory="Field" requestedDate="2026-06-12" status="recived" items={items} vendor="Andy Mark" userRole={userRole}/>
-      <Purchase itemName="Outreach Barrier Spray Paint" cost={50} requestor="Example User" catagory="Outreach" requestedDate="2026-06-12" status="rejected" items={items} vendor="Other - Hardware Store" userRole={userRole}/>
+      {Purchases.map((purchase) => (
+        <Purchase key={purchase.id} itemName={purchase.id} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={purchase.requestedDate} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
+      ))}
     </div>
   );
 }
