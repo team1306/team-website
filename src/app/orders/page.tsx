@@ -95,7 +95,7 @@ export default function Orders() {
                 </Card>
                 <VendorCard vendorName="CTRE" orders={getOrdersBySupplier("CTRE")} userRole={userRole} />
                 <VendorCard vendorName="Digi-Key" orders={getOrdersBySupplier("Digi-Key")} userRole={userRole} />
-                <VendorCard vendorName="Digi-Key" orders={getOrdersBySupplier("Andy Mark")} userRole={userRole} />
+                <VendorCard vendorName="Andy Mark" orders={getOrdersBySupplier("Andy Mark")} userRole={userRole} />
                 <VendorCard vendorName="Other" orders={getOrdersBySupplier("Other")} userRole={userRole} />
             </div>
         </div>

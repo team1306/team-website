@@ -80,7 +80,7 @@ export default function Home() {
         </div>
       </Card>
       {Purchases.map((purchase) => (
-        <div className="m-3 mt-4">
+        <div key={purchase.id} className="m-3 mt-4">
           <Purchase key={purchase.id} itemName={purchase.id} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={purchase.requestedDate} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
         </div>
       ))}

@@ -35,6 +35,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 type request = {
     itemName: string;
@@ -46,7 +56,7 @@ type request = {
     items: ItemData[];
     vendor: string;
     userRole: string;
-  }
+}
 
 interface ItemData {
     id: string;
@@ -68,6 +78,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
     const [expiedited, setExpiedited] = useState(false);
     const [currentStatus, setStatus] = useState(status);
     const [editMode, setEditMode] = useState(false);
+    const [overideStatusOpen, setOverideStatusOpen] = useState(false);
 
     const calculatePrice = () => {
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
@@ -162,7 +173,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
                     )}
                     {(expieditedRejected) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true}/>
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} />
                     )}
                 </div>
             )
@@ -174,13 +185,13 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                     <Approver approverName="" approverPicture="" requiredRole="mentorLead" approved={false} userRole={userRole} />
                     <Approver approverName="" approverPicture="" requiredRole="president" approved={false} userRole={userRole} />
                     {(expiedited) && (
-                        <Approver approverName="" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
+                        <Approver approverName="Name Name" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
                     )}
                     {(expieditedRequsted && !expiedited) && (
                         <Approver approverName="" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
                     )}
-                                        {(expieditedRejected) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true}/>
+                    {(expieditedRejected) && (
+                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} />
                     )}
                 </div>
             )
@@ -263,18 +274,31 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                                     <DropdownMenuGroup>
                                                         <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem>Delete</DropdownMenuItem>
-                                                        <DropdownMenuItem>Overide Status</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" && !expiedited) && (
-                                                            <DropdownMenuItem onClick={() => {setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true)}}>Expedite</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true) }}>Expedite</DropdownMenuItem>
                                                         )}
                                                         {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
-                                                            <DropdownMenuItem onClick={() => {setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false);}}>Reject Expedite</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false); }}>Reject Expedite</DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuGroup>
                                                 </div>
                                             )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
+                                    <Dialog open={overideStatusOpen} onOpenChange={setOverideStatusOpen}>
+                                        <DialogContent className="bg-mist-400 p-4">
+                                            <DialogTitle className="font-jetbrains text-xl font-bold">Change Status</DialogTitle>
+                                            <h1 className="text-zinc-100 mb-2">Current Status: {statusBadge()}</h1>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("needsAproval"); }} className="text-base p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer w-fit">Needs Aproval</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("aproved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer w-fit">Approved</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer w-fit">Purchased</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer w-fit">Received</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer w-fit">Rejected</Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             </div>
                         </Card>
