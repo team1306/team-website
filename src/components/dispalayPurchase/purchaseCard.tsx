@@ -195,7 +195,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
 
     return (
         <div>
-            <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
+            <Card className="p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div>
                         <div className="flex">
