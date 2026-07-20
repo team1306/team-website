@@ -19,11 +19,14 @@ import {
     DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Globe } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 interface Vendor {
     vendorName: string;
     orders: PurchaseData[];
     userRole: string;
+    cleanOrders: PurchaseData[];
 }
 
 interface ItemData {
@@ -48,8 +51,8 @@ interface PurchaseData {
 }
 
 const items: ItemData[] = [
-    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: "programDirector" },
-    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: "programDirector" },
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "https://store.ctr-electronics.com/", comments: "", userRole: "programDirector" },
+    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "https://store.ctr-electronics.com/", comments: "Backordered Until Late Fall", userRole: "programDirector" },
 ];
 
 export default function Orders() {
@@ -65,7 +68,7 @@ export default function Orders() {
         { id: "Season Registration", cost: 1258, requestor: "Example User", catagory: "Competition", requestedDate: "2026-06-12", status: "aproved", items: items, vendor: "Other - FIRST" },
         { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key" },
         { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark" },
-        { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "rejected", items: items, vendor: "Other - Hardware Store" },
+        { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "needsAproval", items: items, vendor: "Other - Hardware Store" },
     ];
 
     function getOrdersBySupplier(vendor: string): PurchaseData[] {
@@ -77,6 +80,16 @@ export default function Orders() {
             const statusMatch = statusFilter.includes(purchase.status);
 
             return vendorMatch && statusMatch;
+        });
+    }
+
+    function getOrdersBySupplierClean(vendor: string): PurchaseData[] {
+        return Purchases.filter((purchase) => {
+            const vendorMatch = vendor === "Other"
+                ? purchase.vendor.startsWith("Other")
+                : purchase.vendor === vendor;
+
+            return vendorMatch;
         });
     }
 
@@ -105,17 +118,43 @@ export default function Orders() {
                         </ToggleGroup>
                     </div>
                 </Card>
-                <VendorCard vendorName="CTRE" orders={getOrdersBySupplier("CTRE")} userRole={userRole} />
-                <VendorCard vendorName="Digi-Key" orders={getOrdersBySupplier("Digi-Key")} userRole={userRole} />
-                <VendorCard vendorName="Andy Mark" orders={getOrdersBySupplier("Andy Mark")} userRole={userRole} />
-                <VendorCard vendorName="Other" orders={getOrdersBySupplier("Other")} userRole={userRole} />
+                <VendorCard vendorName="CTRE" orders={getOrdersBySupplier("CTRE")} userRole={userRole} cleanOrders={getOrdersBySupplierClean("CTRE")} />
+                <VendorCard vendorName="Digi-Key" orders={getOrdersBySupplier("Digi-Key")} userRole={userRole} cleanOrders={getOrdersBySupplierClean("Digi-Key")} />
+                <VendorCard vendorName="Andy Mark" orders={getOrdersBySupplier("Andy Mark")} userRole={userRole} cleanOrders={getOrdersBySupplierClean("Andy Mark")} />
+                <VendorCard vendorName="Other" orders={getOrdersBySupplier("Other")} userRole={userRole} cleanOrders={getOrdersBySupplierClean("Other")} />
             </div>
         </div>
     );
 }
 
-export function VendorCard({ vendorName, orders, userRole }: Vendor) {
+export function VendorCard({ vendorName, orders, userRole, cleanOrders }: Vendor) {
     const [open, setOpen] = useState(false);
+    const [showUnapproved, setShowUnapproved] = useState(false);
+    const [purchasedIds, setPurchasedIds] = useState<Set<string>>(new Set());
+
+    const togglePurchased = (id: string) => {
+        setPurchasedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const cardStatus = (status: string, id: string) => {
+        if (purchasedIds.has(id)) {
+            return ("p-2 bg-emerald-800 mb-2 pb-0");
+        }
+        else if (showUnapproved && status == "needsAproval") {
+            return ("p-2 bg-amber-600 mb-2 pb-0");
+        }
+        else {
+            return ("p-2 bg-mist-600 mb-2 pb-0");
+        }
+    }
 
     return (
         <div>
@@ -131,27 +170,46 @@ export function VendorCard({ vendorName, orders, userRole }: Vendor) {
                         {orders.map((purchase) => (<div key={purchase.id} className="mb-3"><Purchase key={purchase.id} itemName={purchase.id} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={purchase.requestedDate} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} /></div>))}
                     </div>
                     <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
-                        <DrawerContent className="p-0 m-0 bg-mist-800 border-0">
-                            <DrawerTitle className="bg-mist-700 p-2 mb-1 font-bold rounded-tl-sm rounded-b-none rounded-tr-none gap-0 text-zinc-100 text-2xl font-jetbrains ">Items from {vendorName}</DrawerTitle>
-                            <div className="p-1">
-                                {items.map((item) => (
-                                    <Item
-                                        key={item.id}
-                                        name={item.ItemName}
-                                        cost={item.ItemCost}
-                                        quantity={item.ItemQuantity}
-                                        link={item.ItemLink}
-                                    />
+                        <DrawerContent className="p-0 m-0 bg-mist-800 border-0 rounded-tr-none rounded-br-none">
+                            <DrawerHeader className="bg-mist-900 p-2 mb-1 font-bold rounded-tl-sm rounded-b-none rounded-tr-none gap-0 t">
+                                <DrawerTitle className="text-zinc-100 text-2xl font-jetbrains ">Items from {vendorName}</DrawerTitle>
+                                <Field orientation="horizontal" className="mt-1">
+                                    <Checkbox id="showUnapproved" checked={showUnapproved} onCheckedChange={setShowUnapproved} />
+                                    <FieldLabel className="text-zinc-100 text-base " htmlFor="showUnapproved">Show Unapproved Items</FieldLabel>
+                                </Field>
+                            </DrawerHeader>
+                            <div className="p-2">
+                                {cleanOrders.map((purchase) => (
+                                    (purchase.status == "aproved" || (showUnapproved && purchase.status == "needsAproval")) && (
+                                        <Card key={purchase.id} className={cardStatus(purchase.status, purchase.id)} onClick={() => togglePurchased(purchase.id)}>
+                                            <CardTitle className="text-zinc-100 text-lg font-bold">{purchase.id}</CardTitle>
+                                            <div>
+                                                {purchase.items.map((item) => (
+                                                    <Item
+                                                        key={`${purchase.id}-${item.id}`}
+                                                        name={item.ItemName}
+                                                        cost={item.ItemCost}
+                                                        quantity={item.ItemQuantity}
+                                                        link={item.ItemLink}
+                                                        status={purchase.status}
+                                                        comments={item.comments}
+                                                    />
+                                                )
+                                                )}
+                                            </div>
+                                        </Card>
+                                    )
                                 ))}
                             </div>
-                            <DrawerFooter className="bg-mist-700 p-2 mb-1 font-bold rounded-b-none rounded-tr-small gap-0 text-zinc-100 text-2xl font-jetbrains ">
-                            <Button onClick={() => setOpen(false)} className="text-base bg-red-900 font-bold hover:bg-red-950">Purchase Selected Items</Button>
-                        </DrawerFooter>
+                            <DrawerFooter className="bg-mist-900 p-2 font-bold rounded-bl-small rounded-tr-small gap-0 text-zinc-100 text-2xl font-jetbrains ">
+                                <Button onClick={() => setOpen(false)} className="text-base bg-red-900 font-bold hover:bg-red-950">Mark Selected As Purchased</Button>
+                            </DrawerFooter>
                         </DrawerContent>
                     </Drawer>
                 </Card>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
 
@@ -160,28 +218,32 @@ interface Items {
     cost: number;
     quantity: number;
     link: string;
+    status: string;
+    comments: string;
 }
 
-export function Item({ name, cost, quantity, link }: Items) {
+export function Item({ name, cost, quantity, link, status, comments }: Items) {
     const [purchased, setPurchased] = useState(false);
 
-    const updateItem = () => {
-        if (purchased) {
-            return ("bg-green-700 p-0 mb-2");
-        }
-        else {
-            return ("bg-mist-700 p-0 mb-2");
-        }
-    };
     return (
-        <Card onClick={() => setPurchased(true)} className={updateItem()}>
+        <Card className="bg-mist-700 p-0 mb-2 gap-0">
             <div className="flex p-2">
                 <div>
                     <CardTitle className="text-lg font-bold text-zinc-100">{name}</CardTitle>
                     <CardDescription className="text-base font-bold text-zinc-100">x{quantity} at ${cost}</CardDescription>
                 </div>
-                <Button className="bg-zinc-100 text-black ml-auto hover:bg-zinc-300"><Globe /></Button>
+                {(link) && (
+                <Button className="bg-zinc-100 text-black ml-auto hover:bg-zinc-300" onClick={(e) => {e.stopPropagation();window.open(link, "_blank", "noopener,noreferrer");}}><Globe /></Button>
+                )}
+                {(!link) && (
+                    <Button disabled className="bg-red-700 text-black ml-auto hover:bg-red-700"><Globe /></Button>
+                )}
             </div>
+            {(comments) && (
+                    <div className="bg-red-900 p-1 font-bold rounded-bl-small rounded-tr-small mt-0">
+                        <h1 className="text-base text-zinc-100 font-bold">{comments}</h1>
+                    </div>
+                )}
         </Card>
     )
 }
