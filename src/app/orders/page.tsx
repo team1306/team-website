@@ -50,6 +50,10 @@ interface PurchaseData {
     vendor: string;
 }
 
+const systemCoreOrder: ItemData[] = [
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "System Core", ItemCost: 699.99, ItemQuantity: 2, ItemLink: "https://andymark.com/", comments: "Not Avalible Until Season, Estimated Price", userRole: "programDirector" }
+  ];
+
 const items: ItemData[] = [
     { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "https://store.ctr-electronics.com/", comments: "", userRole: "programDirector" },
     { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "https://store.ctr-electronics.com/", comments: "Backordered Until Late Fall", userRole: "programDirector" },
@@ -59,7 +63,7 @@ export default function Orders() {
     const searchParams = useSearchParams();
     const user = searchParams.get("user");
 
-    const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'purchased', 'recived', 'rejected',]);
+    const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'rejected', 'onHold']);
 
     const [userRole, setUserRole] = useState(String(user)); //Change User Role
 
@@ -69,6 +73,7 @@ export default function Orders() {
         { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key" },
         { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark" },
         { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "needsAproval", items: items, vendor: "Other - Hardware Store" },
+        { id: "System Core", cost: 699.99, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-20", status: "onHold", items: systemCoreOrder, vendor: "Other" },
     ];
 
     function getOrdersBySupplier(vendor: string): PurchaseData[] {
@@ -112,9 +117,8 @@ export default function Orders() {
                         <ToggleGroup multiple value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
                             <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-base font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
                             <ToggleGroupItem value="aproved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-base font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
-                            <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-base font-bold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
-                            <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-base font-bold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
                             <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-base font-bold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
+                            <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-base font-bold hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
                         </ToggleGroup>
                     </div>
                 </Card>
@@ -151,6 +155,9 @@ export function VendorCard({ vendorName, orders, userRole, cleanOrders }: Vendor
         else if (showUnapproved && status == "needsAproval") {
             return ("p-2 bg-amber-600 mb-2 pb-0");
         }
+        else if (showUnapproved && status == "onHold") {
+            return ("p-2 bg-red-600 mb-2 pb-0");
+        }
         else {
             return ("p-2 bg-mist-600 mb-2 pb-0");
         }
@@ -180,7 +187,7 @@ export function VendorCard({ vendorName, orders, userRole, cleanOrders }: Vendor
                             </DrawerHeader>
                             <div className="p-2">
                                 {cleanOrders.map((purchase) => (
-                                    (purchase.status == "aproved" || (showUnapproved && purchase.status == "needsAproval")) && (
+                                    (purchase.status == "aproved" || (showUnapproved && (purchase.status == "needsAproval" || purchase.status == "onHold"))) && (
                                         <Card key={purchase.id} className={cardStatus(purchase.status, purchase.id)} onClick={() => togglePurchased(purchase.id)}>
                                             <CardTitle className="text-zinc-100 text-lg font-bold">{purchase.id}</CardTitle>
                                             <div>
@@ -233,17 +240,17 @@ export function Item({ name, cost, quantity, link, status, comments }: Items) {
                     <CardDescription className="text-base font-bold text-zinc-100">x{quantity} at ${cost}</CardDescription>
                 </div>
                 {(link) && (
-                <Button className="bg-zinc-100 text-black ml-auto hover:bg-zinc-300" onClick={(e) => {e.stopPropagation();window.open(link, "_blank", "noopener,noreferrer");}}><Globe /></Button>
+                    <Button className="bg-zinc-100 text-black ml-auto hover:bg-zinc-300" onClick={(e) => { e.stopPropagation(); window.open(link, "_blank", "noopener,noreferrer"); }}><Globe /></Button>
                 )}
                 {(!link) && (
                     <Button disabled className="bg-red-700 text-black ml-auto hover:bg-red-700"><Globe /></Button>
                 )}
             </div>
             {(comments) && (
-                    <div className="bg-red-900 p-1 font-bold rounded-bl-small rounded-tr-small mt-0">
-                        <h1 className="text-base text-zinc-100 font-bold">{comments}</h1>
-                    </div>
-                )}
+                <div className="bg-red-900 p-1 font-bold rounded-bl-small rounded-tr-small mt-0">
+                    <h1 className="text-base text-zinc-100 font-bold">{comments}</h1>
+                </div>
+            )}
         </Card>
     )
 }

@@ -153,6 +153,10 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                 return (
                     <Badge className="text-sm ml-2 w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400">Rejected</Badge>
                 )
+            case "onHold":
+                return (
+                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-orange-400 bg-transparent font-bold text-orange-400">On Hold</Badge>
+                )
         }
     }
 
@@ -290,12 +294,13 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                         <DialogContent className="bg-mist-400 p-4">
                                             <DialogTitle className="font-jetbrains text-xl font-bold">Change Status</DialogTitle>
                                             <h1 className="text-zinc-100 mb-2">Current Status: {statusBadge()}</h1>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("needsAproval"); }} className="text-base p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer w-fit">Needs Aproval</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("aproved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer w-fit">Approved</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer w-fit">Purchased</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer w-fit">Received</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer w-fit">Rejected</Button>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("needsAproval"); }} className="text-xs p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer">Needs Approval</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("aproved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer">Approved</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer">Purchased</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer">Received</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("onHold"); }} className="text-base p-3 font-bold text-orange-100 bg-orange-500 hover:bg-orange-600 cursor-pointer">On Hold</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer">Rejected</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>

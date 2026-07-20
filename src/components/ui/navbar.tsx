@@ -74,10 +74,10 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
             <div className="ml-3 mt-1">
             <Button onClick={() => router.push('/?user=programDirector')} className={activeCSS("/")}><Package /> Purchases</Button>
             <Button onClick={() => router.push('/orders/?user=programDirector')} className={activeCSS("/orders")}><List />Orders</Button>
-            <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
-            <Button className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
+            <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
+            <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
             {(userRole == "president" || userRole == "programDirector") && (
-                <Button className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
+                <Button disabled className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
             )}
             </div>
             <div className="ml-auto flex items-center gap-3">
