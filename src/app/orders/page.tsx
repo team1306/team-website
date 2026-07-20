@@ -8,6 +8,17 @@ import Purchase from "@/components/dispalayPurchase/purchaseCard";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import CreatePurchase from "@/components/createPurchase/createPurchase";
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Globe } from "lucide-react";
 
 interface Vendor {
     vendorName: string;
@@ -36,17 +47,18 @@ interface PurchaseData {
     vendor: string;
 }
 
+const items: ItemData[] = [
+    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: "programDirector" },
+    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: "programDirector" },
+];
+
 export default function Orders() {
     const searchParams = useSearchParams();
     const user = searchParams.get("user");
 
-    const [userRole, setUserRole] = useState(String(user)); //Change User Role
     const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'purchased', 'recived', 'rejected',]);
 
-    const items: ItemData[] = [
-        { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: userRole },
-        { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: userRole },
-    ];
+    const [userRole, setUserRole] = useState(String(user)); //Change User Role
 
     const Purchases: PurchaseData[] = [
         { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE" },
@@ -103,6 +115,8 @@ export default function Orders() {
 }
 
 export function VendorCard({ vendorName, orders, userRole }: Vendor) {
+    const [open, setOpen] = useState(false);
+
     return (
         <div>
             {(orders.length != 0) && (
@@ -110,14 +124,64 @@ export function VendorCard({ vendorName, orders, userRole }: Vendor) {
                     <div className="flex m-0">
                         <CardTitle className="text-zinc-100 text-3xl font-bold ml-4 mb-0 p-0 mt-3">{vendorName}</CardTitle>
                         {(userRole == "programDirector") && (
-                            <Button className="ml-auto text-lg p-2 bg-emerald-600 mt-2 mr-2 hover:bg-emerald-700 cursor-pointer">Order Items</Button>
+                            <Button onClick={() => setOpen(true)} className="ml-auto text-lg p-2 bg-emerald-600 mt-2 mr-2 hover:bg-emerald-700 cursor-pointer">Order Items</Button>
                         )}
                     </div>
                     <div className="pl-2 pr-2 pb-2">
                         {orders.map((purchase) => (<div key={purchase.id} className="mb-3"><Purchase key={purchase.id} itemName={purchase.id} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={purchase.requestedDate} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} /></div>))}
                     </div>
+                    <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
+                        <DrawerContent className="p-0 m-0 bg-mist-800 border-0">
+                            <DrawerTitle className="bg-mist-700 p-2 mb-1 font-bold rounded-tl-sm rounded-b-none rounded-tr-none gap-0 text-zinc-100 text-2xl font-jetbrains ">Items from {vendorName}</DrawerTitle>
+                            <div className="p-1">
+                                {items.map((item) => (
+                                    <Item
+                                        key={item.id}
+                                        name={item.ItemName}
+                                        cost={item.ItemCost}
+                                        quantity={item.ItemQuantity}
+                                        link={item.ItemLink}
+                                    />
+                                ))}
+                            </div>
+                            <DrawerFooter className="bg-mist-700 p-2 mb-1 font-bold rounded-b-none rounded-tr-small gap-0 text-zinc-100 text-2xl font-jetbrains ">
+                            <Button onClick={() => setOpen(false)} className="text-base bg-red-900 font-bold hover:bg-red-950">Purchase Selected Items</Button>
+                        </DrawerFooter>
+                        </DrawerContent>
+                    </Drawer>
                 </Card>
             )}
         </div>
     );
+}
+
+interface Items {
+    name: string;
+    cost: number;
+    quantity: number;
+    link: string;
+}
+
+export function Item({ name, cost, quantity, link }: Items) {
+    const [purchased, setPurchased] = useState(false);
+
+    const updateItem = () => {
+        if (purchased) {
+            return ("bg-green-700 p-0 mb-2");
+        }
+        else {
+            return ("bg-mist-700 p-0 mb-2");
+        }
+    };
+    return (
+        <Card onClick={() => setPurchased(true)} className={updateItem()}>
+            <div className="flex p-2">
+                <div>
+                    <CardTitle className="text-lg font-bold text-zinc-100">{name}</CardTitle>
+                    <CardDescription className="text-base font-bold text-zinc-100">x{quantity} at ${cost}</CardDescription>
+                </div>
+                <Button className="bg-zinc-100 text-black ml-auto hover:bg-zinc-300"><Globe /></Button>
+            </div>
+        </Card>
+    )
 }
