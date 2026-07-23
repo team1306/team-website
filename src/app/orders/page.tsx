@@ -21,6 +21,7 @@ import {
 import { Globe } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Suspense } from "react";
 
 interface Vendor {
     vendorName: string;
@@ -52,7 +53,7 @@ interface PurchaseData {
 
 const systemCoreOrder: ItemData[] = [
     { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "System Core", ItemCost: 699.99, ItemQuantity: 2, ItemLink: "https://andymark.com/", comments: "Not Avalible Until Season, Estimated Price", userRole: "programDirector" }
-  ];
+];
 
 const items: ItemData[] = [
     { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "https://store.ctr-electronics.com/", comments: "", userRole: "programDirector" },
@@ -60,12 +61,20 @@ const items: ItemData[] = [
 ];
 
 export default function Orders() {
+
+    return (
+        <Suspense fallback={null}>
+            <Page />
+        </Suspense>
+    );
+}
+
+export function Page() {
     const searchParams = useSearchParams();
     const user = searchParams.get("user");
+    const [userRole, setUserRole] = useState(String(user)); //Change User Role
 
     const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'rejected', 'onHold']);
-
-    const [userRole, setUserRole] = useState(String(user)); //Change User Role
 
     const Purchases: PurchaseData[] = [
         { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE" },
@@ -128,7 +137,7 @@ export default function Orders() {
                 <VendorCard vendorName="Other" orders={getOrdersBySupplier("Other")} userRole={userRole} cleanOrders={getOrdersBySupplierClean("Other")} />
             </div>
         </div>
-    );
+    )
 }
 
 export function VendorCard({ vendorName, orders, userRole, cleanOrders }: Vendor) {

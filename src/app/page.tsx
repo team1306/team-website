@@ -7,12 +7,23 @@ import { Cog, Swords, Wrench, Volleyball, Handshake, } from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 export default function Home() {
+
+  return (
+    <Suspense fallback={null}>
+      <Page />
+    </Suspense>
+  );
+}
+
+export function Page() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user");
 
   const [userRole, setUserRole] = useState(String(user));//Change User Role
+
   interface ItemData {
     id: string;
     ItemName: string;
@@ -32,6 +43,7 @@ export default function Home() {
     status: string;
     items: ItemData[];
     vendor: string;
+    reason: string;
   }
 
   const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
@@ -47,12 +59,12 @@ export default function Home() {
   ];
 
   const Purchases: PurchaseData[] = [
-    { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE" },
-    { id: "Season Registration", cost: 1258, requestor: "Example User", catagory: "Competition", requestedDate: "2026-06-12", status: "aproved", items: items, vendor: "Other - FIRST" },
-    { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key" },
-    { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark" },
-    { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "rejected", items: items, vendor: "Other - Hardware Store" },
-    { id: "System Core", cost: 699.99, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-20", status: "onHold", items: systemCoreOrder, vendor: "Andy Mark" },
+    { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE", reason: "" },
+    { id: "Season Registration", cost: 1258, requestor: "Example User", catagory: "Competition", requestedDate: "2026-06-12", status: "aproved", items: items, vendor: "Other - FIRST", reason: "" },
+    { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key", reason: "" },
+    { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark", reason: "" },
+    { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "rejected", items: items, vendor: "Other - Hardware Store", reason: "" },
+    { id: "System Core", cost: 699.99, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-20", status: "onHold", items: systemCoreOrder, vendor: "Andy Mark", reason: "" },
   ];
 
   function filterPurchases(): PurchaseData[] {
