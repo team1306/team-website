@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { StickyNotePlus, Plus, ArrowDown } from "lucide-react"
-import { Card, CardAction, CardDescription, CardTitle} from "@/components/ui/card";
+import { Card, CardAction, CardDescription, CardTitle } from "@/components/ui/card";
 import {
     Select,
     SelectContent,
@@ -33,9 +33,10 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
-import { Input } from "@/components/ui/input";
+import { Input } from "@base-ui/react"
 import { useState } from "react";
 import Item from "./itemCard";
+import { toast } from "@/components/ui/toast"
 
 export default function CreatePurchase() {
     interface ItemData {
@@ -47,7 +48,13 @@ export default function CreatePurchase() {
     }
 
     const [items, setItems] = useState<ItemData[]>([]);
+    const [name, setName] = useState(String(""));
+    const [catagory, setCatagory] = useState(String(""));
+    const [supplier, setSupplier] = useState(String(""));
+
     const orderTotal = items.reduce((sum, item) => sum + item.ItemCost * item.ItemQuantity, 0);
+
+    const [open, setOpen] = useState(false)
 
     const data = [
         { name: "Spent", value: 0 },
@@ -92,9 +99,36 @@ export default function CreatePurchase() {
             )
         );
     };
+
+    async function submitPurchase() {
+          const res = await fetch('/api/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: name,
+              requestor: 'Test User',
+              category: catagory,
+              items: items,
+              vendor: supplier,
+            }),
+          });
+      
+          const data = await res.json();
+      
+          if (res.ok) {
+            toast.add({
+              title: "Item Created",
+            });
+          }else{
+          toast.add({
+            title: "Error",
+          });
+        }
+      }
+
     return (
-        <Dialog>
-            <DialogTrigger render={<Button className="cursor-pointer text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
+        <Dialog open={open}>
+            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
             <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                 <h1 className="text-2xl text-zinc-100 font-bold">New Purchase</h1>
                 <div className="flex gap-2 items-stretch">
@@ -133,12 +167,12 @@ export default function CreatePurchase() {
                             <div className="p-2 w-full">
                                 <Field>
                                     <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                    <Input id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="w-full" />
+                                    <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="w-full" />
                                 </Field>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field className="w-full">
                                         <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
-                                        <Select>
+                                        <Select value={catagory} onValueChange={(value) => setCatagory(String(value))}>
                                             <SelectTrigger className="cursor-pointer w-full">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
@@ -153,9 +187,9 @@ export default function CreatePurchase() {
                                     </Field>
                                     <Field className="mt-2">
                                         <FieldLabel>Supplier:<span className="text-destructive">*</span></FieldLabel>
-                                        <Select>
+                                        <Select value={supplier} onValueChange={(value) => setSupplier(String(value))}>
                                             <SelectTrigger className="cursor-pointer w-full">
-                                                    <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
+                                                <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="WCP">WCP</SelectItem>
@@ -195,7 +229,7 @@ export default function CreatePurchase() {
                             <h2>Order Total:</h2>
                             <div className="flex">
                                 <h1 className="text-2xl text-emerald-400 font-bold">${orderTotal.toFixed(2)}</h1>
-                                <Button className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
+                                <Button onClick={() => {setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
                             </div>
 
                         </Card>
