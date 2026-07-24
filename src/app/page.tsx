@@ -5,12 +5,11 @@ import { Card } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Cog, Swords, Wrench, Volleyball, Handshake, } from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 export default function Home() {
-
   return (
     <Suspense fallback={null}>
       <Page />
@@ -18,62 +17,66 @@ export default function Home() {
   );
 }
 
+interface ItemData {
+  id: string;
+  ItemName: string;
+  ItemCost: number;
+  ItemQuantity: number;
+  ItemLink: string;
+  comments: string;
+  userRole: string;
+}
+
+interface Approver {
+  approved: boolean;
+  approverName: string;
+  requiredRole: string;
+  approverPicture: string;
+}
+
+interface PurchaseData {
+  id: string;
+  title: string;
+  cost: number;
+  requestor: string;
+  catagory: string;
+  requestedDate: string;
+  status: string;
+  items: ItemData[];
+  vendor: string;
+  reason: string;
+  approvers: Approver[];
+}
+
 export function Page() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user");
 
-  const [userRole, setUserRole] = useState(String(user));//Change User Role
-
-  interface ItemData {
-    id: string;
-    ItemName: string;
-    ItemCost: number;
-    ItemQuantity: number;
-    ItemLink: string;
-    comments: string;
-    userRole: string;
-  }
-
-  interface PurchaseData {
-    id: string;
-    cost: number;
-    requestor: string;
-    catagory: string;
-    requestedDate: string;
-    status: string;
-    items: ItemData[];
-    vendor: string;
-    reason: string;
-  }
+  const [userRole, setUserRole] = useState(String(user));
+  const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
   const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
   const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'purchased', 'recived', 'rejected', 'onHold'])
 
-  const items: ItemData[] = [
-    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "Kraken X60", ItemCost: 217.99, ItemQuantity: 4, ItemLink: "", comments: "", userRole: userRole },
-    { id: "5dd9856a-5b17-4dbb-b093-34300f479808", ItemName: "Kraken X44", ItemCost: 217.99, ItemQuantity: 6, ItemLink: "", comments: "Backordered Until Late Fall", userRole: userRole },
-  ];
-
-  const systemCoreOrder: ItemData[] = [
-    { id: "cb18f07d-38ee-48ec-8387-695d7604c4c3", ItemName: "System Core", ItemCost: 699.99, ItemQuantity: 2, ItemLink: "https://andymark.com/", comments: "Not Avalible Until Season, Estimated Price", userRole: userRole }
-  ];
-
-  const Purchases: PurchaseData[] = [
-    { id: "CTRE Restock", cost: 2179.90, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-06", status: "needsAproval", items: items, vendor: "CTRE", reason: "" },
-    { id: "Season Registration", cost: 1258, requestor: "Example User", catagory: "Competition", requestedDate: "2026-06-12", status: "aproved", items: items, vendor: "Other - FIRST", reason: "" },
-    { id: "Molex Crimping Tool", cost: 499, requestor: "Example User", catagory: "Tools", requestedDate: "2026-06-12", status: "purchased", items: items, vendor: "Digi-Key", reason: "" },
-    { id: "BIOCORE Scoring Elements", cost: 169, requestor: "Example User", catagory: "Field", requestedDate: "2026-06-12", status: "recived", items: items, vendor: "Andy Mark", reason: "" },
-    { id: "Outreach Barrier Spray Paint", cost: 50, requestor: "Example User", catagory: "Outreach", requestedDate: "2026-06-12", status: "rejected", items: items, vendor: "Other - Hardware Store", reason: "" },
-    { id: "System Core", cost: 699.99, requestor: "Example User", catagory: "Robot", requestedDate: "2026-07-20", status: "onHold", items: systemCoreOrder, vendor: "Andy Mark", reason: "" },
-  ];
+  useEffect(() => {
+    async function loadPurchases() {
+      const res = await fetch('/api/orders', { cache: 'no-store' });
+      const data = await res.json();
+      setPurchases(data.parsed ?? []);
+    }
+    loadPurchases();
+  }, []);
 
   function filterPurchases(): PurchaseData[] {
-    return Purchases.filter((purchase) => {
+    return purchases.filter((purchase) => {
       const categoryMatch = catagoryFilter.includes(purchase.catagory);
       const statusMatch = statusFilter.includes(purchase.status);
-
       return categoryMatch && statusMatch;
     });
+  }
+
+  function formatDate(isoString: string): string {
+    return new Date(isoString).toLocaleDateString('en-US');
   }
 
   return (
@@ -111,7 +114,7 @@ export function Page() {
       </Card>
       {filterPurchases().map((purchase) => (
         <div key={purchase.id} className="m-3 mt-4">
-          <Purchase key={purchase.id} itemName={purchase.id} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={purchase.requestedDate} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
+          <Purchase key={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
         </div>
       ))}
     </div>

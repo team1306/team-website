@@ -177,7 +177,7 @@ export default function CreatePurchase() {
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Roobt">Roobt</SelectItem>
+                                                <SelectItem value="Robot">Robot</SelectItem>
                                                 <SelectItem value="Competition">Competition</SelectItem>
                                                 <SelectItem value="Tools">Tools</SelectItem>
                                                 <SelectItem value="Field">Field</SelectItem>

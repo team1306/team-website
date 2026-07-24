@@ -10,22 +10,37 @@ interface ItemData {
   ItemLink: string;
 }
 
-interface PurchaseCreate {
-  title: string;
-  requestor: string;
-  category: string;
-  items: ItemData[];
-  vendor: string;
-  reason?: string;
+interface Approver {
+  approved: boolean;
+  approverName: string;
+  requiredRole: string;
+  approverPicture: string;
 }
 
-function parsePurchases(rawPurchases: any[] | null): PurchaseCreate[] {
-  if (!rawPurchases) return [];
+interface PurchaseData {
+  id: string;
+  title: string;
+  cost: number;
+  requestor: string;
+  catagory: string;
+  requestedDate: string;
+  status: string;
+  items: ItemData[];
+  vendor: string;
+  reason: string;
+  approvers: Approver[];
+}
 
+function parsePurchases(rawPurchases: any[] | null): PurchaseData[] {
+  if (!rawPurchases) return [];
   return rawPurchases.map((row) => ({
+    id: row.purchaseID,
     title: row.requestName,
+    cost: row.cost,
     requestor: row.requestor,
-    category: row.catagory,
+    catagory: row.catagory,
+    requestedDate: new Date(Number(row.purchaseID) * 1000).toISOString(),
+    status: row.status,
     items: row.items.map((item: any) => ({
       id: item.id,
       ItemName: item.ItemName,
@@ -34,7 +49,13 @@ function parsePurchases(rawPurchases: any[] | null): PurchaseCreate[] {
       ItemLink: item.ItemLink,
     })),
     vendor: row.vendor,
-    reason: row.reason ?? undefined,
+    reason: row.reason ?? "",
+    approvers: row.approvers.map((approver: any) => ({
+      approved: approver.approved,
+      approverName: approver.approverName,
+      requiredRole: approver.requiredRole,
+      approverPicture: approver.approverPicture,
+    })),
   }));
 }
 
@@ -48,7 +69,7 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const parsed: PurchaseCreate[] = parsePurchases(purchases);
+  const parsed: PurchaseData[] = parsePurchases(purchases);
 
   return NextResponse.json({ parsed }, { status: 200 });
 }
