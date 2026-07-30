@@ -36,11 +36,21 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
         onUpdate(id, { cost: Number(value) || 0 });
     };
 
+    const handleNameChange = (value: string) => {
+        setNameValue(value);
+        onUpdate(id, { name: value });
+    };
+
+    const handleLinkChange = (value: string) => {
+        setLinkValue(value);
+        onUpdate(id, { link: value });
+    };
+
     if (editMode && !containsNote) {
         return (
             <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex">
-                    <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => setNameValue(String(value))} /></CardTitle>
+                    <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
                     <div className="flex ml-auto">
                         <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setEditMode(false)}><Save /></Button>
                         <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setcontainsNote(true)}><StickyNote /></Button>
@@ -50,7 +60,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                 <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
                 <div className="flex items-center gap-1 mt-1">
                     <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                    <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => setLinkValue(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                    <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
                 </div>
             </Card>
         );
@@ -61,7 +71,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
             <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
                 <div className="pl-2 pt-2">
                     <div className="flex">
-                        <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => setNameValue(String(value))} /></CardTitle>
+                        <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
                         <div className="flex ml-auto">
                             <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setEditMode(false)}><Save /></Button>
                             <Button type="submit" className="mr-1 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => { setcontainsNote(false); setNotes(""); }}><StickyNote /></Button>
@@ -71,7 +81,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                     <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
                     <div className="flex items-center gap-1 mt-1">
                         <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                        <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => setLinkValue(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                        <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
                     </div>
                 </div>
                 <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
