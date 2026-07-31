@@ -216,7 +216,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                         <div className="flex">
                             <CardTitle className="text-2xl font-bold text-zinc-100">{name || "Untitled Request"}</CardTitle>
                             {statusBadge()}
-                            {(!expiedited && expieditedRequsted && userRole == "programDirector") && (
+                            {(!expiedited && expieditedRequsted) && (
                                 <Badge className="text-sm ml-2 w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
                             )}
                             {(expiedited) && (

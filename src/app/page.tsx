@@ -58,12 +58,13 @@ export function Page() {
   const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
   const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'purchased', 'recived', 'rejected', 'onHold'])
 
+  async function loadPurchases() {
+    const res = await fetch('/api/orders', { cache: 'no-store' });
+    const data = await res.json();
+    setPurchases(data.parsed ?? []);
+  }
+
   useEffect(() => {
-    async function loadPurchases() {
-      const res = await fetch('/api/orders', { cache: 'no-store' });
-      const data = await res.json();
-      setPurchases(data.parsed ?? []);
-    }
     loadPurchases();
   }, []);
 
@@ -84,7 +85,7 @@ export function Page() {
       <Navbar userName="Example User" userRole={userRole} userPicture=""></Navbar>
       <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
         <div className="flex justify-between items-start">
-          <div className="flex gap-6">
+          <div>
             <div>
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
               <ToggleGroup multiple value={catagoryFilter} onValueChange={(value) => setCatagoryFilter(value)}>
@@ -95,7 +96,7 @@ export function Page() {
                 <ToggleGroupItem value="Outreach" className="cursor-pointer border-cyan-600 text-cyan-600 border-3 text-base font-bold hover:bg-cyan-500 hover:text-black group aria-pressed:bg-cyan-600 aria-pressed:text-black"><Handshake className="size-4 text-cyan-600 group-hover:text-black group-aria-pressed:text-black" /> Outreach</ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <div>
+            <div className="mt-2">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-base font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
@@ -108,7 +109,7 @@ export function Page() {
             </div>
           </div>
           <div className="ml-auto">
-            <CreatePurchase></CreatePurchase>
+            <CreatePurchase onPurchaseCreated={loadPurchases}></CreatePurchase>
           </div>
         </div>
       </Card>

@@ -38,7 +38,7 @@ import { useState } from "react";
 import Item from "./itemCard";
 import { toast } from "@/components/ui/toast"
 
-export default function CreatePurchase() {
+export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreated?: () => void }) {
     interface ItemData {
         id: string;
         ItemName: string;
@@ -101,36 +101,37 @@ export default function CreatePurchase() {
     };
 
     async function submitPurchase() {
-          const res = await fetch('/api/create', {
+        const res = await fetch('/api/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              title: name,
-              requestor: 'Test User',
-              category: catagory,
-              items: items,
-              vendor: supplier,
+                title: name,
+                requestor: 'Test User',
+                category: catagory,
+                items: items,
+                vendor: supplier,
             }),
-          });
-      
-          const data = await res.json();
-      
-          if (res.ok) {
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
             toast.add({
-              title: "Item Created",
+                title: "Item Created",
             });
-          }else{
-          toast.add({
-            title: "Error",
-          });
+            onPurchaseCreated?.();
+        } else {
+            toast.add({
+                title: "Error",
+            });
         }
-      }
+    }
 
     return (
         <Dialog open={open}>
             <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
             <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
-                <h1 className="text-2xl text-zinc-100 font-bold">New Purchase</h1>
+                <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
                 <div className="flex gap-2 items-stretch">
                     <Card className="w-sm gap-0 bg-mist-600 text-zinc-100 pt-0">
                         <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
@@ -229,7 +230,7 @@ export default function CreatePurchase() {
                             <h2>Order Total:</h2>
                             <div className="flex">
                                 <h1 className="text-2xl text-emerald-400 font-bold">${orderTotal.toFixed(2)}</h1>
-                                <Button onClick={() => {setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
+                                <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
                             </div>
 
                         </Card>
