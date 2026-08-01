@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog"
 
 type request = {
+    id: string;
     itemName: string;
     cost: number;
     requestor: string;
@@ -68,8 +69,26 @@ interface ItemData {
     userRole?: string
 }
 
+async function updateStatus(id: string, newStatus: string) {
+    try {
+        const res = await fetch('/api/setStatus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: id,
+            status: newStatus
+          })
+        });
+    
+        const data = await res.json();
+    
+      } catch (err) {
+        console.error('error:', err);
+      }
+    }
 
-export default function Purchase({ itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole }: request) {
+
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole }: request) {
 
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
@@ -137,7 +156,7 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                 return (
                     <Badge className="text-sm ml-2 w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400">Needs Approval</Badge>
                 )
-            case "aproved":
+            case "approved":
                 return (
                     <Badge className="text-sm ml-2 w-fit h-fit border-3 border-blue-400 bg-transparent font-bold text-blue-400">Approved</Badge>
                 )
@@ -284,6 +303,9 @@ export default function Purchase({ itemName, cost, requestor, catagory, requeste
                                                         )}
                                                         {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
                                                             <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false); }}>Reject Expedite</DropdownMenuItem>
+                                                        )}
+                                                        {(userRole == "programDirector") && (
+                                                            <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuGroup>
                                                 </div>

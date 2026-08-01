@@ -56,7 +56,7 @@ export function Page() {
   const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
   const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
-  const [statusFilter, setStatusFilter] = useState(['needsAproval', 'aproved', 'purchased', 'recived', 'rejected', 'onHold'])
+  const [statusFilter, setStatusFilter] = useState(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold'])
 
   async function loadPurchases() {
     const res = await fetch('/api/orders', { cache: 'no-store' });
@@ -100,7 +100,7 @@ export function Page() {
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-base font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="aproved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-base font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-base font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-base font-bold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-base font-bold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-base font-bold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
@@ -115,7 +115,7 @@ export function Page() {
       </Card>
       {filterPurchases().map((purchase) => (
         <div key={purchase.id} className="m-3 mt-4">
-          <Purchase key={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
+          <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
         </div>
       ))}
     </div>
