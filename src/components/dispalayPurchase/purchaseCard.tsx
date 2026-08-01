@@ -57,6 +57,8 @@ type request = {
     items: ItemData[];
     vendor: string;
     userRole: string;
+    onPurchaseEdited: () => void;
+    approvers: Approver[];
 }
 
 interface ItemData {
@@ -69,39 +71,48 @@ interface ItemData {
     userRole?: string
 }
 
-async function updateStatus(id: string, newStatus: string) {
-    try {
-        const res = await fetch('/api/setStatus', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: id,
-            status: newStatus
-          })
-        });
-    
-        const data = await res.json();
-    
-      } catch (err) {
-        console.error('error:', err);
-      }
-    }
+interface Approver {
+    approved: boolean;
+    approverName: string;
+    requiredRole: string;
+    approverPicture: string;
+  }
 
 
-export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole }: request) {
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers }: request) {
+    async function updateStatus(id: string, newStatus: string) {
+        try {
+            const res = await fetch('/api/setStatus', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: id,
+                status: newStatus,
+              })
+            });
+        
+            const data = await res.json();
+            onPurchaseEdited();
+        
+          } catch (err) {
+            console.error('error:', err);
+          }
+        }
 
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
     const [expieditedRequsted, setExpieditedRequsted] = useState(false);
     const [expieditedRejected, setExpieditedRejected] = useState(false);
     const [expiedited, setExpiedited] = useState(false);
-    const [currentStatus, setStatus] = useState(status);
     const [editMode, setEditMode] = useState(false);
     const [overideStatusOpen, setOverideStatusOpen] = useState(false);
 
     const calculatePrice = () => {
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
     }
+
+    console.log(id);
+    console.log(approvers);
 
     //track request info
     const [name, setName] = useState(itemName);
@@ -151,7 +162,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const statusBadge = () => {
-        switch (currentStatus) {
+        switch (status) {
             case "needsAproval":
                 return (
                     <Badge className="text-sm ml-2 w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400">Needs Approval</Badge>
@@ -184,41 +195,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const purchaseApprovers = () => {
-        if (calculatePrice() < 250) {
-            return (
-                <div>
-                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
-                    <Approver approverName="" approverPicture="" requiredRole="mentor" approved={false} userRole={userRole} />
-                    {(expiedited) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
-                    )}
-                    {(expieditedRequsted && !expiedited) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
-                    )}
-                    {(expieditedRejected) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} />
-                    )}
-                </div>
-            )
-        }
-        else {
-            return (
-                <div>
-                    <Approver approverName="" approverPicture="" requiredRole="studentLead" approved={false} userRole={userRole} />
-                    <Approver approverName="" approverPicture="" requiredRole="mentorLead" approved={false} userRole={userRole} />
-                    <Approver approverName="" approverPicture="" requiredRole="president" approved={false} userRole={userRole} />
-                    {(expiedited) && (
-                        <Approver approverName="Name Name" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} />
-                    )}
-                    {(expieditedRequsted && !expiedited) && (
-                        <Approver approverName="" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} />
-                    )}
-                    {(expieditedRejected) && (
-                        <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} />
-                    )}
-                </div>
-            )
-        }
+        return (
+            <div>
+                {approvers.map((approver) => (
+                    <Approver
+                        key={approver.requiredRole}
+                        approverName={approver.approverName}
+                        approverPicture={approver.approverPicture}
+                        requiredRole={approver.requiredRole}
+                        approved={approver.approved}
+                        userRole={userRole}
+                        onApproved={onPurchaseEdited}
+                        itemID={id}
+                    />
+                ))}
+                {(expiedited) && (
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id}/>
+                )}
+                {(expieditedRequsted && !expiedited) && (
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id}/>
+                )}
+                {(expieditedRejected) && (
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id}/>
+                )}
+            </div>
+        )
     }
 
     const updateItem = (updatedItem: ItemData) => {
@@ -289,7 +290,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
                                                 {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
-                                                <DropdownMenuItem onClick={() => setStatus("rejected")}>Reject</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
                                             </DropdownMenuGroup>
                                             {(userRole == "president" || userRole == "programDirector") && (
                                                 <div>
@@ -317,12 +318,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <DialogTitle className="font-jetbrains text-xl font-bold">Change Status</DialogTitle>
                                             <h1 className="text-zinc-100 mb-2">Current Status: {statusBadge()}</h1>
                                             <div className="grid grid-cols-3 gap-2">
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("needsAproval"); }} className="text-xs p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer">Needs Approval</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("aproved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer">Approved</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer">Purchased</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer">Received</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("onHold"); }} className="text-base p-3 font-bold text-orange-100 bg-orange-500 hover:bg-orange-600 cursor-pointer">On Hold</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); setStatus("rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer">Rejected</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "needsAproval"); }} className="text-xs p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer">Needs Approval</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "approved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer">Approved</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer">Purchased</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer">Received</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "onHold"); }} className="text-base p-3 font-bold text-orange-100 bg-orange-500 hover:bg-orange-600 cursor-pointer">On Hold</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer">Rejected</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -358,6 +359,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectItem value="WCP">WCP</SelectItem>
                                                 <SelectItem value="CTRE">CTRE</SelectItem>
                                                 <SelectItem value="Digi-Key">Digi-Key</SelectItem>
+                                                <SelectItem value="Amazon">Andy Mark</SelectItem>
                                                 <SelectItem value="Mouser">Mouser</SelectItem>
                                                 <SelectItem value="Amazon">Amazon</SelectItem>
                                                 <SelectItem value="Amazon">Other</SelectItem>

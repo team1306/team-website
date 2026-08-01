@@ -12,10 +12,42 @@ interface approvalInfo {
     approved: boolean;
     userRole: string;
     rejected?: boolean
+    onApproved?: () => void;
+    itemID: string;
 }
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected}: approvalInfo) {
-    const userCanApprove = userRole === requiredRole;
+export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID }: approvalInfo) {
+    const userCanApprove = () => {
+        if (requiredRole == "mentor" && (userRole == "mentor" || userRole == "mentorLead" || userRole == "programDirector")) {
+            return (true);
+        }
+        if (requiredRole == "mentorLead" && (userRole == "mentorLead" || userRole == "programDirector")) {
+            return (true);
+        }
+        if (requiredRole == "studentLead" && (userRole == "studentLead" || userRole == "president")) {
+            return (true);
+        }
+        if (requiredRole == "president" && userRole == "president") {
+            return (true);
+        }
+        else {
+            return (false);
+        }
+    }
+
+    async function approve() {
+        const res = await fetch('/api/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                itemID: itemID,
+                approvalRole: requiredRole
+            })
+        });
+
+        if (onApproved) { onApproved(); }
+    }
+
     const cleanUserRole = () => {
         switch (requiredRole) {
             case "mentorLead":
@@ -33,7 +65,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         }
     }
 
-    if (!approved && userCanApprove && userRole != "nProgramDirector" && !rejected) {
+    if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex items-center justify-start">
@@ -41,12 +73,12 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                         <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
                         <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
-                    <Button className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
+                    <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
                 </div>
             </Card>
         );
     }
-    else if (!approved && !userCanApprove && !rejected) {
+    else if (!approved && !userCanApprove() && !rejected) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="">

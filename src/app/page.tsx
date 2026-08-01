@@ -115,7 +115,7 @@ export function Page() {
       </Card>
       {filterPurchases().map((purchase) => (
         <div key={purchase.id} className="m-3 mt-4">
-          <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} />
+          <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} onPurchaseEdited={loadPurchases} approvers={purchase.approvers}/>
         </div>
       ))}
     </div>
