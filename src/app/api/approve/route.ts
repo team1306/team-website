@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     .from("purchases")
     .update({
       approvers: updatedApprovers,
-      status: allApproved ? "aproved" : "needsAproval",
+      status: allApproved ? "approved" : "needsAproval",
     })
     .eq("purchaseID", itemID)
     .select()

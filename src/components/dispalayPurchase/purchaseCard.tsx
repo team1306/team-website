@@ -76,28 +76,28 @@ interface Approver {
     approverName: string;
     requiredRole: string;
     approverPicture: string;
-  }
+}
 
 
 export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
             const res = await fetch('/api/setStatus', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: id,
-                status: newStatus,
-              })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    status: newStatus,
+                })
             });
-        
+
             const data = await res.json();
             onPurchaseEdited();
-        
-          } catch (err) {
+
+        } catch (err) {
             console.error('error:', err);
-          }
         }
+    }
 
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
@@ -210,13 +210,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     />
                 ))}
                 {(expiedited) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id}/>
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id} />
                 )}
                 {(expieditedRequsted && !expiedited) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id}/>
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id} />
                 )}
                 {(expieditedRejected) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id}/>
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id} />
                 )}
             </div>
         )
@@ -227,6 +227,25 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
         );
     };
+
+    function getNextPurchaseDate() {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+
+        const daysUntilMonday = ((1 - dayOfWeek + 7) % 7) || 0;
+        const daysUntilThursday = ((4 - dayOfWeek + 7) % 7) || 0;
+
+        const soonest = Math.min(daysUntilMonday, daysUntilThursday);
+
+        const result = new Date(today);
+        result.setDate(today.getDate() + soonest);
+
+        const mm = String(result.getMonth() + 1).padStart(2, '0');
+        const dd = String(result.getDate()).padStart(2, '0');
+        const yy = String(result.getFullYear()).slice(-2);
+
+        return `${mm}/${dd}/${yy}`;
+    }
 
     return (
         <div>
@@ -255,6 +274,38 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {CategoryTitle()}
                         </div>
                     </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger render={<Button size="icon" variant="ghost" className="cursor-pointer" onClick={(e) => e.stopPropagation()}><EllipsisVertical className="text-zinc-100 size-5" /></Button>} />
+                        <DropdownMenuContent className="w-fit bg-mist-400">
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                {(!editMode) && (
+                                    <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
+                                )}
+                                {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
+                                <DropdownMenuItem variant="destructive" onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            {(userRole == "president" || userRole == "programDirector") && (
+                                <div>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
+                                        {(userRole == "programDirector" && !expiedited) && (
+                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true) }}>Expedite</DropdownMenuItem>
+                                        )}
+                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
+                                            <DropdownMenuItem variant="destructive" onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false); }}>Reject Expedite</DropdownMenuItem>
+                                        )}
+                                        {(userRole == "programDirector") && (
+                                            <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                </div>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
                     <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-1/4 bg-mist-600">
@@ -283,21 +334,20 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 <div className="ml-auto">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
-                                        <DropdownMenuContent className="w-fit">
+                                        <DropdownMenuContent className="w-fit bg-mist-400">
                                             <DropdownMenuGroup>
                                                 <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                                 {(!editMode) && (
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
                                                 {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
-                                                <DropdownMenuItem onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
+                                                <DropdownMenuItem variant="destructive" onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
                                             </DropdownMenuGroup>
                                             {(userRole == "president" || userRole == "programDirector") && (
                                                 <div>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>
-                                                        <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                        <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" && !expiedited) && (
                                                             <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true) }}>Expedite</DropdownMenuItem>
@@ -308,6 +358,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                         {(userRole == "programDirector") && (
                                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                                         )}
+                                                        <DropdownMenuItem variant="destructive" >Delete</DropdownMenuItem>
                                                     </DropdownMenuGroup>
                                                 </div>
                                             )}
@@ -369,7 +420,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-2xl gap-0">
+                        <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                            {(status == 'approved') && (
+                                <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                            )}
+                            {(status == 'needsAproval') && (
+                                <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                            )}
+                        </Card>
+                        <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
                             <div className="flex p-2 pb-0">
                                 {(!editMode) && (
                                     <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
@@ -423,7 +482,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             </div>
                         </Card>
                         {(!editMode) && (
-                            <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-2xl gap-0">
+                            <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
                                 <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
                                 <div className="p-2">
                                     {purchaseApprovers()}

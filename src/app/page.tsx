@@ -120,7 +120,7 @@ export function Page() {
             </div>
           </div>
         </Card>
-        {filterPurchases().map((purchase) => (
+        {[...filterPurchases()].sort((a, b) => Number(b.id) - Number(a.id)).map((purchase) => (
           <div key={purchase.id} className="m-3 mt-4">
             <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} />
           </div>
@@ -164,7 +164,7 @@ export function Page() {
         </Card>
 
         <div className="flex-1 flex items-center justify-center">
-            <Spinner className="text-zinc-100 size-8" />
+          <Spinner className="text-zinc-100 size-8" />
         </div>
       </div>
     );

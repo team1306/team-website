@@ -129,7 +129,7 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
 
     return (
         <Dialog open={open}>
-            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-lg w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
+            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-lg" />New Request</Button>}></DialogTrigger>
             <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                 <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
                 <div className="flex gap-2 items-stretch">
