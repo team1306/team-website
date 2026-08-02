@@ -59,6 +59,7 @@ type request = {
     userRole: string;
     onPurchaseEdited: () => void;
     approvers: Approver[];
+    reason?: string;
 }
 
 interface ItemData {
@@ -79,7 +80,7 @@ interface Approver {
 }
 
 
-export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers }: request) {
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers, reason }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
             const res = await fetch('/api/setStatus', {
@@ -105,7 +106,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const [expieditedRejected, setExpieditedRejected] = useState(false);
     const [expiedited, setExpiedited] = useState(false);
     const [editMode, setEditMode] = useState(false);
+
     const [overideStatusOpen, setOverideStatusOpen] = useState(false);
+    const [rejectOpen, setRejectOpen] = useState(false);
+    const [onHoldOpen, setOnHoldOpen] = useState(false);
 
     const calculatePrice = () => {
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
@@ -119,6 +123,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const [requestCost, setRequestCost] = useState(calculatePrice());
     const [itemCatagory, setItemCaragory] = useState(catagory);
     const [orderVendor, setOrderVendor] = useState(vendor);
+    const [statusReason, setReason] = useState(reason || "");
 
     const CategoryTitle = () => {
         switch (itemCatagory) {
@@ -195,6 +200,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const purchaseApprovers = () => {
+        const approvalDisabled = status === "onHold" || status === "rejected";
         return (
             <div>
                 {approvers.map((approver) => (
@@ -207,16 +213,17 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         userRole={userRole}
                         onApproved={onPurchaseEdited}
                         itemID={id}
+                        disable={approvalDisabled}
                     />
                 ))}
                 {(expiedited) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id} disable={approvalDisabled} />
                 )}
                 {(expieditedRequsted && !expiedited) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id} disable={approvalDisabled} />
                 )}
                 {(expieditedRejected) && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id} disable={approvalDisabled} />
                 )}
             </div>
         )
@@ -247,13 +254,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return `${mm}/${dd}/${yy}`;
     }
 
-    async function editPurchase() {
+    async function editPurchase(overrideStatus?: string) {
         const updatedData = {
             id: id,
             title: name,
             category: itemCatagory,
             vendor: orderVendor,
             items: itemsArray,
+            reason: statusReason,
+            status: overrideStatus,
         };
 
         await fetch('/api/edit', {
@@ -261,6 +270,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData),
         });
+
+        onPurchaseEdited();
     }
 
     return (
@@ -292,14 +303,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger render={<Button size="icon" variant="ghost" className="cursor-pointer" onClick={(e) => e.stopPropagation()}><EllipsisVertical className="text-zinc-100 size-5" /></Button>} />
-                        <DropdownMenuContent className="w-fit bg-mist-400">
+                        <DropdownMenuContent className="w-fit bg-mist-500">
                             <DropdownMenuGroup>
                                 <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                 {(!editMode) && (
                                     <DropdownMenuItem onClick={() => { setEditMode(true); setOpen(true); }}>Edit</DropdownMenuItem>
                                 )}
                                 {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
-                                <DropdownMenuItem variant="destructive" onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
+                                {(status == "needsAproval") && (
+                                    <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
+                                )}
+                                {(status == "onHold") && (
+                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
+                                )}
+                                {(status != "rejected") && (
+                                    <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
+                                )}
                             </DropdownMenuGroup>
                             {(userRole == "president" || userRole == "programDirector") && (
                                 <div>
@@ -325,7 +344,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
                     <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-1/4 bg-mist-600">
-                        <Card className="p-0 mb-2 bg-mist-800 rounded-t-sm rounded-b-none rounded-tr-none gap-0">
+                        <Card className="p-0 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -350,14 +369,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 <div className="ml-auto">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
-                                        <DropdownMenuContent className="w-fit bg-mist-400">
+                                        <DropdownMenuContent className="w-fit bg-mist-500">
                                             <DropdownMenuGroup>
                                                 <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                                 {(!editMode) && (
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
                                                 {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
-                                                <DropdownMenuItem variant="destructive" onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
+                                                {(status == "needsAproval") && (
+                                                    <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
+                                                )}
+                                                {(status == "onHold") && (
+                                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
+                                                )}
+                                                {(status != "rejected") && (
+                                                    <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
+                                                )}
                                             </DropdownMenuGroup>
                                             {(userRole == "president" || userRole == "programDirector") && (
                                                 <div>
@@ -394,8 +421,36 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             </div>
                                         </DialogContent>
                                     </Dialog>
+                                    <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+                                        <DialogContent className="bg-mist-400 p-4">
+                                            <DialogTitle className="font-jetbrains text-xl font-bold">Reject Order</DialogTitle>
+                                            <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                                            <div className="flex">
+                                                <Button onClick={() => { setRejectOpen(false); editPurchase("rejected"); }} className="bg-destructive/50 text-zinc-100 hover::bg-red-600 w-fit p-2 ml-auto" variant="destructive">Reject</Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Dialog open={onHoldOpen} onOpenChange={setOnHoldOpen}>
+                                        <DialogContent className="bg-mist-400 p-4">
+                                            <DialogTitle className="font-jetbrains text-xl font-bold">Mark Order on Hold</DialogTitle>
+                                            <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                                            <div className="flex">
+                                                <Button onClick={() => { setOnHoldOpen(false); editPurchase("onHold"); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark On Hold</Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             </div>
+                            {(reason && status === "rejected") && (
+                                <div className="bg-red-600 flex rounded-bl-sm">
+                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1 mb-1">Rejected: {reason}</h1>
+                                </div>
+                            )}
+                            {(reason && status === "onHold") && (
+                                <div className="bg-orange-600 flex rounded-bl-sm">
+                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1 mb-1">On Hold: {reason}</h1>
+                                </div>
+                            )}
                         </Card>
                         {(editMode) && (
                             <Card className="bg-mist-800 mt-2 m-1 m-1 p-2 rounded-2xl gap-0">

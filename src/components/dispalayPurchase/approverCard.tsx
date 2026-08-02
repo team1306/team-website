@@ -14,9 +14,10 @@ interface approvalInfo {
     rejected?: boolean
     onApproved?: () => void;
     itemID: string;
+    disable?: boolean;
 }
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID }: approvalInfo) {
+export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID, disable }: approvalInfo) {
     const userCanApprove = () => {
         if (requiredRole == "mentor" && (userRole == "mentor" || userRole == "mentorLead" || userRole == "programDirector")) {
             return (true);
@@ -65,7 +66,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         }
     }
 
-    if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected) {
+    if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected && !disable) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex items-center justify-start">
@@ -74,6 +75,19 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                         <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
                     <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
+                </div>
+            </Card>
+        );
+    }
+    else if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected && disable) {
+        return (
+            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+                <div className="flex items-center justify-start">
+                    <div>
+                        <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                        <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                    </div>
+                    <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
                 </div>
             </Card>
         );
