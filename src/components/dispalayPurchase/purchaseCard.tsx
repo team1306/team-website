@@ -247,6 +247,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return `${mm}/${dd}/${yy}`;
     }
 
+    async function editPurchase() {
+        const updatedData = {
+            id: id,
+            title: name,
+            category: itemCatagory,
+            vendor: orderVendor,
+            items: itemsArray,
+        };
+
+        await fetch('/api/edit', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData),
+        });
+    }
+
     return (
         <div>
             <Card className="p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
@@ -280,7 +296,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             <DropdownMenuGroup>
                                 <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                 {(!editMode) && (
-                                    <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => { setEditMode(true); setOpen(true); }}>Edit</DropdownMenuItem>
                                 )}
                                 {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
                                 <DropdownMenuItem variant="destructive" onClick={() => updateStatus(id, "rejected")}>Reject</DropdownMenuItem>
@@ -313,7 +329,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
-                                    <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg ml-auto text-sm mt-1 mb-1 mr-2" onClick={() => setEditMode(false)}>Save</Button>
+                                    <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg ml-auto text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase(); }}>Save</Button>
                                 </div>
                             )}
                             <div className="mt-1 pb-0">
@@ -413,21 +429,23 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectItem value="Amazon">Andy Mark</SelectItem>
                                                 <SelectItem value="Mouser">Mouser</SelectItem>
                                                 <SelectItem value="Amazon">Amazon</SelectItem>
-                                                <SelectItem value="Amazon">Other</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 </div>
                             </Card>
                         )}
-                        <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
-                            {(status == 'approved') && (
-                                <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
-                            )}
-                            {(status == 'needsAproval') && (
-                                <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
-                            )}
-                        </Card>
+                        {(status == 'needsAproval' || status == 'approved') && (
+                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                                {(status == 'approved') && (
+                                    <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                                )}
+                                {(status == 'needsAproval') && (
+                                    <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                )}
+                            </Card>
+                        )}
                         <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
                             <div className="flex p-2 pb-0">
                                 {(!editMode) && (
