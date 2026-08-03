@@ -196,6 +196,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
+    const isTierTwo = () => {
+        if(calculatePrice() > 250){
+            return(true);
+        }
+        else{
+            return(false);
+        }
+    }
+
     const calcPercent = () => {
         return (Math.round(((4000 - calculatePrice()) / 4000) * 100))
     }
@@ -215,6 +224,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         onApproved={onPurchaseEdited}
                         itemID={id}
                         disable={approvalDisabled}
+                        tierTwo={isTierTwo()}
                     />
                 ))}
                 {(expiedited) && (

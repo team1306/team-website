@@ -15,9 +15,10 @@ interface approvalInfo {
     onApproved?: () => void;
     itemID: string;
     disable?: boolean;
+    tierTwo?: boolean;
 }
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID, disable }: approvalInfo) {
+export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID, disable, tierTwo }: approvalInfo) {
     const userCanApprove = () => {
         if (requiredRole == "mentor" && (userRole == "mentor" || userRole == "mentorLead" || userRole == "programDirector")) {
             return (true);
@@ -25,7 +26,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         if (requiredRole == "mentorLead" && (userRole == "mentorLead" || userRole == "programDirector")) {
             return (true);
         }
-        if (requiredRole == "studentLead" && (userRole == "studentLead" || userRole == "president")) {
+        if (requiredRole == "studentLead" && (userRole == "studentLead" || userRole == "president") && !tierTwo) {
             return (true);
         }
         if (requiredRole == "president" && userRole == "president") {
