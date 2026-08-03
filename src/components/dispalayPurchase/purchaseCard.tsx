@@ -45,6 +45,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type request = {
     id: string;
@@ -274,6 +275,33 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         onPurchaseEdited();
     }
 
+    const MAX_VISIBLE_ITEMS = 4;
+    const ITEM_HEIGHT = 78;
+
+    const scrollAreaHeight =
+        itemsArray.length > MAX_VISIBLE_ITEMS
+            ? MAX_VISIBLE_ITEMS * ITEM_HEIGHT
+            : itemsArray.length * ITEM_HEIGHT;
+
+    const needsScroll = itemsArray.length > MAX_VISIBLE_ITEMS;
+
+    const itemList = (
+        <div className="p-2 pb-0 ">
+            {itemsArray.map((item) => (
+                <Item
+                    key={`${item.id}-${editMode}`}
+                    id={item.id}
+                    name={item.ItemName}
+                    cost={item.ItemCost}
+                    quantity={item.ItemQuantity}
+                    link={item.ItemLink}
+                    defaultEdit={editMode}
+                    onUpdate={updateItem}
+                />
+            ))}
+        </div>
+    );
+
     return (
         <div>
             <Card className="p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
@@ -348,7 +376,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
-                                    <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg ml-auto text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase(); }}>Save</Button>
+                                    <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg ml-auto text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase("needsAproval"); }}>Save</Button>
                                 </div>
                             )}
                             <div className="mt-1 pb-0">
@@ -512,20 +540,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 <div className="flex ml-auto">
                                 </div>
                             </div>
-                            <div className="p-2 pb-0">
-                                {itemsArray.map((item) => (
-                                    <Item
-                                        key={`${item.id}-${editMode}`}
-                                        id={item.id}
-                                        name={item.ItemName}
-                                        cost={item.ItemCost}
-                                        quantity={item.ItemQuantity}
-                                        link={item.ItemLink}
-                                        defaultEdit={editMode}
-                                        onUpdate={updateItem}
-                                    />
-                                ))}
-                            </div>
+                            {needsScroll ? (
+                                <ScrollArea style={{ height: `${MAX_VISIBLE_ITEMS * ITEM_HEIGHT}px` }} className="w-full rounded-md pr-3">
+                                    {itemList}
+                                </ScrollArea>
+                            ) : (
+                                itemList
+                            )}
                             {(editMode) && (
                                 <div className="p-2 bg-mist-700 m-2 rounded-md mt-3">
                                     <Progress

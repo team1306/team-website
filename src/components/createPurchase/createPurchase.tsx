@@ -37,6 +37,7 @@ import { Input } from "@base-ui/react"
 import { useState } from "react";
 import Item from "./itemCard";
 import { toast } from "@/components/ui/toast"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreated?: () => void }) {
     interface ItemData {
@@ -50,7 +51,8 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
     const [items, setItems] = useState<ItemData[]>([]);
     const [name, setName] = useState(String(""));
     const [catagory, setCatagory] = useState(String(""));
-    const [supplier, setSupplier] = useState(String(""));
+    const [supplierPicker, setSupplierPicker] = useState(String(""));
+    const [otherSupplier, setOtherSupplier] = useState(String(""));
 
     const orderTotal = items.reduce((sum, item) => sum + item.ItemCost * item.ItemQuantity, 0);
 
@@ -100,6 +102,15 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
         );
     };
 
+    function supplier() {
+        if (supplierPicker == "Other" && !otherSupplier) {
+            return ("Other - " + otherSupplier);
+        }
+        else {
+            return (supplierPicker);
+        }
+    }
+
     async function submitPurchase() {
         const res = await fetch('/api/create', {
             method: 'POST',
@@ -109,7 +120,7 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
                 requestor: 'Test User',
                 category: catagory,
                 items: items,
-                vendor: supplier,
+                vendor: supplier(),
             }),
         });
 
@@ -129,7 +140,7 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
 
     return (
         <Dialog open={open}>
-            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-lg" />New Request</Button>}></DialogTrigger>
+            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
             <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                 <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
                 <div className="flex gap-2 items-stretch">
@@ -168,7 +179,7 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
                             <div className="p-2 w-full">
                                 <Field>
                                     <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                    <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="w-full" />
+                                    <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
                                 </Field>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field className="w-full">
@@ -187,8 +198,8 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
                                         </Select>
                                     </Field>
                                     <Field className="mt-2">
-                                        <FieldLabel>Supplier:<span className="text-destructive">*</span></FieldLabel>
-                                        <Select value={supplier} onValueChange={(value) => setSupplier(String(value))}>
+                                        <FieldLabel>Supplier:</FieldLabel>
+                                        <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
                                             <SelectTrigger className="cursor-pointer w-full">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                             </SelectTrigger>
@@ -198,9 +209,13 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
                                                 <SelectItem value="Digi-Key">Digi-Key</SelectItem>
                                                 <SelectItem value="Mouser">Mouser</SelectItem>
                                                 <SelectItem value="Amazon">Amazon</SelectItem>
-                                                <SelectItem value="Amazon">Other</SelectItem>
+                                                <SelectItem value="Multiple">Multiple</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        {(supplierPicker == "Other") && (
+                                            <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                        )}
                                     </Field>
                                 </div>
                             </div>
@@ -221,9 +236,11 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
                                 </div>
                             </Card>
                             <div className="p-2 w-full flex-1 overflow-auto min-h-0">
-                                {items.map((item) => (
-                                    <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
-                                ))}
+                                <ScrollArea className="h-[310px] w-full rounded-md pr-4">
+                                    {items.map((item) => (
+                                        <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
+                                    ))}
+                                </ScrollArea>
                             </div>
                         </Card>
                         <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
