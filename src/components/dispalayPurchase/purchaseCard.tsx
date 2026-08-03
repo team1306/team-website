@@ -61,6 +61,7 @@ type request = {
     onPurchaseEdited: () => void;
     approvers: Approver[];
     reason?: string;
+    expidited: string;
 }
 
 interface ItemData {
@@ -81,7 +82,7 @@ interface Approver {
 }
 
 
-export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers, reason }: request) {
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, userRole, onPurchaseEdited, approvers, reason, expidited }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
             const res = await fetch('/api/setStatus', {
@@ -197,11 +198,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const isTierTwo = () => {
-        if(calculatePrice() > 250){
-            return(true);
+        if (calculatePrice() > 250) {
+            return (true);
         }
-        else{
-            return(false);
+        else {
+            return (false);
         }
     }
 
@@ -227,13 +228,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         tierTwo={isTierTwo()}
                     />
                 ))}
-                {(expiedited) && (
+                {(expidited == "approved") && (
                     <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} userRole={userRole} itemID={id} disable={approvalDisabled} />
                 )}
-                {(expieditedRequsted && !expiedited) && (
+                {(expidited == "requested") && (
                     <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} itemID={id} disable={approvalDisabled} />
                 )}
-                {(expieditedRejected) && (
+                {(expidited == "rejected") && (
                     <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} userRole={userRole} rejected={true} itemID={id} disable={approvalDisabled} />
                 )}
             </div>
@@ -245,6 +246,25 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
         );
     };
+
+    async function updateExpidite(id: string, newStatus: string) {
+        try {
+            const res = await fetch('/api/edit', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    expidited: newStatus
+                })
+            });
+
+            const data = await res.json();
+            onPurchaseEdited();
+
+        } catch (err) {
+            console.error('error:', err);
+        }
+    }
 
     function getNextPurchaseDate() {
         const today = new Date();
@@ -320,10 +340,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         <div className="flex">
                             <CardTitle className="text-2xl font-bold text-zinc-100">{name || "Untitled Request"}</CardTitle>
                             {statusBadge()}
-                            {(!expiedited && expieditedRequsted) && (
+                            {(expidited == "requested") && (
                                 <Badge className="text-sm ml-2 w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
                             )}
-                            {(expiedited) && (
+                            {(expidited == "approved") && (
                                 <Badge className="text-sm ml-2 w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400">Expedited</Badge>
                             )}
                         </div>
@@ -340,14 +360,14 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                     </div>
                     <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button size="icon" variant="ghost" className="cursor-pointer" onClick={(e) => e.stopPropagation()}><EllipsisVertical className="text-zinc-100 size-5" /></Button>} />
+                        <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
                         <DropdownMenuContent className="w-fit bg-mist-500">
                             <DropdownMenuGroup>
                                 <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                 {(!editMode) && (
-                                    <DropdownMenuItem onClick={() => { setEditMode(true); setOpen(true); }}>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                 )}
-                                {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
+                                {(expidited == "NULL") && (<DropdownMenuItem onClick={() => updateExpidite(id, "requested")}>Request Expedite</DropdownMenuItem>)}
                                 {(status == "needsAproval") && (
                                     <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
                                 )}
@@ -364,16 +384,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     <DropdownMenuGroup>
                                         <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
-                                        {(userRole == "programDirector" && !expiedited) && (
-                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true) }}>Expedite</DropdownMenuItem>
+                                        {(userRole == "programDirector") && (
+                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
                                         )}
-                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
-                                            <DropdownMenuItem variant="destructive" onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false); }}>Reject Expedite</DropdownMenuItem>
+                                        {((expidited == "requested" || expidited == "approved") && userRole == "programDirector") && (
+                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "rejected") }}>Reject Expedite</DropdownMenuItem>
                                         )}
                                         {(userRole == "programDirector") && (
                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                         )}
-                                        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                                        <DropdownMenuItem variant="destructive" >Delete</DropdownMenuItem>
                                     </DropdownMenuGroup>
                                 </div>
                             )}
@@ -413,7 +433,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 {(!editMode) && (
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
-                                                {(!expieditedRequsted && !expieditedRejected) && (<DropdownMenuItem onClick={() => setExpieditedRequsted(true)}>Request Expedite</DropdownMenuItem>)}
+                                                {(expidited == "NULL") && (<DropdownMenuItem onClick={() => updateExpidite(id, "requested")}>Request Expedite</DropdownMenuItem>)}
                                                 {(status == "needsAproval") && (
                                                     <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
                                                 )}
@@ -430,11 +450,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuGroup>
                                                         <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
-                                                        {(userRole == "programDirector" && !expiedited) && (
-                                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(false); setExpiedited(true) }}>Expedite</DropdownMenuItem>
+                                                        {(userRole == "programDirector") && (
+                                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
                                                         )}
-                                                        {(expieditedRequsted == true && userRole == "programDirector" && !expiedited || expiedited) && (
-                                                            <DropdownMenuItem onClick={() => { setExpieditedRequsted(false); setExpieditedRejected(true); setExpiedited(false); }}>Reject Expedite</DropdownMenuItem>
+                                                        {((expidited == "requested" || expidited == "approved") && userRole == "programDirector") && (
+                                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "rejected") }}>Reject Expedite</DropdownMenuItem>
                                                         )}
                                                         {(userRole == "programDirector") && (
                                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
@@ -531,11 +551,17 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         )}
                         {(status == 'needsAproval' || status == 'approved') && (
                             <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
-                                {(status == 'approved') && (
+                                {(status == 'approved' && expidited != "approved") && (
                                     <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
                                 )}
-                                {(status == 'needsAproval') && (
+                                {(status == 'needsAproval' && expidited != "approved") && (
                                     <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                )}
+                                {(expidited == "approved" && status == "needsAproval") && (
+                                    <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
+                                )}
+                                {(expidited == "approved" && status == "approved") && (
+                                    <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Expidited: Can be Ordered Now</h1>
                                 )}
                             </Card>
                         )}

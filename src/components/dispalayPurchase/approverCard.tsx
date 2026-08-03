@@ -29,6 +29,9 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         if (requiredRole == "studentLead" && (userRole == "studentLead" || userRole == "president") && !tierTwo) {
             return (true);
         }
+        if (requiredRole == "studentLead" && userRole == "studentLead"&& tierTwo) {
+            return (true);
+        }
         if (requiredRole == "president" && userRole == "president") {
             return (true);
         }

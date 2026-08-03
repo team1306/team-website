@@ -29,6 +29,7 @@ interface PurchaseData {
   vendor: string;
   reason: string;
   approvers: Approver[];
+  expidited: string;
 }
 
 function parsePurchases(rawPurchases: any[] | null): PurchaseData[] {
@@ -39,6 +40,7 @@ function parsePurchases(rawPurchases: any[] | null): PurchaseData[] {
     cost: row.cost,
     requestor: row.requestor,
     catagory: row.catagory,
+    expidited: row.expidited,
     requestedDate: new Date(Number(row.purchaseID) * 1000).toISOString(),
     status: row.status,
     items: row.items.map((item: any) => ({

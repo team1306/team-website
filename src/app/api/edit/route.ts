@@ -21,6 +21,7 @@ export interface OrderData {
   vendor?: string;
   reason?: string;
   clearApprovers?: boolean;
+  expidited?: string;
 }
 
 function getCost(items: ItemData[]): number {
@@ -48,7 +49,7 @@ export async function PATCH(request: NextRequest) {
   const supabase = createClient(cookieStore)
 
   const body: OrderData = await request.json();
-  const { id, title, cost, requestor, category, status, items, vendor, reason, clearApprovers } = body;
+  const { id, title, cost, requestor, category, status, items, vendor, reason, clearApprovers, expidited } = body;
 
   if (id === undefined || id === null) {
     return NextResponse.json({ error: 'id not found' }, { status: 400 });
@@ -62,6 +63,7 @@ export async function PATCH(request: NextRequest) {
   if (status !== undefined) updateObj.status = status;
   if (vendor !== undefined) updateObj.vendor = vendor;
   if (reason !== undefined) updateObj.reason = reason;
+  if (expidited !== undefined) updateObj.expidited = expidited;
 
   if(clearApprovers == true && items){
     updateObj.approvers = generateApprovers(items);
