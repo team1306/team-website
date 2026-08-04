@@ -3,7 +3,7 @@ import Navbar from "../components/ui/navbar";
 import Purchase from "../components/dispalayPurchase/purchaseCard";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Cog, Swords, Wrench, Volleyball, Handshake, Search} from "lucide-react"
+import { Cog, Swords, Wrench, Volleyball, Handshake, Search } from "lucide-react"
 import CreatePurchase from "../components/createPurchase/createPurchase";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -21,6 +21,13 @@ export default function Home() {
       <Page />
     </Suspense>
   );
+}
+
+interface UserData {
+  id: string;
+  name: string;
+  role: string;
+  profilePicture: string;
 }
 
 interface ItemData {
@@ -59,7 +66,13 @@ export function Page() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user");
 
-  const [userRole, setUserRole] = useState(String(user));
+  const [currentUser, setCurrentUser] = useState<UserData>({
+    id: "1234567890",
+    name: "Example Program Director",
+    role: "programDirector",
+    profilePicture: "",
+  });
+
   const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
   const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
@@ -75,7 +88,7 @@ export function Page() {
     setPurchases(data.parsed ?? []);
   }
 
-  function clearFilters(){
+  function clearFilters() {
     setCatagoryFilter(['Robot', "Competition", "Tools", "Field", "Outreach"]);
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
     setNameFilter("");
@@ -106,20 +119,20 @@ export function Page() {
   if (!loading) {
     return (
       <div className="bg-background min-h-screen">
-        <Navbar userName="Example User" userRole={userRole} userPicture=""></Navbar>
+        <Navbar userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
               <Field>
                 <div className="flex gap-2">
-                <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                <ButtonGroup className="flex items-stretch gap-1">
-                  <Input className="bg-mist-500 text-base text-zinc-100 pl-1 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                  <Button  onClick={() => {setNameFilter(searchBarValue)}} className="bg-mist-400 text-base rounded-lg hover:bg-mist-500 cursor-pointer"><Search /></Button>
-                </ButtonGroup>
+                  <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
+                  <ButtonGroup className="flex items-stretch gap-1">
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-1 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                    <Button onClick={() => { setNameFilter(searchBarValue) }} className="bg-mist-400 text-base rounded-lg hover:bg-mist-500 cursor-pointer"><Search /></Button>
+                  </ButtonGroup>
                 </div>
               </Field>
-              <Button  onClick={() => {clearFilters()}} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
+              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
             <div className="ml-auto">
               <CreatePurchase onPurchaseCreated={loadPurchases}></CreatePurchase>
@@ -151,7 +164,7 @@ export function Page() {
         </Card>
         {[...filterPurchases()].sort((a, b) => Number(b.id) - Number(a.id)).map((purchase) => (
           <div key={purchase.id} className="m-3 mt-4">
-            <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} userRole={userRole} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited}/>
+            <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} />
           </div>
         ))}
       </div>
@@ -160,7 +173,7 @@ export function Page() {
   if (loading) {
     return (
       <div className="bg-background min-h-screen flex flex-col">
-        <Navbar userName="Example User" userRole={userRole} userPicture=""></Navbar>
+        <Navbar userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex gap-4">

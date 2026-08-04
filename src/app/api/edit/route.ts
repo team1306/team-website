@@ -72,7 +72,9 @@ export async function PATCH(request: NextRequest) {
   if (items !== undefined) {
     updateObj.items = items;
     updateObj.cost = cost !== undefined ? cost : getCost(items);
+    if(clearApprovers){
     updateObj.approvers = generateApprovers(items);
+    }
   } else if (cost !== undefined) {
     updateObj.cost = cost;
   }

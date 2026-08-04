@@ -10,7 +10,7 @@ interface approvalInfo {
     approverPicture: string;
     requiredRole: string;
     approved: boolean;
-    userRole: string;
+    user: UserData;
     rejected?: boolean
     onApproved?: () => void;
     itemID: string;
@@ -18,21 +18,28 @@ interface approvalInfo {
     tierTwo?: boolean;
 }
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, userRole, rejected, onApproved, itemID, disable, tierTwo }: approvalInfo) {
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+  }
+
+export default function Approver({ approverName, approverPicture, requiredRole, approved, user, rejected, onApproved, itemID, disable, tierTwo }: approvalInfo) {
     const userCanApprove = () => {
-        if (requiredRole == "mentor" && (userRole == "mentor" || userRole == "mentorLead" || userRole == "programDirector")) {
+        if (requiredRole == "mentor" && (user.role == "mentor" || user.role == "mentorLead" || user.role == "programDirector")) {
             return (true);
         }
-        if (requiredRole == "mentorLead" && (userRole == "mentorLead" || userRole == "programDirector")) {
+        if (requiredRole == "mentorLead" && (user.role == "mentorLead" || user.role == "programDirector")) {
             return (true);
         }
-        if (requiredRole == "studentLead" && (userRole == "studentLead" || userRole == "president") && !tierTwo) {
+        if (requiredRole == "studentLead" && (user.role == "studentLead" || user.role == "president") && !tierTwo) {
             return (true);
         }
-        if (requiredRole == "studentLead" && userRole == "studentLead"&& tierTwo) {
+        if (requiredRole == "studentLead" && user.role == "studentLead"&& tierTwo) {
             return (true);
         }
-        if (requiredRole == "president" && userRole == "president") {
+        if (requiredRole == "president" && user.role == "president") {
             return (true);
         }
         else {
@@ -46,14 +53,15 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 itemID: itemID,
-                approvalRole: requiredRole
+                approvalRole: requiredRole,
+                approverName: user.name,
             })
         });
 
         if (onApproved) { onApproved(); }
     }
 
-    const cleanUserRole = () => {
+    const cleanuser = () => {
         switch (requiredRole) {
             case "mentorLead":
                 return ("Lead Mentor");
@@ -70,12 +78,12 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         }
     }
 
-    if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected && !disable) {
+    if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && !disable) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex items-center justify-start">
                     <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                         <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
                     <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
@@ -83,12 +91,12 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
             </Card>
         );
     }
-    else if (!approved && userCanApprove() && userRole != "nProgramDirector" && !rejected && disable) {
+    else if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && disable) {
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex items-center justify-start">
                     <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                         <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
                     <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
@@ -100,7 +108,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         return (
             <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                 </div>
             </Card>
         );
@@ -109,7 +117,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         return (
             <Card className="bg-red-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                 </div>
             </Card>
         );
@@ -117,7 +125,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
     else {
         return (
             <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <CardTitle className="text-base font-bold text-zinc-100">{cleanUserRole()}</CardTitle>
+                <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                 <div className="flex items-center justify-start">
                     <Avatar className="size-10">
                         <AvatarImage src={approverPicture} />
