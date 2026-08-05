@@ -11,14 +11,23 @@ import { Package, List, CircleDollarSign, Users, Crown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 type user = {
     userName: string;
     userRole: string;
     userPicture: string;
+    updateUserRole: (newRole: string) => void;
 }
 
-export default function Navbar({ userName, userRole, userPicture }: user) {
+export default function Navbar({ userName, userRole, userPicture, updateUserRole }: user) {
 
     const roleBadge = () => {
         switch (userRole) {
@@ -51,11 +60,11 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
     const router = useRouter();
 
     const activeCSS = (url: String) => {
-        if(url == usePathname()){
-            return("rounded-md text-lg bg-red-400 hover:bg-red-400 mr-1 text-zinc-100");
+        if (url == usePathname()) {
+            return ("rounded-md text-lg bg-red-400 hover:bg-red-400 mr-1 text-zinc-100");
         }
-        else{
-            return("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
+        else {
+            return ("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
         }
     }
 
@@ -72,14 +81,27 @@ export default function Navbar({ userName, userRole, userPicture }: user) {
                 Purchasing App
             </h1>
             <div className="ml-3 mt-1">
-            <Button onClick={() => router.push('/?user=programDirector')} className={activeCSS("/")}><Package /> Orders</Button>
-            <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
-            <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
-            {(userRole == "president" || userRole == "programDirector") && (
-                <Button disabled className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
-            )}
+                <Button onClick={() => router.push('/?user=programDirector')} className={activeCSS("/")}><Package /> Orders</Button>
+                <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
+                <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
+                {(userRole == "president" || userRole == "programDirector") && (
+                    <Button disabled className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
+                )}
             </div>
             <div className="ml-auto flex items-center gap-3">
+                <Select defaultValue={userRole} onValueChange={(value) => updateUserRole(String(value))}>
+                    <SelectTrigger className="cursor-pointer w-full">
+                        <SelectValue className="text-zinc-100" placeholder="Select a Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="studentLead">Student Lead</SelectItem>
+                        <SelectItem value="mentor">Mentor</SelectItem>
+                        <SelectItem value="mentorLead">Lead Mentor</SelectItem>
+                        <SelectItem value="president">President</SelectItem>
+                        <SelectItem value="programDirector">Program Director</SelectItem>
+                    </SelectContent>
+                </Select>
                 <HoverCard>
                     <HoverCardTrigger>
                         <div className="flex items-center gap-2 cursor-pointer">

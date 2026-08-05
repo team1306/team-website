@@ -63,15 +63,16 @@ interface PurchaseData {
 }
 
 export function Page() {
-  const searchParams = useSearchParams();
-  const user = searchParams.get("user");
 
   const [currentUser, setCurrentUser] = useState<UserData>({
     id: "1234567890",
-    name: "Example Program Director",
+    name: "Example User",
     role: "programDirector",
     profilePicture: "",
   });
+
+  const searchParams = useSearchParams();
+  const user = searchParams.get("user");
 
   const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
@@ -93,6 +94,10 @@ export function Page() {
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
     setNameFilter("");
   }
+
+  function setRole(newRole: string) {
+    setCurrentUser(prev => ({ ...prev, role: newRole }));
+}
 
   useEffect(() => {
     async function init() {
@@ -119,7 +124,7 @@ export function Page() {
   if (!loading) {
     return (
       <div className="bg-background min-h-screen">
-        <Navbar userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
+        <Navbar updateUserRole={setRole} userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
@@ -135,7 +140,7 @@ export function Page() {
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
             <div className="ml-auto">
-              <CreatePurchase onPurchaseCreated={loadPurchases}></CreatePurchase>
+              <CreatePurchase user={currentUser.name} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
           </div>
           <div className="flex gap-4">
