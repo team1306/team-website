@@ -135,7 +135,7 @@ export function Page() {
   if (!loading && currentUser) {
     return (
       <div className="bg-background min-h-screen">
-        <Navbar updateUserRole={setRole} userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
+        <Navbar updateUserRole={setRole} user={currentUser} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
@@ -189,7 +189,7 @@ export function Page() {
   if (loading || !currentUser) {
     return (
       <div className="bg-background min-h-screen flex flex-col">
-        <Navbar updateUserRole={setRole} userName={currentUser?.name ?? ""} userRole={currentUser?.role ?? ""} userPicture={currentUser?.profilePicture ?? ""} />
+        <Navbar updateUserRole={setRole} user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex gap-4">

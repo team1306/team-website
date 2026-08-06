@@ -22,13 +22,21 @@ import {
 import { createClient } from "../../../utils/supabase/client";
 
 type user = {
-    userName: string;
-    userRole: string;
-    userPicture: string;
+    user: UserData;
     updateUserRole: (newRole: string) => void;
 }
 
-export default function Navbar({ userName, userRole, userPicture, updateUserRole }: user) {
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+  }
+
+export default function Navbar({ user, updateUserRole }: user) {
+    const userName = user.name;
+    const userRole = user.role;
+    const userPicture = user.profilePicture;
 
     const roleBadge = () => {
         switch (userRole) {
@@ -79,6 +87,8 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
         router.refresh();
     }
 
+    const defaultRole = userRole;
+
     return (
         <div className="bg-red-900 w-full h-16 flex items-center px-4">
             <Image
@@ -100,7 +110,7 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
                 )}
             </div>
             <div className="ml-auto flex items-center gap-3">
-                <Select defaultValue={userRole} onValueChange={(value) => updateUserRole(String(value))}>
+                <Select value={userRole} onValueChange={(value) => updateUserRole(String(value))}>
                     <SelectTrigger className="cursor-pointer w-fit min-w-32">
                         <SelectValue className="text-zinc-100" placeholder="Select a Role" />
                     </SelectTrigger>
