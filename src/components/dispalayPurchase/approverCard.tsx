@@ -55,6 +55,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                 itemID: itemID,
                 approvalRole: requiredRole,
                 approverName: user.name,
+                approverPicture: user.profilePicture,
             })
         });
 
