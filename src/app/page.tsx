@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@base-ui/react";
+import { getUserInfo } from "./auth/getUserInfo/route";
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   return (
@@ -63,13 +65,21 @@ interface PurchaseData {
 }
 
 export function Page() {
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const router = useRouter();
 
-  const [currentUser, setCurrentUser] = useState<UserData>({
-    id: "1234567890",
-    name: "Example User",
-    role: "programDirector",
-    profilePicture: "",
-  });
+  async function loadUser() {
+    try {
+      const user = await getUserInfo();
+      setCurrentUser(user);
+    } catch (err) {
+      console.error("Failed to load user:", err);
+      router.push("/login");
+    } finally {
+      setUserLoading(false);
+    }
+  }
 
   const searchParams = useSearchParams();
   const user = searchParams.get("user");
@@ -96,12 +106,13 @@ export function Page() {
   }
 
   function setRole(newRole: string) {
-    setCurrentUser(prev => ({ ...prev, role: newRole }));
-}
+    setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
+  }
 
   useEffect(() => {
     async function init() {
       setLoading(true);
+      await loadUser();
       await loadPurchases();
       setLoading(false);
     }
@@ -121,7 +132,7 @@ export function Page() {
     return new Date(isoString).toLocaleDateString('en-US');
   }
 
-  if (!loading) {
+  if (!loading && currentUser) {
     return (
       <div className="bg-background min-h-screen">
         <Navbar updateUserRole={setRole} userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
@@ -140,7 +151,7 @@ export function Page() {
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
             <div className="ml-auto">
-              <CreatePurchase user={currentUser.name} onPurchaseCreated={loadPurchases}></CreatePurchase>
+              <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
           </div>
           <div className="flex gap-4">
@@ -175,10 +186,10 @@ export function Page() {
       </div>
     );
   }
-  if (loading) {
+  if (loading || !currentUser) {
     return (
       <div className="bg-background min-h-screen flex flex-col">
-        <Navbar userName={currentUser.name} userRole={currentUser.role} userPicture={currentUser.profilePicture} />
+        <Navbar updateUserRole={setRole} userName={currentUser?.name ?? ""} userRole={currentUser?.role ?? ""} userPicture={currentUser?.profilePicture ?? ""} />
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0">
           <div className="flex justify-between items-start">
             <div className="flex gap-4">
@@ -205,7 +216,7 @@ export function Page() {
               </div>
             </div>
             <div className="ml-auto">
-              <CreatePurchase onPurchaseCreated={loadPurchases}></CreatePurchase>
+              {currentUser && <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>}
             </div>
           </div>
         </Card>

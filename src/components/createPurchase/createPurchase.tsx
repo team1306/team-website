@@ -39,7 +39,14 @@ import Item from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreated?: () => void }) {
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+  }
+
+export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchaseCreated?: () => void, user: UserData }) {
     interface ItemData {
         id: string;
         ItemName: string;
@@ -117,7 +124,7 @@ export default function CreatePurchase({ onPurchaseCreated }: { onPurchaseCreate
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: name,
-                requestor: 'Test User',
+                requestor: user.name,
                 category: catagory,
                 items: items,
                 vendor: supplier(),

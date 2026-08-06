@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { createClient } from "../../../utils/supabase/client";
 
 type user = {
     userName: string;
@@ -58,6 +59,7 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
         }
     }
     const router = useRouter();
+    const supabase = createClient();
 
     const activeCSS = (url: String) => {
         if (url == usePathname()) {
@@ -66,6 +68,15 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
         else {
             return ("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
         }
+    }
+    async function handleSignOut() {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error(error.message);
+            return;
+        }
+        router.push("/login");
+        router.refresh();
     }
 
     return (
@@ -90,7 +101,7 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
             </div>
             <div className="ml-auto flex items-center gap-3">
                 <Select defaultValue={userRole} onValueChange={(value) => updateUserRole(String(value))}>
-                    <SelectTrigger className="cursor-pointer w-full">
+                    <SelectTrigger className="cursor-pointer w-fit min-w-32">
                         <SelectValue className="text-zinc-100" placeholder="Select a Role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -116,7 +127,7 @@ export default function Navbar({ userName, userRole, userPicture, updateUserRole
                         </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="rounded-md bg-red-400 w-64 flex justify-center">
-                        <Button onClick={() => router.push('/login')} className="cursor-pointer text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
+                        <Button onClick={() => handleSignOut()} className="cursor-pointer text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
                     </HoverCardContent>
                 </HoverCard>
             </div>
