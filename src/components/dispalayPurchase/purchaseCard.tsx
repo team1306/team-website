@@ -375,6 +375,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {(expidited == "approved") && (
                                 <Badge className="text-sm ml-2 w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400">Expedited</Badge>
                             )}
+                            {(expidited == "rejected") && (
+                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400">Expedited Rejected</Badge>
+                            )}
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
@@ -430,7 +433,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     </DropdownMenu>
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
-                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-1/4 bg-mist-600">
+                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-2/5 bg-mist-600">
                         <Card className="p-0 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
