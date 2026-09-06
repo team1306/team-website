@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 todo.md
+
+broker-private-key.pem
+broker-kid.txt

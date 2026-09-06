@@ -9,7 +9,7 @@ export default function Page() {
 
     async function signInWithSlack() {
         const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'slack_oidc',
+            provider: "custom:slack",
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
             },
