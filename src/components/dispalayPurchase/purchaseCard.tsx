@@ -410,7 +410,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
                                 )}
                             </DropdownMenuGroup>
-                            {(userRole == "president" || userRole == "programDirector") && (
+                            {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                                 <div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuGroup>
@@ -479,7 +479,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
                                                 )}
                                             </DropdownMenuGroup>
-                                            {(userRole == "president" || userRole == "programDirector") && (
+                                            {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                 <div>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>

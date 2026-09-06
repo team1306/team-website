@@ -64,6 +64,10 @@ export default function Navbar({ user, updateUserRole }: user) {
                 return (
                     <Badge className="rounded-md text-base bg-violet-600">Program Director</Badge>
                 )
+            case "teamAdministrator":
+                return (
+                    <Badge className="rounded-md text-base bg-violet-600">Team Adminstrator</Badge>
+                )
         }
     }
     const router = useRouter();
@@ -102,10 +106,10 @@ export default function Navbar({ user, updateUserRole }: user) {
                 Purchasing App
             </h1>
             <div className="ml-3 mt-1">
-                <Button onClick={() => router.push('/?user=programDirector')} className={activeCSS("/")}><Package /> Orders</Button>
-                <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><CircleDollarSign />Budget</Button>
+                <Button onClick={() => router.push('/')} className={activeCSS("/")}><Package /> Orders</Button>
+                <Button onClick={() => router.push('/budget')} className={activeCSS("/budget")}><CircleDollarSign />Budget</Button>
                 <Button disabled className="cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100"><Users />Meetings</Button>
-                {(userRole == "president" || userRole == "programDirector") && (
+                {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                     <Button disabled className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
                 )}
             </div>
@@ -121,6 +125,7 @@ export default function Navbar({ user, updateUserRole }: user) {
                         <SelectItem value="mentorLead">Lead Mentor</SelectItem>
                         <SelectItem value="president">President</SelectItem>
                         <SelectItem value="programDirector">Program Director</SelectItem>
+                        <SelectItem value="teamAdministrator">Team Administrator</SelectItem>
                     </SelectContent>
                 </Select>
                 <HoverCard>
