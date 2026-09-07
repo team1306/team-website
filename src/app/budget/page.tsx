@@ -26,6 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function Page() {
     interface UserData {
@@ -68,8 +69,12 @@ export default function Page() {
                 <CardTitle className="text-mist-100 text-3xl font-bold mt-0">$2,000.00</CardTitle>
             </Card>
             <Card className="p-2 bg-mist-700 m-3">
-                <CardDescription className="text-mist-200 text-base mb-0">Budget Categories:</CardDescription>
-                <NewCatagory />
+                <div className="flex">
+                    <CardDescription className="text-mist-200 text-base mb-0">Budget Categories:</CardDescription>
+                    <div className="ml-auto">
+                        <NewCatagory />
+                    </div>
+                </div>
             </Card>
         </div>
     )
@@ -82,6 +87,9 @@ function NewCatagory() {
     const [phase, setPhase] = useState("Please select a phase");
     const [budget, setBudget] = useState(0);
     const [budgetInput, setBudgetInput] = useState("");
+    const [enabled, setEnabled] = useState(false);
+
+    const [valid, setValid] = useState(true);
 
     function handleBudgetChange(value: string) {
         setBudgetInput(value);
@@ -90,11 +98,34 @@ function NewCatagory() {
             setBudget(0);
             return;
         }
+ 
+        const parsed = Number(value);
+        if (!Number.isNaN(parsed)) {
+            setBudget(parsed);
+        }
+    }
+
+
+    async function createCategory(){
+        if(valid){
+            const res = await fetch('/api/budget/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    categoryName: name,
+                    categoryPhase: phase,
+                    categoryBudget: budget,
+                    enabled: enabled,
+                }),
+            });
+
+            setOpen(false);
+        }
     }
 
     return (
         <div>
-            <Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Category</Button>
+            <Button onClick={() => setOpen(true)} className="cursor-pointer text-base w-fit p-3"><StickyNotePlus className="mr-1" />New Category</Button>
             <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
                 <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/5">
                     <div className="bg-mist-700 w-full p-2">
@@ -107,7 +138,7 @@ function NewCatagory() {
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Select value={phase} onValueChange={(value) => setPhase(value||"Please select a phase")} id="name">
+                            <Select value={phase} onValueChange={(value) => setPhase(value || "Please select a phase")} id="name">
                                 <SelectTrigger className="cursor-pointer w-full">
                                     <SelectValue className="text-zinc-100" placeholder="Select a Phase" />
                                 </SelectTrigger>
@@ -120,9 +151,16 @@ function NewCatagory() {
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
-                            <Input value={budgetInput} onValueChange={(value) => setBudgetInput(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            <Input value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                        </Field>
+                        <Field className="mt-3">
+                            <div className="flex gap-1">
+                            <FieldLabel>Category Enabled:</FieldLabel>
+                            <Checkbox checked={enabled} onCheckedChange={setEnabled}/>
+                            </div>
                         </Field>
                     </div>
+                    <Button onClick={() => createCategory()} className="cursor-pointer text-base w-full m-2 p-3">Create Category</Button>
                 </DrawerContent>
             </Drawer>
         </div>

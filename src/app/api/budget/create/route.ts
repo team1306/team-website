@@ -3,9 +3,9 @@ import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 
 interface ItemData {
-    catagoryName: string;
-    catagoryPhase: string;
-    catagoryBudget: number;
+    categoryName: string;
+    categoryPhase: string;
+    categoryBudget: number;
     enabled?: boolean;
 }
 
@@ -14,17 +14,17 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(cookieStore)
 
     const body: ItemData = await request.json();
-    const { catagoryName, catagoryPhase, catagoryBudget, enabled } = body;
+    const { categoryName, categoryPhase, categoryBudget, enabled } = body;
 
-    if (!catagoryName || !catagoryPhase || !catagoryBudget) {
+    if (!categoryName || !categoryPhase || !categoryBudget) {
         return NextResponse.json({ error: 'Invalid Input' }, { status: 400 });
     }
 
     const { error } = await supabase.from('budget').insert({
-        categoryID: (catagoryName + "-" + catagoryBudget),
-        categoryName: catagoryName,
-        categoryPhase: catagoryPhase,
-        categoryBudget: catagoryBudget,
+        categoryID: (categoryPhase + "-" + categoryName),
+        categoryName: categoryName,
+        categoryPhase: categoryPhase,
+        categoryBudget: categoryBudget,
         categorySpent: 0.00,
         enabled: enabled,
     })
