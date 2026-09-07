@@ -94,7 +94,7 @@ export function Page() {
   const [searchBarValue, setSearchBarValue] = useState("");
 
   async function loadPurchases() {
-    const res = await fetch('/api/orders', { cache: 'no-store' });
+    const res = await fetch('/api/order/getOrders', { cache: 'no-store' });
     const data = await res.json();
     setPurchases(data.parsed ?? []);
   }

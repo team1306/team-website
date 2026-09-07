@@ -92,7 +92,7 @@ interface UserData {
 export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
-            const res = await fetch('/api/setStatus', {
+            const res = await fetch('/api/order/setStatus', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -111,7 +111,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     async function duplicate() {
         try {
-            const res = await fetch('/api/create', {
+            const res = await fetch('/api/order/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -277,7 +277,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     async function updateExpidite(id: string, newStatus: string) {
         try {
-            const res = await fetch('/api/edit', {
+            const res = await fetch('/api/order/edit', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -325,7 +325,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             clearApprovers: clearApprovers,
         };
 
-        await fetch('/api/edit', {
+        await fetch('/api/order/edit', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData),

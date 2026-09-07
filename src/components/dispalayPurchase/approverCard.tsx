@@ -48,7 +48,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
     }
 
     async function approve() {
-        const res = await fetch('/api/approve', {
+        const res = await fetch('/api/order/approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

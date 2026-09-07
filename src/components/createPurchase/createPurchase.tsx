@@ -119,7 +119,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
     }
 
     async function submitPurchase() {
-        const res = await fetch('/api/create', {
+        const res = await fetch('/api/order/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
