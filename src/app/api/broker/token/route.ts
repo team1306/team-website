@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT, importPKCS8 } from 'jose';
-import { randomBytes } from 'crypto';
+import { randomBytes, timingSafeEqual } from 'crypto';
 import { issuedCodes } from '../callback/route';
 
 export const activeAccessTokens = new Map<string, Record<string, unknown>>();
+
+function safeCompare(a: string, b: string) {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+}
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
@@ -11,7 +17,12 @@ export async function POST(req: NextRequest) {
   const clientSecret = form.get('client_secret');
   const code = form.get('code');
 
-  if (clientId !== process.env.BROKER_CLIENT_ID || clientSecret !== process.env.BROKER_CLIENT_SECRET) {
+  if (
+    typeof clientId !== 'string' ||
+    typeof clientSecret !== 'string' ||
+    !safeCompare(clientId, process.env.BROKER_CLIENT_ID!) ||
+    !safeCompare(clientSecret, process.env.BROKER_CLIENT_SECRET!)
+  ) {
     return NextResponse.json({ error: 'invalid_client' }, { status: 401 });
   }
 

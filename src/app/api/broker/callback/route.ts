@@ -38,7 +38,6 @@ export async function GET(req: NextRequest) {
 
   const idTokenParts = tokenData.id_token.split('.');
   const slackClaims = JSON.parse(Buffer.from(idTokenParts[1], 'base64').toString('utf8'));
-  console.log('Slack claims:', slackClaims);
 
   const { email, email_verified, date_email_verified, ...safeClaims } = slackClaims;
 

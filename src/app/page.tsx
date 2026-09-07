@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@base-ui/react";
-import { getUserInfo } from "./auth/getUserInfo/route";
+import { getUserInfo } from "./auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
 
 export default function Home() {

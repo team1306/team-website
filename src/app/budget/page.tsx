@@ -1,7 +1,7 @@
 'use client'
 import Navbar from "@/components/ui/navbar"
 import { useRouter } from 'next/navigation'
-import { getUserInfo } from "../auth/getUserInfo/route";
+import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
 import { useEffect, useState } from "react";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 
