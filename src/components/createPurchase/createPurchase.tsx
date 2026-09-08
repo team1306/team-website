@@ -38,13 +38,14 @@ import { useState } from "react";
 import Item from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useEffect } from "react"
 
 interface UserData {
     id: string;
     name: string;
     role: string;
     profilePicture: string;
-  }
+}
 
 export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchaseCreated?: () => void, user: UserData }) {
     interface ItemData {
@@ -55,19 +56,48 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         ItemLink: string;
     }
 
+    interface CategoryData {
+        categoryID: string;
+        categoryName: string;
+        categoryPhase: string;
+        categoryBudget: number;
+        categorySpent: number;
+        enabled: boolean;
+    }
+
     const [items, setItems] = useState<ItemData[]>([]);
     const [name, setName] = useState(String(""));
     const [catagory, setCatagory] = useState(String(""));
     const [supplierPicker, setSupplierPicker] = useState(String(""));
     const [otherSupplier, setOtherSupplier] = useState(String(""));
 
+    const [categories, setCategories] = useState<CategoryData[]>([]);
+    const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
+
+    async function fetchCategories() {
+        try {
+            const res = await fetch("/api/budget/getCategories");
+            if (!res.ok) throw new Error("Failed to fetch categories");
+            const data: CategoryData[] = await res.json();
+            setCategories(data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
     const orderTotal = items.reduce((sum, item) => sum + item.ItemCost * item.ItemQuantity, 0);
+    const selectedCategoryBudget = categories.find((c) => c.categoryID === catagory)?.categoryBudget ?? 0;
+    const selectedCategorySpent = categories.find((c) => c.categoryID === catagory)?.categorySpent ?? 0;
 
     const [open, setOpen] = useState(false)
 
     const data = [
-        { name: "Spent", value: 0 },
-        { name: "Remains", value: (4000 - orderTotal) },
+        { name: "Spent", value: selectedCategorySpent },
+        { name: "Remains", value: ((selectedCategoryBudget - selectedCategorySpent)-orderTotal) },
         { name: "Order Cost", value: orderTotal },
     ];
     const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
@@ -145,6 +175,15 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         }
     }
 
+    function budgetHue(): number {
+        if (selectedCategoryBudget <= 0) return 220;
+        const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
+        if (percent >= 100) return 0;
+        if (percent >= 75) return 20;
+        if (percent >= 50) return 50;
+        return 120;
+    }
+
     return (
         <Dialog open={open}>
             <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
@@ -156,8 +195,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                             <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                         </Card>
                         <div className="p-2 w-full">
-                            <h1 className="text-5xl font-bold text-emerald-400 mt-4">${(4000 - orderTotal).toFixed(2)}</h1>
-                            <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((4000 - orderTotal) / 4000) * 100)}%)</h2>
+                            <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                            <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
@@ -196,11 +235,9 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Robot">Robot</SelectItem>
-                                                <SelectItem value="Competition">Competition</SelectItem>
-                                                <SelectItem value="Tools">Tools</SelectItem>
-                                                <SelectItem value="Field">Field</SelectItem>
-                                                <SelectItem value="Outreach">Outreach</SelectItem>
+                                                {categories.map((selectcategory) => (
+                                                <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </Field>
@@ -253,8 +290,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                         <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
                             <h2>Order Total:</h2>
                             <div className="flex">
-                                <h1 className="text-2xl text-emerald-400 font-bold">${orderTotal.toFixed(2)}</h1>
-                                <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Save</Button>
+                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                                <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
                             </div>
 
                         </Card>
