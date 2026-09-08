@@ -28,6 +28,13 @@ import {
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 
+function formatMoney(amount: number): string {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+    }).format(amount);
+}
+
 export default function Page() {
     interface UserData {
         id: string;
@@ -40,6 +47,9 @@ export default function Page() {
     const [currentUser, setCurrentUser] = useState<UserData | null>(null);
     const [userLoading, setUserLoading] = useState(true);
     const router = useRouter();
+
+    const [categories, setCategories] = useState<CategoryData[]>([]);
+    const [loading, setLoading] = useState(true);
 
     function setRole(newRole: string) {
         setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
@@ -57,30 +67,95 @@ export default function Page() {
         }
     }
 
+    async function fetchCategories() {
+        try {
+            const res = await fetch("/api/budget/getCategories");
+            if (!res.ok) throw new Error("Failed to fetch categories");
+            const data: CategoryData[] = await res.json();
+            setCategories(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         loadUser();
+        fetchCategories();
     }, []);
+
+    function getCategories(phase: string): CategoryData[] {
+        return categories.filter((category) => category.categoryPhase === phase);
+    }
+
+    const findTotalSpent = (): number => categories.reduce((sum, category) => sum + category.categorySpent, 0);
+
+    const findTotalBudget = (): number => categories.reduce((sum, category) => sum + category.categoryBudget, 0);
+
+    const totalBudget = findTotalBudget();
+    const totalSpent = findTotalSpent();
+
+    function budgetHue(): number {
+        if (totalBudget <= 0) return 220;
+        const percent = (totalSpent / totalBudget) * 100;
+        if (percent >= 100) return 0;
+        if (percent >= 75) return 20;
+        if (percent >= 50) return 50;
+        return 120;
+    }
+
+    function budgetFill(): React.CSSProperties {
+        const percent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+        const remaining = 100 - percent;
+        const hue = budgetHue();
+        const filledColor = `hsl(${hue}, 70%, 40%)`;
+        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
+        return {
+            background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
+        };
+    }
 
     return (
         <div>
             <Navbar user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} updateUserRole={setRole} />
-            <Card className="p-2 bg-mist-700 m-3">
-                <CardDescription className="text-mist-200 text-base mb-0">Total Phase Spending:</CardDescription>
-                <CardTitle className="text-mist-100 text-3xl font-bold mt-0">$2,000.00</CardTitle>
+            <Card className="p-2 bg-mist-700 m-3 gap-0">
+                <CardDescription className="text-mist-200 text-2xl mb-0 font-bold">Total Season Spending:</CardDescription>
+                <div className="rounded-md mt-2 mb-2" style={budgetFill()}>
+                    <h1 className="text-lg font-bold text-zinc-100 p-1">{formatMoney(totalSpent)}/{formatMoney(totalBudget)}</h1>
+                </div>
             </Card>
             <Card className="p-2 bg-mist-700 m-3">
                 <div className="flex">
-                    <CardDescription className="text-mist-200 text-base mb-0">Budget Categories:</CardDescription>
+                    <CardDescription className="text-mist-200 text-2xl font-bold mb-0">Budget Categories:</CardDescription>
                     <div className="ml-auto">
-                        <NewCatagory />
+                        <NewCatagory onCreate={fetchCategories} />
                     </div>
                 </div>
+                <Card className="bg-mist-600 p-2 gap-2">
+                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Offseason</CardTitle>
+                    {getCategories("Offseason").map((category) => (
+                        <BudgetCategory key={category.categoryID} {...category} />
+                    ))}
+                </Card>
+                <Card className="bg-mist-600 p-2 gap-2">
+                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Season</CardTitle>
+                    {getCategories("Season").map((category) => (
+                        <BudgetCategory key={category.categoryID} {...category} />
+                    ))}
+                </Card>
+                <Card className="bg-mist-600 p-2 gap-2">
+                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Champs</CardTitle>
+                    {getCategories("Champs").map((category) => (
+                        <BudgetCategory key={category.categoryID} {...category} />
+                    ))}
+                </Card>
             </Card>
         </div>
     )
 }
 
-function NewCatagory() {
+function NewCatagory({ onCreate }: { onCreate: () => void }) {
     const [open, setOpen] = useState(false);
 
     const [name, setName] = useState("");
@@ -93,12 +168,12 @@ function NewCatagory() {
 
     function handleBudgetChange(value: string) {
         setBudgetInput(value);
- 
+
         if (value.trim() === "") {
             setBudget(0);
             return;
         }
- 
+
         const parsed = Number(value);
         if (!Number.isNaN(parsed)) {
             setBudget(parsed);
@@ -106,8 +181,8 @@ function NewCatagory() {
     }
 
 
-    async function createCategory(){
-        if(valid){
+    async function createCategory() {
+        if (valid) {
             const res = await fetch('/api/budget/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -119,6 +194,7 @@ function NewCatagory() {
                 }),
             });
 
+            onCreate();
             setOpen(false);
         }
     }
@@ -155,8 +231,8 @@ function NewCatagory() {
                         </Field>
                         <Field className="mt-3">
                             <div className="flex gap-1">
-                            <FieldLabel>Category Enabled:</FieldLabel>
-                            <Checkbox checked={enabled} onCheckedChange={setEnabled}/>
+                                <FieldLabel>Category Enabled:</FieldLabel>
+                                <Checkbox checked={enabled} onCheckedChange={setEnabled} />
                             </div>
                         </Field>
                     </div>
@@ -164,5 +240,60 @@ function NewCatagory() {
                 </DrawerContent>
             </Drawer>
         </div>
+    )
+}
+
+interface CategoryData {
+    categoryID: string;
+    categoryName: string;
+    categoryPhase: string;
+    categoryBudget: number;
+    categorySpent: number;
+    enabled: boolean;
+}
+
+function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudget, categorySpent, enabled }: CategoryData) {
+
+    const genCardCSS = () => {
+        const baseCSS = "p-2 bg-mist-800 m-0";
+        if (!enabled) {
+            return (baseCSS + " opacity-75 grayscale");
+        }
+        else {
+            return (baseCSS);
+        }
+    }
+
+    function budgetHue(): number {
+        if (categoryBudget <= 0) return 220;
+        const percent = (categorySpent / categoryBudget) * 100;
+        if (percent >= 100) return 0;
+        if (percent >= 75) return 20;
+        if (percent >= 50) return 50;
+        return 120;
+    }
+
+    function budgetFill(): React.CSSProperties {
+        const percent = categoryBudget > 0 ? Math.min((categorySpent / categoryBudget) * 100, 100) : 0;
+        const remaining = 100 - percent;
+        const hue = budgetHue();
+        const filledColor = `hsl(${hue}, 70%, 40%)`;
+        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
+        return {
+            background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
+        };
+    }
+
+    return (
+        <Card className={genCardCSS()}>
+            <div className="flex items-center">
+                <div className="gap-0">
+                    <CardTitle className="text-zinc-100 text-xl m-0 font-bold">{categoryName}</CardTitle>
+                </div>
+                <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
+                    <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}/{formatMoney(categoryBudget)}</h1>
+                </div>
+            </div>
+        </Card>
     )
 }

@@ -121,7 +121,7 @@ export function Page() {
 
   function filterPurchases(): PurchaseData[] {
     return purchases.filter((purchase) => {
-      const categoryMatch = catagoryFilter.includes(purchase.catagory);
+      const categoryMatch = purchases; //Temp Overide Until Fix
       const statusMatch = statusFilter.includes(purchase.status);
       const nameMatch = purchase.title.toLowerCase().includes(nameFilter.toLowerCase());
       return categoryMatch && statusMatch && nameMatch;

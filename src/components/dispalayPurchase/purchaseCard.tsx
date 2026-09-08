@@ -192,6 +192,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
                     </div>
                 )
+            default:
+                return (
+                    <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
+                    </div>
+                )
 
         }
     }
@@ -385,7 +391,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                         <h2 className="text-base font-bold text-zinc-100">${requestCost.toFixed(2)}</h2>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-42 h-fit mt-2 pt-1 pb-1">
+                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
                         <div className="flex items-center gap-2">
                             {CategoryTitle()}
