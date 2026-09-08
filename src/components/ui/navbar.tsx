@@ -52,6 +52,10 @@ export default function Navbar({ user, updateUserRole }: user) {
                 return (
                     <Badge className="rounded-md text-base bg-emerald-600">Lead Mentor</Badge>
                 )
+            case "treasurer":
+                    return (
+                        <Badge className="rounded-md text-base bg-emerald-600">Treasurer</Badge>
+                    )
             case "studentLead":
                 return (
                     <Badge className="rounded-md text-base bg-emerald-600">Student Lead</Badge>
@@ -114,20 +118,6 @@ export default function Navbar({ user, updateUserRole }: user) {
                 )}
             </div>
             <div className="ml-auto flex items-center gap-3">
-                <Select value={userRole} onValueChange={(value) => updateUserRole(String(value))}>
-                    <SelectTrigger className="cursor-pointer w-fit min-w-32">
-                        <SelectValue className="text-zinc-100" placeholder="Select a Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="student">Student</SelectItem>
-                        <SelectItem value="studentLead">Student Lead</SelectItem>
-                        <SelectItem value="mentor">Mentor</SelectItem>
-                        <SelectItem value="mentorLead">Lead Mentor</SelectItem>
-                        <SelectItem value="president">President</SelectItem>
-                        <SelectItem value="programDirector">Program Director</SelectItem>
-                        <SelectItem value="teamAdministrator">Team Administrator</SelectItem>
-                    </SelectContent>
-                </Select>
                 <HoverCard>
                     <HoverCardTrigger>
                         <div className="flex items-center gap-2 cursor-pointer">
@@ -141,7 +131,22 @@ export default function Navbar({ user, updateUserRole }: user) {
                             </Avatar>
                         </div>
                     </HoverCardTrigger>
-                    <HoverCardContent className="rounded-md bg-red-400 w-64 flex justify-center">
+                    <HoverCardContent className="rounded-md bg-red-400 w-64 justify-center">
+                    <Select value={userRole} onValueChange={(value) => updateUserRole(String(value))}>
+                    <SelectTrigger className="cursor-pointer w-fit min-w-32">
+                        <SelectValue className="text-zinc-100" placeholder="Select a Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="studentLead">Student Lead</SelectItem>
+                        <SelectItem value="mentor">Mentor</SelectItem>
+                        <SelectItem value="mentorLead">Lead Mentor</SelectItem>
+                        <SelectItem value="treasurer">Treasurer</SelectItem>
+                        <SelectItem value="president">President</SelectItem>
+                        <SelectItem value="programDirector">Program Director</SelectItem>
+                        <SelectItem value="teamAdministrator">Team Administrator</SelectItem>
+                    </SelectContent>
+                </Select>
                         <Button onClick={() => handleSignOut()} className="cursor-pointer text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
                     </HoverCardContent>
                 </HoverCard>
