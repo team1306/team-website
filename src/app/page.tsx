@@ -16,6 +16,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@base-ui/react";
 import { getUserInfo } from "./auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
+import PurchaseItems from "@/components/purchaseItems";
 
 export default function Home() {
   return (
@@ -150,7 +151,8 @@ export function Page() {
               </Field>
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex gap-2">
+              <PurchaseItems orders={purchases}/>
               <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
           </div>
