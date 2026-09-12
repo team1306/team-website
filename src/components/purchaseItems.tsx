@@ -7,38 +7,13 @@ import { Input } from "@base-ui/react";
 import { Field, FieldLabel } from "./ui/field";
 import { Globe } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-interface ItemData {
-    id: string;
-    ItemName: string;
-    ItemCost: number;
-    ItemQuantity: number;
-    ItemLink: string;
-    comments: string;
-    userRole: string;
-    ordered: boolean;
-}
+import { ItemData, PurchaseData } from "@/app/page";
 
 interface Approver {
     approved: boolean;
     approverName: string;
     requiredRole: string;
     approverPicture: string;
-}
-
-interface PurchaseData {
-    id: string;
-    title: string;
-    cost: number;
-    requestor: string;
-    catagory: string;
-    requestedDate: string;
-    status: string;
-    items: ItemData[];
-    vendor: string;
-    reason: string;
-    approvers: Approver[];
-    expidited: string;
 }
 
 interface PurchaseItemsProps {
@@ -114,7 +89,7 @@ function Vendor({ items, vendorName }: { items: ItemData[]; vendorName: string }
             <div className="p-1 pt-0">
                 <div className="flex flex-col gap-1">
                     {vendorItems.map(item => (
-                        <Item key={item.id} id={item.id} ItemName={item.ItemName} ItemCost={item.ItemCost} ItemQuantity={item.ItemQuantity} ItemLink={item.ItemLink} ordered={item.ordered} toggleItemPurchased={toggleItemPurchased}></Item>
+                        <Item key={item.id} id={item.id} ItemName={item.ItemName} ItemCost={item.ItemCost} ItemQuantity={item.ItemQuantity} ItemLink={item.ItemLink} ordered={item.ordered||false} toggleItemPurchased={toggleItemPurchased}></Item>
                     ))}
                 </div>
             </div>

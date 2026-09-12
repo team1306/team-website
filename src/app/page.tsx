@@ -33,7 +33,7 @@ interface UserData {
   profilePicture: string;
 }
 
-interface ItemData {
+export interface ItemData {
   id: string;
   ItemName: string;
   ItemCost: number;
@@ -41,6 +41,7 @@ interface ItemData {
   ItemLink: string;
   comments: string;
   userRole: string;
+  ordered?: boolean;
 }
 
 interface Approver {
@@ -50,7 +51,7 @@ interface Approver {
   approverPicture: string;
 }
 
-interface PurchaseData {
+export interface PurchaseData {
   id: string;
   title: string;
   cost: number;
