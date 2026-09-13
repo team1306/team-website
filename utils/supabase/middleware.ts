@@ -8,6 +8,7 @@ const PUBLIC_BROKER_PATHS = [
   '/api/broker/.well-known/openid-configuration',
   '/api/broker/jwks',
   '/api/broker/authorize',
+  '/api/broker/callback',
   '/api/broker/token',
   '/api/broker/userinfo',
 ];
