@@ -3,9 +3,26 @@ import Image from "next/image";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "../../../utils/supabase/client";
+import { useSearchParams } from 'next/navigation'
+import { toast } from "@/components/ui/toast"
+import { useEffect } from "react";
+import { useState } from "react";
 
 export default function Page() {
+    const searchParams = useSearchParams();
+    const notAuthed = searchParams.get("notAuthed") === "true";
     const supabase = createClient();
+    const [sent, setSent] = useState(false);
+
+    function notSignedInAlert() {
+        if (notAuthed && !sent) {
+            toast.add({
+                type: "warning",
+                description: "Please sign into to continue",
+            })
+        }
+        setSent(true);
+    }
 
     async function signInWithSlack() {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -16,6 +33,10 @@ export default function Page() {
         });
         if (error) console.error(error.message);
     }
+
+    useEffect(() => {
+        notSignedInAlert();
+    }, [notAuthed]);
 
     return (
         <div className="bg-background min-h-screen flex flex-col">

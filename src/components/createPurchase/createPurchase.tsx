@@ -39,6 +39,17 @@ import Item from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useEffect } from "react"
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Progress, ProgressLabel } from "@/components/ui/progress"
 
 interface UserData {
     id: string;
@@ -97,7 +108,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
 
     const data = [
         { name: "Spent", value: selectedCategorySpent },
-        { name: "Remains", value: ((selectedCategoryBudget - selectedCategorySpent)-orderTotal) },
+        { name: "Remains", value: ((selectedCategoryBudget - selectedCategorySpent) - orderTotal) },
         { name: "Order Cost", value: orderTotal },
     ];
     const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
@@ -184,120 +195,127 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         return 120;
     }
 
+    function budgetRemainPercent(): number {
+        if (selectedCategoryBudget <= 0) return 0;
+        return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
+    }
+
+
     return (
-        <Dialog open={open}>
-            <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
-            <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
-                <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
-                <div className="flex gap-2 items-stretch">
-                    <Card className="w-sm gap-0 bg-mist-600 text-zinc-100 pt-0">
-                        <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                            <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
-                        </Card>
-                        <div className="p-2 w-full">
-                            <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
-                            <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={data}
-                                        dataKey="value"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="50%"
-                                        outerRadius={100}
-                                        isAnimationActive={true}
-                                    >
-                                        {data.map((entry, index) => (
-                                            <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </Card>
-                    <div>
-                        <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 pt-0">
+        <div>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
+                <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
+                    <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
+                    <div className="flex gap-2 items-stretch">
+                        <Card className="w-sm gap-0 bg-mist-600 text-zinc-100 pt-0">
                             <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Info</CardTitle>
+                                <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                             </Card>
                             <div className="p-2 w-full">
-                                <Field>
-                                    <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                    <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
-                                </Field>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Field className="w-full">
-                                        <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
-                                        <Select value={catagory} onValueChange={(value) => setCatagory(String(value))}>
-                                            <SelectTrigger className="cursor-pointer w-full">
-                                                <SelectValue className="text-zinc-100" placeholder="Select a category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {categories.map((selectcategory) => (
-                                                <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                                <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={data}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            isAnimationActive={true}
+                                        >
+                                            {data.map((entry, index) => (
+                                                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </Card>
+                        <div>
+                            <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 pt-0">
+                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
+                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Info</CardTitle>
+                                </Card>
+                                <div className="p-2 w-full">
+                                    <Field>
+                                        <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
+                                        <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
                                     </Field>
-                                    <Field className="mt-2">
-                                        <FieldLabel>Supplier:</FieldLabel>
-                                        <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
-                                            <SelectTrigger className="cursor-pointer w-full">
-                                                <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="WCP">WCP</SelectItem>
-                                                <SelectItem value="CTRE">CTRE</SelectItem>
-                                                <SelectItem value="Digi-Key">Digi-Key</SelectItem>
-                                                <SelectItem value="Mouser">Mouser</SelectItem>
-                                                <SelectItem value="Amazon">Amazon</SelectItem>
-                                                <SelectItem value="Multiple">Multiple</SelectItem>
-                                                <SelectItem value="Other">Other</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        {(supplierPicker == "Other") && (
-                                            <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
-                                        )}
-                                    </Field>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Field className="w-full">
+                                            <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
+                                            <Select value={catagory} onValueChange={(value) => setCatagory(String(value))}>
+                                                <SelectTrigger className="cursor-pointer w-full">
+                                                    <SelectValue className="text-zinc-100" placeholder="Select a category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {categories.map((selectcategory) => (
+                                                        <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </Field>
+                                        <Field className="mt-2">
+                                            <FieldLabel>Supplier:</FieldLabel>
+                                            <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
+                                                <SelectTrigger className="cursor-pointer w-full">
+                                                    <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="WCP">WCP</SelectItem>
+                                                    <SelectItem value="CTRE">CTRE</SelectItem>
+                                                    <SelectItem value="Digi-Key">Digi-Key</SelectItem>
+                                                    <SelectItem value="Mouser">Mouser</SelectItem>
+                                                    <SelectItem value="Amazon">Amazon</SelectItem>
+                                                    <SelectItem value="Multiple">Multiple</SelectItem>
+                                                    <SelectItem value="Other">Other</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {(supplierPicker == "Other") && (
+                                                <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                            )}
+                                        </Field>
+                                    </div>
                                 </div>
-                            </div>
-                        </Card>
-                        <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0 pt-0">
-                            <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Best Practices</CardTitle>
                             </Card>
-                            <CardDescription className="ml-2 pb-5 text-zinc-100">Purchasing Guidelines</CardDescription>
-                        </Card>
-                    </div>
-                    <div className="flex flex-col gap-2 h-full">
-                        <Card className="w-md gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
-                            <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                <div className="flex m-1">
-                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                                    <Button className="cursor-pointer ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                            <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0 pt-0">
+                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
+                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Best Practices</CardTitle>
+                                </Card>
+                                <CardDescription className="ml-2 pb-5 text-zinc-100">Purchasing Guidelines</CardDescription>
+                            </Card>
+                        </div>
+                        <div className="flex flex-col gap-2 h-full">
+                            <Card className="w-md gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
+                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
+                                    <div className="flex m-1">
+                                        <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
+                                        <Button className="cursor-pointer ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                                    </div>
+                                </Card>
+                                <div className="p-2 w-full flex-1 overflow-auto min-h-0">
+                                    <ScrollArea className="h-[310px] w-full rounded-md pr-4">
+                                        {items.map((item) => (
+                                            <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
+                                        ))}
+                                    </ScrollArea>
                                 </div>
                             </Card>
-                            <div className="p-2 w-full flex-1 overflow-auto min-h-0">
-                                <ScrollArea className="h-[310px] w-full rounded-md pr-4">
-                                    {items.map((item) => (
-                                        <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
-                                    ))}
-                                </ScrollArea>
-                            </div>
-                        </Card>
-                        <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
-                            <h2>Order Total:</h2>
-                            <div className="flex">
-                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
-                                <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
-                            </div>
-
-                        </Card>
+                            <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
+                                <h2>Order Total:</h2>
+                                <div className="flex">
+                                    <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                                    <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
+                                </div>
+                            </Card>
+                        </div>
                     </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+                </DialogContent>
+            </Dialog>
+        </div>
     )
 }

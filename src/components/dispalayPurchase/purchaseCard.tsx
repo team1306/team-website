@@ -46,6 +46,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useEffect } from "react"
 
 type request = {
     id: string;
@@ -86,7 +87,7 @@ interface UserData {
     name: string;
     role: string;
     profilePicture: string;
-  }
+}
 
 
 export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited }: request) {
@@ -195,7 +196,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             default:
                 return (
                     <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
+                        <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
                     </div>
                 )
 
@@ -206,27 +207,27 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         switch (status) {
             case "needsAproval":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400">Needs Approval</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400 ml-auto md:ml-0">Needs Approval</Badge>
                 )
             case "approved":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-blue-400 bg-transparent font-bold text-blue-400">Approved</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-blue-400 bg-transparent font-bold text-blue-400 ml-auto md:ml-0">Approved</Badge>
                 )
             case "purchased":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400">Purchased</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400 ml-auto md:ml-0">Purchased</Badge>
                 )
             case "recived":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400">Received</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400 ml-auto md:ml-0">Received</Badge>
                 )
             case "rejected":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400">Rejected</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400 ml-auto md:ml-0">Rejected</Badge>
                 )
             case "onHold":
                 return (
-                    <Badge className="text-sm ml-2 w-fit h-fit border-3 border-orange-400 bg-transparent font-bold text-orange-400">On Hold</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-orange-400 bg-transparent font-bold text-orange-400 ml-auto md:ml-0">On Hold</Badge>
                 )
         }
     }
@@ -280,6 +281,17 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
         );
     };
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const mql = window.matchMedia("(max-width: 767px)");
+        setIsMobile(mql.matches);
+
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mql.addEventListener("change", handler);
+        return () => mql.removeEventListener("change", handler);
+    }, []);
 
     async function updateExpidite(id: string, newStatus: string) {
         try {
@@ -371,76 +383,36 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         <div>
             <Card className="p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
-                    <div>
-                        <div className="flex">
-                            <CardTitle className="text-2xl font-bold text-zinc-100">{name || "Untitled Request"}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-2xl font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
                             {statusBadge()}
                             {(expidited == "requested") && (
-                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
+                                <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500 hidden md:block">Expedited Requested</Badge>
                             )}
                             {(expidited == "approved") && (
-                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400">Expedited</Badge>
+                                <Badge className="text-sm w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400 hidden md:block">Expedited</Badge>
                             )}
                             {(expidited == "rejected") && (
-                                <Badge className="text-sm ml-2 w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400">Expedited Rejected</Badge>
+                                <Badge className="text-sm w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400 hidden md:block">Expedited Rejected</Badge>
                             )}
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 ml-auto">
+                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                         <h2 className="text-base font-bold text-zinc-100">${requestCost.toFixed(2)}</h2>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1">
+                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
                         <div className="flex items-center gap-2">
                             {CategoryTitle()}
                         </div>
                     </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
-                        <DropdownMenuContent className="w-fit bg-mist-500">
-                            <DropdownMenuGroup>
-                                <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>
-                                {(!editMode) && (
-                                    <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
-                                )}
-                                {(expidited == "NULL") && (<DropdownMenuItem onClick={() => updateExpidite(id, "requested")}>Request Expedite</DropdownMenuItem>)}
-                                {(status == "needsAproval") && (
-                                    <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
-                                )}
-                                {(status == "onHold") && (
-                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
-                                )}
-                                {(status != "rejected") && (
-                                    <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
-                                )}
-                            </DropdownMenuGroup>
-                            {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
-                                <div>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
-                                        {(userRole == "programDirector") && (
-                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
-                                        )}
-                                        {((expidited == "requested" || expidited == "approved") && userRole == "programDirector") && (
-                                            <DropdownMenuItem onClick={() => { updateExpidite(id, "rejected") }}>Reject Expedite</DropdownMenuItem>
-                                        )}
-                                        {(userRole == "programDirector") && (
-                                            <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuItem variant="destructive" >Delete</DropdownMenuItem>
-                                    </DropdownMenuGroup>
-                                </div>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
-                <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
-                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-2/5 bg-mist-600">
-                        <Card className="p-0 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0">
+                <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
+                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full">
+                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -607,76 +579,78 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        {(status == 'needsAproval' || status == 'approved') && (
+                        <ScrollArea className="w-full rounded-md pr-3 h-full">
+                            {(status == 'needsAproval' || status == 'approved') && (
+                                <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                                    {(status == 'approved' && expidited != "approved") && (
+                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                                    )}
+                                    {(status == 'needsAproval' && expidited != "approved") && (
+                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                    )}
+                                    {(expidited == "approved" && status == "needsAproval") && (
+                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
+                                    )}
+                                    {(expidited == "approved" && status == "approved") && (
+                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Expidited: Can be Ordered Now</h1>
+                                    )}
+                                </Card>
+                            )}
                             <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
-                                {(status == 'approved' && expidited != "approved") && (
-                                    <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
-                                )}
-                                {(status == 'needsAproval' && expidited != "approved") && (
-                                    <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
-                                )}
-                                {(expidited == "approved" && status == "needsAproval") && (
-                                    <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
-                                )}
-                                {(expidited == "approved" && status == "approved") && (
-                                    <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Expidited: Can be Ordered Now</h1>
-                                )}
-                            </Card>
-                        )}
-                        <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
-                            <div className="flex p-2 pb-0">
-                                {(!editMode) && (
-                                    <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                <div className="flex p-2 pb-0">
+                                    {(!editMode) && (
+                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                    )}
+                                    {(editMode) && (
+                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Items</CardTitle>
+                                    )}
+                                    <div className="flex ml-auto">
+                                    </div>
+                                </div>
+                                {needsScroll ? (
+                                    <ScrollArea style={{ height: `${MAX_VISIBLE_ITEMS * ITEM_HEIGHT}px` }} className="w-full rounded-md pr-3">
+                                        {itemList}
+                                    </ScrollArea>
+                                ) : (
+                                    itemList
                                 )}
                                 {(editMode) && (
-                                    <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Items</CardTitle>
+                                    <div className="p-2 bg-mist-700 m-2 rounded-md mt-3">
+                                        <Progress
+                                            className=""
+                                            max={4000}
+                                            value={calculatePrice()}
+                                        >
+                                            <div className="flex w-full">
+                                                <ProgressLabel className="text-zinc-100 text-sm mr-auto">Remaining Budget</ProgressLabel>
+                                                {(calcPercent() > 10) && (
+                                                    <h1 className="ml-auto text-green-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                )}
+                                                {(calcPercent() < 10 && !(calcPercent() < 0)) && (
+                                                    <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                )}
+                                                {(calcPercent() < 0) && (
+                                                    <h1 className="ml-auto text-red-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                )}
+                                            </div>
+                                        </Progress>
+                                    </div>
                                 )}
-                                <div className="flex ml-auto">
-                                </div>
-                            </div>
-                            {needsScroll ? (
-                                <ScrollArea style={{ height: `${MAX_VISIBLE_ITEMS * ITEM_HEIGHT}px` }} className="w-full rounded-md pr-3">
-                                    {itemList}
-                                </ScrollArea>
-                            ) : (
-                                itemList
-                            )}
-                            {(editMode) && (
-                                <div className="p-2 bg-mist-700 m-2 rounded-md mt-3">
-                                    <Progress
-                                        className=""
-                                        max={4000}
-                                        value={calculatePrice()}
-                                    >
-                                        <div className="flex w-full">
-                                            <ProgressLabel className="text-zinc-100 text-sm mr-auto">Remaining Budget</ProgressLabel>
-                                            {(calcPercent() > 10) && (
-                                                <h1 className="ml-auto text-green-500 text-sm">{calcPercent()}%% Remains</h1>
-                                            )}
-                                            {(calcPercent() < 10 && !(calcPercent() < 0)) && (
-                                                <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}%% Remains</h1>
-                                            )}
-                                            {(calcPercent() < 0) && (
-                                                <h1 className="ml-auto text-red-500 text-sm">{calcPercent()}%% Remains</h1>
-                                            )}
-                                        </div>
-                                    </Progress>
-                                </div>
-                            )}
-                            <div className="flex p-2">
-                                <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice().toFixed(2)}</h1>
-                                <div className="ml-auto">
-                                </div>
-                            </div>
-                        </Card>
-                        {(!editMode) && (
-                            <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
-                                <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
-                                <div className="p-2">
-                                    {purchaseApprovers()}
+                                <div className="flex p-2">
+                                    <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice().toFixed(2)}</h1>
+                                    <div className="ml-auto">
+                                    </div>
                                 </div>
                             </Card>
-                        )}
+                            {(!editMode) && (
+                                <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
+                                    <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
+                                    <div className="p-2">
+                                        {purchaseApprovers()}
+                                    </div>
+                                </Card>
+                            )}
+                        </ScrollArea>
                     </DrawerContent>
                 </Drawer>
             </Card>

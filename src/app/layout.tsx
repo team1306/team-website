@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
