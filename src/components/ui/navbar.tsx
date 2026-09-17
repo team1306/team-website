@@ -94,6 +94,15 @@ export default function Navbar({ user, updateUserRole }: user) {
             return ("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
         }
     }
+
+    const adminActiveCSS = (url: String) => {
+        if (url == usePathname()) {
+            return ("rounded-md text-lg bg-violet-500 hover:bg-violet-500 mr-1 text-zinc-100");
+        }
+        else {
+            return ("cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100");
+        }
+    }
     async function handleSignOut() {
         const { error } = await supabase.auth.signOut();
         if (error) {
@@ -133,7 +142,7 @@ export default function Navbar({ user, updateUserRole }: user) {
                         <Button onClick={() => router.push('/')} className={activeCSS("/")}><Package /> Orders</Button>
                         <Button onClick={() => router.push('/budget')} className={activeCSS("/budget")}><CircleDollarSign />Budget</Button>
                         {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
-                            <Button disabled className="cursor-pointer rounded-md text-lg bg-violet-600 hover:bg-violet-400 mr-1 text-zinc-100"><Crown /> Admin Panel</Button>
+                            <Button onClick={() => router.push('/admin')} className={adminActiveCSS("/admin")}><Crown /> Admin Settings</Button>
                         )}
                     </div>
                     <div className="ml-auto flex items-center gap-3">
