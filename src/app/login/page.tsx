@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "../../../utils/supabase/client";
 import { useSearchParams } from 'next/navigation'
 import { toast } from "@/components/ui/toast"
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function Page() {
+function LoginContent() {
     const searchParams = useSearchParams();
     const notAuthed = searchParams.get("notAuthed") === "true";
     const supabase = createClient();
@@ -47,9 +46,20 @@ export default function Page() {
             <div className="flex-1 flex items-center justify-center">
                 <Card className="w-96 p-3 bg-red-900">
                     <CardTitle className="text-center text-zinc-100 text-4xl font-jetbrains font-bold mt-2 mb-2">Welcome Back</CardTitle>
-                    <Button onClick={signInWithSlack} className="cursor-pointer w-full text-xl font-jetbrains font-bold text-zinc-100 h-fit p-1 bg-zinc-900 hover:bg-zinc-950"><Image className="mr-1" src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" alt="" width={18} height={18} />Login with Slack</Button>
+                    <Button onClick={signInWithSlack} className="cursor-pointer w-full text-xl font-jetbrains font-bold text-zinc-100 h-fit p-1 bg-zinc-900 hover:bg-zinc-950">
+                        <Image className="mr-1" src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" alt="" width={18} height={18} />
+                        Login with Slack
+                    </Button>
                 </Card>
             </div>
         </div>
+    );
+}
+
+export default function Page() {
+    return (
+        <Suspense>
+            <LoginContent />
+        </Suspense>
     );
 }
