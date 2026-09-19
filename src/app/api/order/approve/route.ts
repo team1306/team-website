@@ -16,6 +16,58 @@ export interface PurchaseCreate {
     approverPicture?: string;
 }
 
+const FINAL_APPROVAL_RECIPIENT = "@Andrew";
+
+function escapeSlack(text: string): string {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatRole(role: string): string {
+    return role.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+}
+
+function withArticle(phrase: string): string {
+    return /^[aeiou]/i.test(phrase) ? `an ${phrase}` : `a ${phrase}`;
+}
+
+async function postSlackThreadReply(text: string, threadTs: string | null): Promise<void> {
+    const token = process.env.SLACK_BOT_TOKEN;
+    const channel = process.env.SLACK_CHANNEL_ID;
+
+    if (!token || !channel) {
+        console.error("Slack not configured: missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID");
+        return;
+    }
+
+    if (!threadTs) {
+        console.error("No slack-thread-id on this purchase, skipping Slack message");
+        return;
+    }
+
+    try {
+        const res = await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                channel,
+                text,
+                thread_ts: threadTs,
+                unfurl_links: false,
+            }),
+        });
+
+        const data = await res.json();
+        if (!data.ok) {
+            console.error("Slack API error:", data.error, data.response_metadata?.messages);
+        }
+    } catch (err) {
+        console.error("Failed to post Slack reply:", err);
+    }
+}
+
 export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
@@ -25,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     const { data: purchase, error: fetchError } = await supabase
         .from("purchases")
-        .select("status, approvers")
+        .select('status, approvers, requestName, "slack-thread-id"')
         .eq("purchaseID", itemID)
         .single();
 
@@ -66,8 +118,47 @@ export async function POST(request: NextRequest) {
         .single();
 
     if (updateError) {
-        console.error("Error updating purchase:", updateError);
         return NextResponse.json({ error: "Failed to update purchase" }, { status: 500 });
+    }
+
+    try {
+        const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
+
+        let slackUserId: string | null = null;
+        const { data: authData } = await supabase.auth.getUser();
+        const approverUserId = authData?.user?.id;
+
+        if (approverUserId) {
+            const { data: userRow, error: userError } = await supabase
+                .from("users")
+                .select("slack_userid")
+                .eq("user_id", approverUserId)
+                .maybeSingle();
+
+            if (userError) {
+            }
+            slackUserId = userRow?.slack_userid?.trim() || null;
+        }
+
+        const approverMention = slackUserId
+            ? `<@${slackUserId}>`
+            : escapeSlack(approverName || "Someone");
+
+        const orderName = escapeSlack(purchase.requestName ?? "this order");
+        const roleText = withArticle(formatRole(approvalRole));
+
+        await postSlackThreadReply(
+            `${approverMention} has approved ${orderName} as ${roleText}.`,
+            threadTs
+        );
+
+        if (allApproved) {
+            await postSlackThreadReply(
+                `This order has been approved, ${FINAL_APPROVAL_RECIPIENT}.`,
+                threadTs
+            );
+        }
+    } catch (err) {
     }
 
     return NextResponse.json({ purchase: updated }, { status: 200 });
