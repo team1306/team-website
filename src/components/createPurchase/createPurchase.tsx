@@ -165,7 +165,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: name,
-                requestor: user.name,
+                requestor: user.id,
                 category: catagory,
                 items: items,
                 vendor: supplier(),

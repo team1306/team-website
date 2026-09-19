@@ -55,8 +55,8 @@ export default function PurchaseItems({ orders }: PurchaseItemsProps) {
     return (
         <div>
             <Button onClick={() => setOpen(true)} className="cursor-pointer text-base w-fit p-3 bg-emerald-600 hover:bg-emerald-700">Purchase Items</Button>
-            <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "down"} modal={false}>
-                <DrawerContent className="bg-mist-800 border-0 p-0 m-0 rounded-none rounded-tl-lg rounded-bl-lg w-full md:w-1/3 md:w-full">
+            <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
+                <DrawerContent className="bg-mist-800 border-0 p-0 m-0 rounded-none rounded-tl-lg rounded-bl-lg md:w-1/3  w-full md:w-full">
                     <div className="bg-mist-700 w-full h-fit flex">
                         <DrawerTitle className="text-zinc-100 text-2xl m-1 ml-2">Items to Purchase</DrawerTitle>
                     </div>

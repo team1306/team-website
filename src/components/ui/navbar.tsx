@@ -7,7 +7,7 @@ import {
     HoverCardTrigger,
 } from "@/components/ui/hover-card"
 import { Button } from "@/components/ui/button"
-import { Package, List, CircleDollarSign, Users, Crown } from 'lucide-react';
+import { Package, List, CircleDollarSign, Users, Crown, Sparkle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
@@ -134,10 +134,12 @@ export default function Navbar({ user, updateUserRole }: user) {
                         width={55}
                         height={55}
                         className="cursor-pointer"
+                        preload
                     />
                     <h1 className="text-zinc-100 text-2xl font-bold ml-4">
                         Purchasing App
                     </h1>
+                    <Badge className="rounded-md text-base bg-amber-500 ml-2 mt-1 mr-2 p-2"><Sparkle />Beta</Badge>
                     <div className="ml-3 mt-1">
                         <Button onClick={() => router.push('/')} className={activeCSS("/")}><Package /> Orders</Button>
                         <Button onClick={() => router.push('/budget')} className={activeCSS("/budget")}><CircleDollarSign />Budget</Button>

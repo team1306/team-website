@@ -140,29 +140,31 @@ export default function Page() {
     }
 
     async function submitPurchase() {
-        const res = await fetch('/api/order/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: name,
-                requestor: "Test Mobile User",
-                category: catagory,
-                items: items,
-                vendor: supplier(),
-            }),
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            toast.add({
-                title: "Item Created",
+        if (currentUser) {
+            const res = await fetch('/api/order/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: name,
+                    requestor: currentUser.id,
+                    category: catagory,
+                    items: items,
+                    vendor: supplier(),
+                }),
             });
-            router.push("/");
-        } else {
-            toast.add({
-                title: "Error",
-            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                toast.add({
+                    title: "Item Created",
+                });
+                router.push("/");
+            } else {
+                toast.add({
+                    title: "Error",
+                });
+            }
         }
     }
 
@@ -178,6 +180,7 @@ export default function Page() {
     }
 
     useEffect(() => {
+        loadUser();
         fetchCategories();
     }, []);
 
