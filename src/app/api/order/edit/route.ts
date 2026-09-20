@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
+import { recalculateCategorySpent } from "@/lib/budget";
 
 interface ItemData {
   id: string;
@@ -65,15 +66,15 @@ export async function PATCH(request: NextRequest) {
   if (reason !== undefined) updateObj.reason = reason;
   if (expidited !== undefined) updateObj.expidited = expidited;
 
-  if(clearApprovers == true && items){
+  if (clearApprovers == true && items) {
     updateObj.approvers = generateApprovers(items);
   }
 
   if (items !== undefined) {
     updateObj.items = items;
     updateObj.cost = cost !== undefined ? cost : getCost(items);
-    if(clearApprovers){
-    updateObj.approvers = generateApprovers(items);
+    if (clearApprovers) {
+      updateObj.approvers = generateApprovers(items);
     }
   } else if (cost !== undefined) {
     updateObj.cost = cost;
@@ -83,13 +84,51 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'no updates found' }, { status: 400 });
   }
 
+  let previousCategory: string | null = null;
+  if (updateObj.catagory !== undefined) {
+    const { data: existing } = await supabase
+      .from('purchases')
+      .select('catagory')
+      .eq('purchaseID', id)
+      .maybeSingle();
+    previousCategory = existing?.catagory ?? null;
+  }
+
   const { error } = await supabase
     .from('purchases')
     .update(updateObj)
     .eq('purchaseID', id);
 
   if (!error) {
-    return NextResponse.json({ message: 'Success' }, { status: 200 });
+    const affectsSpending =
+      updateObj.status !== undefined ||
+      updateObj.catagory !== undefined ||
+      updateObj.cost !== undefined;
+
+    let budgetError: string | null = null;
+    if (affectsSpending) {
+      let currentCategory: string | null = null;
+      if (typeof updateObj.catagory === 'string') {
+        currentCategory = updateObj.catagory;
+      } else {
+        const { data: row } = await supabase
+          .from('purchases')
+          .select('catagory')
+          .eq('purchaseID', id)
+          .maybeSingle();
+        currentCategory = row?.catagory ?? null;
+      }
+
+      budgetError = await recalculateCategorySpent([previousCategory, currentCategory]);
+      if (budgetError) {
+        console.error('Failed to update budget spent:', budgetError);
+      }
+    }
+
+    return NextResponse.json(
+      { message: 'Success', ...(budgetError ? { budgetWarning: budgetError } : {}) },
+      { status: 200 }
+    );
   }
   else {
     if (error.code === '42501') {

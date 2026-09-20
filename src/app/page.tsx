@@ -143,7 +143,7 @@ export function Page() {
     return (
       <div className="bg-background min-h-screen">
         <Navbar updateUserRole={setRole} user={currentUser} />
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block w-full">
+        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
               <Field>

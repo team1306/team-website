@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
+import { recalculateCategorySpent } from "@/lib/budget";
 
 export interface RequestInfo {
   id: string;
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('purchases')
-      .update({ 
+      .update({
         status: status
       })
       .eq('purchaseID', id)
@@ -32,7 +33,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No purchase found with that id' }, { status: 404 });
     }
 
-    return NextResponse.json({ status: 200 });
+    const budgetError = await recalculateCategorySpent(data.map((row) => row.catagory));
+    if (budgetError) {
+      console.error('Failed to update budget spent:', budgetError);
+    }
+
+    return NextResponse.json({
+      status: 200,
+      ...(budgetError ? { budgetWarning: budgetError } : {}),
+    });
 
   } catch (err) {
     console.error('Unhandled error in /api/setStatus:', err);

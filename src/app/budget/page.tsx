@@ -203,7 +203,7 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
         <div>
             <Button onClick={() => setOpen(true)} className="cursor-pointer text-base w-fit p-3"><StickyNotePlus className="mr-1" />New Category</Button>
             <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
-                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/5">
+                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
                     <div className="bg-mist-700 w-full p-2">
                         <DrawerTitle className="text-zinc-100 text-xl font-jetbrains font-bold">New Budget Category</DrawerTitle>
                     </div>
