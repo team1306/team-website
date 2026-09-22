@@ -17,7 +17,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@base-ui/react";
 import { Button } from "@/components/ui/button";
-import { StickyNotePlus } from "lucide-react";
+import { StickyNotePlus, EllipsisVertical } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -135,19 +135,19 @@ export default function Page() {
                 <Card className="bg-mist-600 p-2 gap-2">
                     <CardTitle className="text-zinc-100 text-lg font-semi p-0">Offseason</CardTitle>
                     {getCategories("Offseason").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} />
+                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
                     ))}
                 </Card>
                 <Card className="bg-mist-600 p-2 gap-2">
                     <CardTitle className="text-zinc-100 text-lg font-semi p-0">Season</CardTitle>
                     {getCategories("Season").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} />
+                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
                     ))}
                 </Card>
                 <Card className="bg-mist-600 p-2 gap-2">
                     <CardTitle className="text-zinc-100 text-lg font-semi p-0">Champs</CardTitle>
                     {getCategories("Champs").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} />
+                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
                     ))}
                 </Card>
             </Card>
@@ -252,7 +252,16 @@ interface CategoryData {
     enabled: boolean;
 }
 
-function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudget, categorySpent, enabled }: CategoryData) {
+function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudget, categorySpent, enabled, onEdited }: CategoryData & { onEdited: () => void }) {
+
+    const [open, setOpen] = useState(false);
+    const [error, setError] = useState("");
+
+    const [name, setName] = useState(categoryName);
+    const [phase, setPhase] = useState(categoryPhase);
+    const [budget, setBudget] = useState(categoryBudget);
+    const [budgetInput, setBudgetInput] = useState(String(categoryBudget));
+    const [newenabled, setEnabled] = useState(enabled);
 
     const genCardCSS = () => {
         const baseCSS = "p-2 bg-mist-800 m-0";
@@ -284,6 +293,65 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
         };
     }
 
+    function handleBudgetChange(value: string) {
+        setBudgetInput(value);
+
+        if (value.trim() === "") {
+            setBudget(0);
+            return;
+        }
+
+        const parsed = Number(value);
+        if (!Number.isNaN(parsed)) {
+            setBudget(parsed);
+        }
+    }
+
+    function resetFields() {
+        setName(categoryName);
+        setPhase(categoryPhase);
+        setBudget(categoryBudget);
+        setBudgetInput(String(categoryBudget));
+        setEnabled(enabled);
+        setError("");
+    }
+
+    async function editCategory() {
+        setError("");
+
+        const payload: Record<string, unknown> = { categoryID };
+
+        if (name !== categoryName) payload.categoryName = name;
+        if (phase !== categoryPhase) payload.categoryPhase = phase;
+        if (budget !== categoryBudget) payload.categoryBudget = budget;
+        if (newenabled !== enabled) payload.enabled = newenabled;
+
+        if (Object.keys(payload).length === 1) {
+            setOpen(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/budget/edit', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Failed to save changes");
+                return;
+            }
+
+            onEdited();
+            setOpen(false);
+        } catch (err) {
+            setError("Failed to save changes");
+        }
+    }
+
     return (
         <Card className={genCardCSS()}>
             <div className="flex items-center">
@@ -293,7 +361,45 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                 <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
                     <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}/{formatMoney(categoryBudget)}</h1>
                 </div>
+                <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start" />
             </div>
+            <Drawer open={open} onOpenChange={(next) => { if (!next) resetFields(); setOpen(next); }} swipeDirection="right" modal={false}>
+                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
+                    <div className="bg-mist-700 w-full p-2">
+                        <DrawerTitle className="text-zinc-100 text-xl font-jetbrains font-bold">Edit Category</DrawerTitle>
+                    </div>
+                    <div className="p-2">
+                        <Field>
+                            <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
+                            <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="New Budget Category Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                        </Field>
+                        <Field className="mt-3">
+                            <FieldLabel>Category Phase: <span className="text-destructive">*</span></FieldLabel>
+                            <Select value={phase} onValueChange={(value) => setPhase(value || "Please select a phase")} id="phase">
+                                <SelectTrigger className="cursor-pointer w-full">
+                                    <SelectValue className="text-zinc-100" placeholder="Select a Phase" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Offseason">Offseason</SelectItem>
+                                    <SelectItem value="Season">Season</SelectItem>
+                                    <SelectItem value="Champs">Champs</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Field className="mt-3">
+                            <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
+                            <Input value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                        </Field>
+                        <Field className="mt-3">
+                            <div className="flex gap-1">
+                                <FieldLabel>Category Enabled:</FieldLabel>
+                                <Checkbox checked={newenabled} onCheckedChange={setEnabled} />
+                            </div>
+                        </Field>
+                    </div>
+                    <Button onClick={() => editCategory()} className="cursor-pointer text-base w-full m-2 p-3">Save</Button>
+                </DrawerContent>
+            </Drawer>
         </Card>
     )
 }
