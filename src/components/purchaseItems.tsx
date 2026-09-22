@@ -9,8 +9,10 @@ import { Globe } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ItemData, PurchaseData } from "@/app/page";
 
+
 interface PurchaseItemsProps {
     orders: PurchaseData[];
+    onPurchased: () => void;
 }
 
 interface VendorFees {
@@ -21,9 +23,15 @@ interface VendorFees {
 
 const EMPTY_FEES: VendorFees = { tax: "", shipping: "", orderNumber: "" };
 
-export default function PurchaseItems({ orders }: PurchaseItemsProps) {
+interface DisplayItem extends ItemData {
+    orderName: string;
+}
+
+export default function PurchaseItems({ orders, onPurchased }: PurchaseItemsProps) {
     const [open, setOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState("");
     const [orderedIds, setOrderedIds] = useState<Set<string>>(
         () => new Set(
             orders
@@ -34,11 +42,25 @@ export default function PurchaseItems({ orders }: PurchaseItemsProps) {
     );
     const [feesByVendor, setFeesByVendor] = useState<Record<string, VendorFees>>({});
 
-    function getItemsForVendor(vendorName: string): ItemData[] {
+    function getItemsForVendor(vendorName: string): DisplayItem[] {
         return orders
             .filter(order => order.status.toLowerCase() === "approved" && order.vendor === vendorName)
-            .flatMap(order => order.items);
+            .flatMap(order => order.items.map(item => ({ ...item, orderName: order.title })));
     }
+
+    function getOrdersForVendor(vendorName: string): PurchaseData[] {
+        return orders.filter(order => order.status.toLowerCase() === "approved" && order.vendor === vendorName);
+    }
+
+    function getPartialOrders(): PurchaseData[] {
+        return orders.filter(order => {
+            if (order.status.toLowerCase() !== "approved") return false;
+            const selectedCount = order.items.filter(item => orderedIds.has(item.id)).length;
+            return selectedCount > 0 && selectedCount < order.items.length;
+        });
+    }
+
+    const partialOrders = getPartialOrders();
 
     const vendors = Array.from(new Set(
         orders
@@ -83,6 +105,89 @@ export default function PurchaseItems({ orders }: PurchaseItemsProps) {
         }, 0);
     }
 
+    async function submitPurchases() {
+        setError("");
+
+        const partial = getPartialOrders();
+        if (partial.length > 0) {
+            setError(`Select every item for: ${partial.map(order => order.title).join(", ")}`);
+            return;
+        }
+
+        const touchedOrderIds = new Set(
+            orders
+                .flatMap(order => order.items)
+                .filter(item => orderedIds.has(item.id))
+                .map(item => item.id)
+        );
+
+        if (touchedOrderIds.size === 0) {
+            setError("Check off at least one item before submitting");
+            return;
+        }
+
+        const payloadOrders: { id: string; orderedItemIds: string[]; feeShare: number; orderNumber?: string }[] = [];
+
+        for (const vendorName of vendors) {
+            const vendorOrders = getOrdersForVendor(vendorName);
+            const fees = feesByVendor[vendorName] ?? EMPTY_FEES;
+            const feeTotal = (Number(fees.tax) || 0) + (Number(fees.shipping) || 0);
+
+            const vendorSelectedTotal = vendorOrders.reduce((sum, order) => {
+                return sum + order.items
+                    .filter(item => orderedIds.has(item.id))
+                    .reduce((itemSum, item) => itemSum + item.ItemCost * item.ItemQuantity, 0);
+            }, 0);
+
+            for (const order of vendorOrders) {
+                const orderSelectedIds = order.items
+                    .filter(item => orderedIds.has(item.id))
+                    .map(item => item.id);
+
+                if (orderSelectedIds.length === 0) continue;
+
+                const orderSelectedTotal = order.items
+                    .filter(item => orderedIds.has(item.id))
+                    .reduce((sum, item) => sum + item.ItemCost * item.ItemQuantity, 0);
+
+                const feeShare = vendorSelectedTotal > 0
+                    ? feeTotal * (orderSelectedTotal / vendorSelectedTotal)
+                    : 0;
+
+                payloadOrders.push({
+                    id: order.id,
+                    orderedItemIds: orderSelectedIds,
+                    feeShare,
+                    orderNumber: fees.orderNumber || undefined,
+                });
+            }
+        }
+
+        setSubmitting(true);
+        try {
+            const res = await fetch('/api/order/bulkPurchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orders: payloadOrders }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Failed to save purchases");
+                return;
+            }
+
+            onPurchased();
+            setOpen(false);
+        } catch (err) {
+            setError("Failed to save purchases");
+        } finally {
+            setSubmitting(false);
+            setOpen(false);
+        }
+    }
+
     useEffect(() => {
         const mql = window.matchMedia("(max-width: 767px)");
         setIsMobile(mql.matches);
@@ -115,7 +220,7 @@ export default function PurchaseItems({ orders }: PurchaseItemsProps) {
                             ))}
                             <Card className="bg-mist-700 pb-0 p-0 mb-10 p-2">
                                 <CardTitle className="text-zinc-100 text-2xl font-bold">Total Spending: ${calculateTotalCost().toFixed(2)}</CardTitle>
-                                <Button className="">Submit</Button>
+                                <Button onClick={() => submitPurchases()} disabled={submitting || partialOrders.length > 0} className="">Purchase Items</Button>
                             </Card>
                         </ScrollArea>
                     </div>
@@ -126,7 +231,7 @@ export default function PurchaseItems({ orders }: PurchaseItemsProps) {
 }
 
 interface VendorProps {
-    items: ItemData[];
+    items: DisplayItem[];
     vendorName: string;
     orderedIds: Set<string>;
     fees: VendorFees;
@@ -145,7 +250,7 @@ function Vendor({ items, vendorName, orderedIds, fees, toggleItemPurchased, onFe
             <div className="p-1 pt-0">
                 <div className="flex flex-col gap-1">
                     {items.map(item => (
-                        <Item key={item.id} id={item.id} ItemName={item.ItemName} ItemCost={item.ItemCost} ItemQuantity={item.ItemQuantity} ItemLink={item.ItemLink} ordered={orderedIds.has(item.id)} toggleItemPurchased={toggleItemPurchased}></Item>
+                        <Item key={item.id} id={item.id} ItemName={item.ItemName} orderName={item.orderName} ItemCost={item.ItemCost} ItemQuantity={item.ItemQuantity} ItemLink={item.ItemLink} ordered={orderedIds.has(item.id)} toggleItemPurchased={toggleItemPurchased}></Item>
                     ))}
                 </div>
             </div>
@@ -178,6 +283,7 @@ interface item {
     key: string;
     id: string;
     ItemName: string;
+    orderName: string;
     ItemCost: number;
     ItemQuantity: number;
     ItemLink: string;
@@ -186,12 +292,12 @@ interface item {
 }
 
 
-function Item({ id, ItemName, ItemCost, ItemQuantity, ItemLink, toggleItemPurchased, ordered }: item) {
+function Item({ id, ItemName, orderName, ItemCost, ItemQuantity, ItemLink, toggleItemPurchased, ordered }: item) {
 
     return (
         <Card onClick={() => toggleItemPurchased(id)} className={`p-1 gap-0 cursor-pointer ${ordered ? "bg-emerald-600" : "bg-mist-500"}`}>
             <div className="flex">
-                <CardTitle className="text-zinc-100">{ItemName}</CardTitle>
+                <CardTitle className="text-zinc-100">{ItemName}~{orderName}</CardTitle>
                 <Button className="bg-zinc-100 text-black text-lg hover:bg-zinc-300 ml-auto" onClick={(e) => { e.stopPropagation(); window.open(ItemLink, "_blank") }}><Globe /></Button>
             </div>
             <CardDescription className="text-zinc-200">x{ItemQuantity} at ${ItemCost.toFixed(2)}</CardDescription>

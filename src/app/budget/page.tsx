@@ -361,7 +361,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                 <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
                     <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}/{formatMoney(categoryBudget)}</h1>
                 </div>
-                <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start" />
+                <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />
             </div>
             <Drawer open={open} onOpenChange={(next) => { if (!next) resetFields(); setOpen(next); }} swipeDirection="right" modal={false}>
                 <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
