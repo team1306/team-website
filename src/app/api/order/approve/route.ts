@@ -30,6 +30,29 @@ function withArticle(phrase: string): string {
     return /^[aeiou]/i.test(phrase) ? `an ${phrase}` : `a ${phrase}`;
 }
 
+function getNextPurchaseDate(): string {
+    // Anchor "today" to America/Chicago rather than the server's local timezone,
+    // matching the timeZone: "America/Chicago" pattern used elsewhere in this codebase.
+    const today = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
+    );
+    const dayOfWeek = today.getDay();
+
+    const daysUntilMonday = ((1 - dayOfWeek + 7) % 7) || 0;
+    const daysUntilThursday = ((4 - dayOfWeek + 7) % 7) || 0;
+
+    const soonest = Math.min(daysUntilMonday, daysUntilThursday);
+
+    const result = new Date(today);
+    result.setDate(today.getDate() + soonest);
+
+    const mm = String(result.getMonth() + 1).padStart(2, "0");
+    const dd = String(result.getDate()).padStart(2, "0");
+    const yy = String(result.getFullYear()).slice(-2);
+
+    return `${mm}/${dd}/${yy}`;
+}
+
 async function postSlackThreadReply(text: string, threadTs: string | null): Promise<void> {
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_CHANNEL_ID;
@@ -77,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     const { data: purchase, error: fetchError } = await supabase
         .from("purchases")
-        .select('status, approvers, requestName, "slack-thread-id"')
+        .select('status, approvers, requestName, expidited, "slack-thread-id"')
         .eq("purchaseID", itemID)
         .single();
 
@@ -153,10 +176,13 @@ export async function POST(request: NextRequest) {
         );
 
         if (allApproved) {
-            await postSlackThreadReply(
-                `This order has been approved, ${FINAL_APPROVAL_RECIPIENT}.`,
-                threadTs
-            );
+            const isExpidited = purchase.expidited === "approved";
+
+            const finalMessage = isExpidited
+                ? `This order has been approved and expedited, ${FINAL_APPROVAL_RECIPIENT}. It can be ordered now.`
+                : `This order has been approved, ${FINAL_APPROVAL_RECIPIENT}. Next purchasing day: ${getNextPurchaseDate()}.`;
+
+            await postSlackThreadReply(finalMessage, threadTs);
         }
     } catch (err) {
     }

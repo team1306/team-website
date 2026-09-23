@@ -190,6 +190,44 @@ export async function PATCH(request: NextRequest) {
   const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
 
   try {
+    let cachedEditorMention: string | null = null;
+
+    async function getEditorMention(): Promise<string> {
+      if (cachedEditorMention) return cachedEditorMention;
+
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
+
+      if (userId) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('name, slack_userid')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const slackUserId = userRow?.slack_userid?.trim() || null;
+        cachedEditorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(userRow?.name ?? "Someone");
+      } else {
+        cachedEditorMention = "Someone";
+      }
+
+      return cachedEditorMention;
+    }
+
+    const expiditeChanged = updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited;
+    const expiditeTransition = expiditeChanged ? String(updateObj.expidited) : null;
+
+    if (expiditeTransition === "requested") {
+      const mention = await getEditorMention();
+      await postSlackThreadReply(`${mention} has requested this order to be expedited @Andrew.`, threadTs);
+    } else if (expiditeTransition === "approved") {
+      const mention = await getEditorMention();
+      await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);
+    } else if (expiditeTransition === "rejected") {
+      const mention = await getEditorMention();
+      await postSlackThreadReply(`${mention} has marked this order as expedited rejected.`, threadTs);
+    }
+
     const bullets: string[] = [];
 
     if (updateObj.requestName !== undefined && updateObj.requestName !== existing.requestName) {
@@ -204,7 +242,7 @@ export async function PATCH(request: NextRequest) {
     if (updateObj.reason !== undefined && updateObj.reason !== existing.reason) {
       bullets.push(`Reason: ${escapeSlack(String(updateObj.reason))}`);
     }
-    if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited) {
+    if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited && expiditeTransition === null) {
       bullets.push(`Expedited: ${escapeSlack(String(updateObj.expidited))}`);
     }
     if (updateObj.cost !== undefined && updateObj.items === undefined && updateObj.cost !== existing.cost) {
@@ -218,21 +256,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (bullets.length > 0) {
-      let editorMention = "Someone";
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id;
-
-      if (userId) {
-        const { data: userRow } = await supabase
-          .from('users')
-          .select('name, slack_userid')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        const slackUserId = userRow?.slack_userid?.trim() || null;
-        editorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(userRow?.name ?? "Someone");
-      }
-
+      const editorMention = await getEditorMention();
       const orderName = escapeSlack(String(updateObj.requestName ?? existing.requestName ?? "this order"));
 
       const message = [
