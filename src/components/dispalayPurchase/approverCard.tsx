@@ -54,8 +54,6 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
             body: JSON.stringify({
                 itemID: itemID,
                 approvalRole: requiredRole,
-                approverName: user.name,
-                approverPicture: user.profilePicture,
             })
         });
 

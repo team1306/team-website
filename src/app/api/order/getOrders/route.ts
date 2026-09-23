@@ -34,7 +34,8 @@ interface PurchaseData {
 
 function parsePurchases(
   rawPurchases: any[] | null,
-  userNames: Map<string, string>
+  userNames: Map<string, string>,
+  userPictures: Map<string, string>
 ): PurchaseData[] {
   if (!rawPurchases) return [];
   return rawPurchases.map((row) => ({
@@ -55,12 +56,15 @@ function parsePurchases(
     })),
     vendor: row.vendor,
     reason: row.reason ?? "",
-    approvers: row.approvers.map((approver: any) => ({
-      approved: approver.approved,
-      approverName: approver.approverName,
-      requiredRole: approver.requiredRole,
-      approverPicture: approver.approverPicture,
-    })),
+    approvers: row.approvers.map((approver: any) => {
+      const approverId = approver.approver ? String(approver.approver).trim() : "";
+      return {
+        approved: approver.approved,
+        approverName: approverId ? userNames.get(approverId) ?? approver.approver : "",
+        requiredRole: approver.requiredRole,
+        approverPicture: approverId ? userPictures.get(approverId) ?? "" : "",
+      };
+    }),
   }));
 }
 
@@ -70,7 +74,7 @@ export async function GET() {
 
   const [purchasesRes, usersRes] = await Promise.all([
     supabase.from("purchases").select(),
-    supabase.from("users").select("user_id, name"),
+    supabase.from("users").select("user_id, name, picture"),
   ]);
 
   if (purchasesRes.error) {
@@ -84,9 +88,11 @@ export async function GET() {
   const userNames = new Map<string, string>(
     (usersRes.data ?? []).map((u) => [String(u.user_id), u.name])
   );
-  console.log("users loaded:", userNames.size);
+  const userPictures = new Map<string, string>(
+    (usersRes.data ?? []).map((u) => [String(u.user_id), u.picture ?? ""])
+  );
 
-  const parsed: PurchaseData[] = parsePurchases(purchasesRes.data, userNames);
+  const parsed: PurchaseData[] = parsePurchases(purchasesRes.data, userNames, userPictures);
 
   return NextResponse.json({ parsed }, { status: 200 });
 }

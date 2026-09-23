@@ -22,15 +22,15 @@ export interface PurchaseCreate {
 function generateApprovers(items: ItemData[]) {
   if (getCost(items) > 250) {
     return ([
-      { approverName: "", approverPicture: "", requiredRole: "studentLead", approved: false },
-      { approverName: "", approverPicture: "", requiredRole: "mentorLead", approved: false },
-      { approverName: "", approverPicture: "", requiredRole: "president", approved: false },
+      { approved: false, approver: "", requiredRole: "studentLead" },
+      { approved: false, approver: "", requiredRole: "mentorLead" },
+      { approved: false, approver: "", requiredRole: "president" },
     ]);
   }
   else {
     return ([
-      { approverName: "", approverPicture: "", requiredRole: "studentLead", approved: false },
-      { approverName: "", approverPicture: "", requiredRole: "mentor", approved: false },
+      { approved: false, approver: "", requiredRole: "studentLead" },
+      { approved: false, approver: "", requiredRole: "mentor" },
     ]);
   }
 }

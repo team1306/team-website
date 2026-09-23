@@ -4,16 +4,13 @@ import { cookies } from "next/headers";
 
 export interface Approver {
     approved: boolean;
-    approverName: string;
+    approver: string;
     requiredRole: string;
-    approverPicture: string;
 }
 
-export interface PurchaseCreate {
+export interface PurchaseApprove {
     itemID: string;
     approvalRole: string;
-    approverName: string;
-    approverPicture?: string;
 }
 
 const FINAL_APPROVAL_RECIPIENT = "@Andrew";
@@ -95,8 +92,15 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const body: PurchaseCreate = await request.json();
-    const { itemID, approvalRole, approverName, approverPicture } = body;
+    const body: PurchaseApprove = await request.json();
+    const { itemID, approvalRole } = body;
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const approverUserId = authData?.user?.id;
+
+    if (authError || !approverUserId) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
 
     const { data: purchase, error: fetchError } = await supabase
         .from("purchases")
@@ -124,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     const updatedApprovers = approvers.map((a) =>
         a.requiredRole === approvalRole && !a.approved
-            ? { ...a, approved: true, approverName: approverName ?? "", approverPicture: approverPicture ?? "" }
+            ? { ...a, approved: true, approver: approverUserId }
             : a
     );
 
@@ -147,25 +151,20 @@ export async function POST(request: NextRequest) {
     try {
         const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
 
-        let slackUserId: string | null = null;
-        const { data: authData } = await supabase.auth.getUser();
-        const approverUserId = authData?.user?.id;
+        const { data: userRow, error: userError } = await supabase
+            .from("users")
+            .select("name, slack_userid")
+            .eq("user_id", approverUserId)
+            .maybeSingle();
 
-        if (approverUserId) {
-            const { data: userRow, error: userError } = await supabase
-                .from("users")
-                .select("slack_userid")
-                .eq("user_id", approverUserId)
-                .maybeSingle();
-
-            if (userError) {
-            }
-            slackUserId = userRow?.slack_userid?.trim() || null;
+        if (userError) {
+            console.error("Failed to look up approver:", userError.message);
         }
 
+        const slackUserId = userRow?.slack_userid?.trim() || null;
         const approverMention = slackUserId
             ? `<@${slackUserId}>`
-            : escapeSlack(approverName || "Someone");
+            : escapeSlack(userRow?.name ?? "Someone");
 
         const orderName = escapeSlack(purchase.requestName ?? "this order");
         const roleText = withArticle(formatRole(approvalRole));
@@ -185,6 +184,7 @@ export async function POST(request: NextRequest) {
             await postSlackThreadReply(finalMessage, threadTs);
         }
     } catch (err) {
+        console.error("Slack notification failed:", err);
     }
 
     return NextResponse.json({ purchase: updated }, { status: 200 });
