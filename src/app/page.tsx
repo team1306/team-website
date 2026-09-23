@@ -159,7 +159,7 @@ export function Page() {
             </div>
             <div className="ml-auto flex gap-2">
             {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
-              <PurchaseItems orders={purchases} />
+              <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
             )}
                 <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
@@ -202,7 +202,7 @@ export function Page() {
               </Field>
             </div>
             <div className="ml-auto flex gap-2 mt-2">
-              <PurchaseItems orders={purchases} />
+              <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
               <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
           </div>
