@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 import { recalculateCategorySpent } from "@/lib/budget";
+import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage, postSlackThreadReply } from "@/lib/slack";
 
 interface ItemData {
   id: string;
@@ -25,10 +26,6 @@ export interface OrderData {
   expidited?: string;
 }
 
-function getCost(items: ItemData[]): number {
-  return items.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
-}
-
 function generateApprovers(items: ItemData[]) {
   if (getCost(items) > 250) {
     return ([
@@ -43,6 +40,48 @@ function generateApprovers(items: ItemData[]) {
       { approverName: "", approverPicture: "", requiredRole: "mentor", approved: false },
     ]);
   }
+}
+
+function diffItems(oldItems: ItemData[], newItems: ItemData[]): string[] {
+  const oldMap = new Map(oldItems.map((item) => [item.id, item]));
+  const newMap = new Map(newItems.map((item) => [item.id, item]));
+  const lines: string[] = [];
+
+  for (const item of newItems) {
+    const old = oldMap.get(item.id);
+    const name = escapeSlack(item.ItemName);
+
+    if (!old) {
+      lines.push(`Added ${name} (qty ${item.ItemQuantity}, ${currency.format(item.ItemCost)})`);
+      continue;
+    }
+
+    const changes: string[] = [];
+    if (old.ItemName !== item.ItemName) {
+      changes.push(`name "${escapeSlack(old.ItemName)}" → "${name}"`);
+    }
+    if (old.ItemQuantity !== item.ItemQuantity) {
+      changes.push(`qty ${old.ItemQuantity} → ${item.ItemQuantity}`);
+    }
+    if (old.ItemCost !== item.ItemCost) {
+      changes.push(`cost ${currency.format(old.ItemCost)} → ${currency.format(item.ItemCost)}`);
+    }
+    if (old.ItemLink !== item.ItemLink) {
+      changes.push(`link updated`);
+    }
+
+    if (changes.length > 0) {
+      lines.push(`Edited ${name}: ${changes.join(", ")}`);
+    }
+  }
+
+  for (const item of oldItems) {
+    if (!newMap.has(item.id)) {
+      lines.push(`Removed ${escapeSlack(item.ItemName)}`);
+    }
+  }
+
+  return lines;
 }
 
 export async function PATCH(request: NextRequest) {
@@ -84,14 +123,40 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'no updates found' }, { status: 400 });
   }
 
-  let previousCategory: string | null = null;
-  if (updateObj.catagory !== undefined) {
-    const { data: existing } = await supabase
-      .from('purchases')
-      .select('catagory')
-      .eq('purchaseID', id)
+  const { data: existing, error: existingError } = await supabase
+    .from('purchases')
+    .select('catagory, requestName, vendor, reason, status, cost, expidited, items, requestor, "slack-thread-id"')
+    .eq('purchaseID', id)
+    .maybeSingle();
+
+  if (existingError) {
+    return NextResponse.json({ error: existingError.message }, { status: 500 });
+  }
+
+  if (!existing) {
+    return NextResponse.json({ error: 'No purchase found with that id' }, { status: 404 });
+  }
+
+  const previousCategory: string | null = existing.catagory ?? null;
+
+  if (typeof category === 'string' && category !== previousCategory) {
+    const { data: budgetRow, error: budgetError } = await supabase
+      .from('budget')
+      .select('categoryID, enabled')
+      .eq('categoryID', category)
       .maybeSingle();
-    previousCategory = existing?.catagory ?? null;
+
+    if (budgetError) {
+      return NextResponse.json({ error: budgetError.message }, { status: 500 });
+    }
+
+    if (!budgetRow) {
+      return NextResponse.json({ error: 'Unknown budget category' }, { status: 400 });
+    }
+
+    if (!budgetRow.enabled) {
+      return NextResponse.json({ error: 'Budget category is disabled' }, { status: 400 });
+    }
   }
 
   const { error } = await supabase
@@ -99,43 +164,134 @@ export async function PATCH(request: NextRequest) {
     .update(updateObj)
     .eq('purchaseID', id);
 
-  if (!error) {
-    const affectsSpending =
-      updateObj.status !== undefined ||
-      updateObj.catagory !== undefined ||
-      updateObj.cost !== undefined;
-
-    let budgetError: string | null = null;
-    if (affectsSpending) {
-      let currentCategory: string | null = null;
-      if (typeof updateObj.catagory === 'string') {
-        currentCategory = updateObj.catagory;
-      } else {
-        const { data: row } = await supabase
-          .from('purchases')
-          .select('catagory')
-          .eq('purchaseID', id)
-          .maybeSingle();
-        currentCategory = row?.catagory ?? null;
-      }
-
-      budgetError = await recalculateCategorySpent([previousCategory, currentCategory]);
-      if (budgetError) {
-        console.error('Failed to update budget spent:', budgetError);
-      }
-    }
-
-    return NextResponse.json(
-      { message: 'Success', ...(budgetError ? { budgetWarning: budgetError } : {}) },
-      { status: 200 }
-    );
-  }
-  else {
+  if (error) {
     if (error.code === '42501') {
       return NextResponse.json({ error: 'Auth Error - Acess Denied' }, { status: 403 });
     }
-    else {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const affectsSpending =
+    updateObj.status !== undefined ||
+    updateObj.catagory !== undefined ||
+    updateObj.cost !== undefined;
+
+  let budgetWarning: string | null = null;
+  if (affectsSpending) {
+    const currentCategory =
+      typeof updateObj.catagory === 'string' ? updateObj.catagory : previousCategory;
+
+    budgetWarning = await recalculateCategorySpent([previousCategory, currentCategory]);
+    if (budgetWarning) {
+      console.error('Failed to update budget spent:', budgetWarning);
     }
   }
+
+  const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
+
+  try {
+    const bullets: string[] = [];
+
+    if (updateObj.requestName !== undefined && updateObj.requestName !== existing.requestName) {
+      bullets.push(`Order Name: ${escapeSlack(String(updateObj.requestName))}`);
+    }
+    if (updateObj.catagory !== undefined && updateObj.catagory !== existing.catagory) {
+      bullets.push(`Budget Category: ${escapeSlack(String(updateObj.catagory))}`);
+    }
+    if (updateObj.vendor !== undefined && updateObj.vendor !== existing.vendor) {
+      bullets.push(`Vendor: ${escapeSlack(String(updateObj.vendor))}`);
+    }
+    if (updateObj.reason !== undefined && updateObj.reason !== existing.reason) {
+      bullets.push(`Reason: ${escapeSlack(String(updateObj.reason))}`);
+    }
+    if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited) {
+      bullets.push(`Expedited: ${escapeSlack(String(updateObj.expidited))}`);
+    }
+    if (updateObj.cost !== undefined && updateObj.items === undefined && updateObj.cost !== existing.cost) {
+      bullets.push(`Cost: ${currency.format(Number(updateObj.cost))}`);
+    }
+    if (updateObj.items !== undefined) {
+      const newItems = updateObj.items as ItemData[];
+      const oldItems = (existing.items ?? []) as ItemData[];
+      const itemLines = diffItems(oldItems, newItems);
+      bullets.push(...itemLines);
+    }
+
+    if (bullets.length > 0) {
+      let editorMention = "Someone";
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
+
+      if (userId) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('name, slack_userid')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const slackUserId = userRow?.slack_userid?.trim() || null;
+        editorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(userRow?.name ?? "Someone");
+      }
+
+      const orderName = escapeSlack(String(updateObj.requestName ?? existing.requestName ?? "this order"));
+
+      const message = [
+        `${editorMention} edited ${orderName},`,
+        ...bullets.map((bullet) => `• ${bullet}`),
+      ].join("\n");
+
+      await postSlackThreadReply(message, threadTs);
+    }
+  } catch (err) {
+    console.error("Slack thread notification failed:", err);
+  }
+
+  if (threadTs) {
+    try {
+      const mergedItems = (updateObj.items ?? existing.items ?? []) as ItemData[];
+      const mergedCost = updateObj.cost !== undefined ? Number(updateObj.cost) : Number(existing.cost ?? getCost(mergedItems));
+      const mergedTitle = String(updateObj.requestName ?? existing.requestName ?? "Purchase Request");
+      const mergedVendor = String(updateObj.vendor ?? existing.vendor ?? "");
+      const mergedCategory = String(updateObj.catagory ?? existing.catagory ?? "");
+      const mergedStatus = String(updateObj.status ?? existing.status ?? "needsAproval");
+
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('name, slack_userid')
+        .eq('user_id', existing.requestor)
+        .maybeSingle();
+
+      const requesterMention = userRow?.slack_userid
+        ? `<@${userRow.slack_userid.trim()}>`
+        : escapeSlack(userRow?.name ?? "Unknown user");
+
+      const requestedDate = new Date(Number(id) * 1000).toLocaleDateString("en-US", {
+        timeZone: "America/Chicago",
+      });
+
+      const blocks = buildSlackBlocks({
+        title: mergedTitle,
+        requesterMention,
+        requestedDate,
+        items: mergedItems,
+        totalCost: mergedCost,
+        vendor: mergedVendor,
+        category: mergedCategory,
+        status: mergedStatus,
+      });
+
+      await updateSlackMessage(
+        threadTs,
+        blocks,
+        `Purchase request: ${mergedTitle} (${currency.format(mergedCost)})`
+      );
+    } catch (err) {
+      console.error("Slack main message update failed:", err);
+    }
+  }
+
+  return NextResponse.json(
+    { message: 'Success', ...(budgetWarning ? { budgetWarning } : {}) },
+    { status: 200 }
+  );
 }

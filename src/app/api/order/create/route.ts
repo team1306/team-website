@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
+import { currency, escapeSlack, getCost, buildSlackBlocks, postSlackMessage } from "@/lib/slack";
 
 interface ItemData {
   id: string;
@@ -18,12 +19,6 @@ export interface PurchaseCreate {
   vendor: string;
 }
 
-const MAX_ITEM_ROWS = 38;
-
-function getCost(items: ItemData[]): number {
-  return items.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
-}
-
 function generateApprovers(items: ItemData[]) {
   if (getCost(items) > 250) {
     return ([
@@ -37,125 +32,6 @@ function generateApprovers(items: ItemData[]) {
       { approverName: "", approverPicture: "", requiredRole: "studentLead", approved: false },
       { approverName: "", approverPicture: "", requiredRole: "mentor", approved: false },
     ]);
-  }
-}
-
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-
-function escapeSlack(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function isHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-function buildSlackBlocks(params: {
-  title: string;
-  requesterMention: string;
-  requestedDate: string;
-  items: ItemData[];
-  totalCost: number;
-  vendor: string;
-  category: string;
-}) {
-  const { title, requesterMention, requestedDate, items, totalCost, vendor, category } = params;
-
-  const shownItems = items.slice(0, MAX_ITEM_ROWS);
-  const hiddenCount = items.length - shownItems.length;
-
-  const itemBlocks = shownItems.map((item, index) => {
-    const block: any = {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*${escapeSlack(item.ItemName)}* ×${item.ItemQuantity}` },
-        { type: "mrkdwn", text: `*${currency.format(item.ItemCost * item.ItemQuantity)}*` },
-      ],
-    };
-
-    if (item.ItemLink && isHttpUrl(item.ItemLink)) {
-      block.accessory = {
-        type: "button",
-        text: { type: "plain_text", text: "Open Link" },
-        url: item.ItemLink,
-        action_id: `open_item_${index + 1}`,
-      };
-    }
-    return block;
-  });
-
-  if (hiddenCount > 0) {
-    itemBlocks.push({
-      type: "context",
-      elements: [{ type: "mrkdwn", text: `+${hiddenCount} more item${hiddenCount === 1 ? "" : "s"} not shown` }],
-    } as any);
-  }
-
-  return [
-    { type: "markdown", text: `# ${title}` },
-    {
-      type: "section",
-      text: { type: "mrkdwn", text: `*Requested By* ${requesterMention} on ${requestedDate}` },
-    },
-    { type: "divider" },
-    ...itemBlocks,
-    { type: "markdown", text: `### Total Cost: ${currency.format(totalCost)}` },
-    { type: "divider" },
-    {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: "*Status*\nNeeds Approval" },
-        { type: "mrkdwn", text: "*Ordering*\nAwaiting Approval" },
-      ],
-    },
-    {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Vendor*\n${escapeSlack(vendor)}` },
-        { type: "mrkdwn", text: `*Budget*\n${escapeSlack(category)}` },
-      ],
-    },
-  ];
-}
-
-async function postSlackMessage(blocks: any[], fallbackText: string): Promise<string | null> {
-  const token = process.env.SLACK_BOT_TOKEN;
-  const channel = process.env.SLACK_CHANNEL_ID;
-
-  if (!token || !channel) {
-    console.error("Slack not configured: missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID");
-    return null;
-  }
-
-  try {
-    const res = await fetch("https://slack.com/api/chat.postMessage", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        channel,
-        text: fallbackText,
-        blocks,
-        unfurl_links: false,
-      }),
-    });
-
-    const data = await res.json();
-    if (!data.ok) {
-      console.error("Slack API error:", data.error, data.response_metadata?.messages);
-      return null;
-    }
-    return data.ts as string;
-  } catch (err) {
-    console.error("Failed to post Slack message:", err);
-    return null;
   }
 }
 
@@ -220,6 +96,7 @@ export async function POST(request: NextRequest) {
       totalCost,
       vendor,
       category,
+      status: 'needsAproval',
     });
 
     const ts = await postSlackMessage(

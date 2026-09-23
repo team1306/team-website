@@ -110,6 +110,32 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
+    interface CategoryData {
+        categoryID: string;
+        categoryName: string;
+        categoryPhase: string;
+        categoryBudget: number;
+        categorySpent: number;
+        enabled: boolean;
+    }
+
+    const [categories, setCategories] = useState<CategoryData[]>([]);
+
+    async function fetchCategories() {
+        try {
+            const res = await fetch("/api/budget/getCategories");
+            if (!res.ok) throw new Error("Failed to fetch categories");
+            const data: CategoryData[] = await res.json();
+            setCategories(data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
     async function duplicate() {
         try {
             const res = await fetch('/api/order/create', {
@@ -142,19 +168,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const [onHoldOpen, setOnHoldOpen] = useState(false);
     const [receivedOpen, setReceivedOpen] = useState(false);
 
+    useEffect(() => {
+        setItems(items);
+    }, [items]);
+
     const calculatePrice = () => {
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
     }
 
-    console.log(id);
-    console.log(approvers);
-
     //track request info
     const [name, setName] = useState(itemName);
-    const [requestCost, setRequestCost] = useState(calculatePrice());
     const [itemCatagory, setItemCaragory] = useState(catagory);
     const [orderVendor, setOrderVendor] = useState(vendor);
     const [statusReason, setReason] = useState(reason || "");
+
+    const selectedCategoryData = categories.find((c) => c.categoryID === itemCatagory);
+    const categoryMax = selectedCategoryData?.categoryBudget ?? 4000;
 
     const CategoryTitle = () => {
         switch (itemCatagory) {
@@ -242,7 +271,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const calcPercent = () => {
-        return (Math.round(((4000 - calculatePrice()) / 4000) * 100))
+        return (Math.round(((categoryMax - calculatePrice()) / categoryMax) * 100))
     }
 
     const purchaseApprovers = () => {
@@ -401,7 +430,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
-                        <h2 className="text-base font-bold text-zinc-100">${requestCost.toFixed(2)}</h2>
+                        <h2 className="text-base font-bold text-zinc-100">${calculatePrice().toFixed(2)}</h2>
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
@@ -411,8 +440,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     </div>
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
-                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full">
-                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0">
+                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
+                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -541,7 +570,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             )}
                         </Card>
                         {(editMode) && (
-                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-2 rounded-2xl gap-0">
+                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-2 rounded-2xl gap-0 shrink-0">
                                 <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Request Info</CardTitle>
                                 <div className="flex">
                                     <div className="pl-2 pr-2 flex-1 mt-1">
@@ -551,11 +580,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Robot">Robot</SelectItem>
-                                                <SelectItem value="Competition">Competition</SelectItem>
-                                                <SelectItem value="Tools">Tools</SelectItem>
-                                                <SelectItem value="Field">Field</SelectItem>
-                                                <SelectItem value="Outreach">Outreach</SelectItem>
+                                                    {categories.map((selectcategory) => (
+                                                        <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -569,7 +596,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectItem value="WCP">WCP</SelectItem>
                                                 <SelectItem value="CTRE">CTRE</SelectItem>
                                                 <SelectItem value="Digi-Key">Digi-Key</SelectItem>
-                                                <SelectItem value="Amazon">Andy Mark</SelectItem>
+                                                <SelectItem value="AndyMark">Andy Mark</SelectItem>
                                                 <SelectItem value="Mouser">Mouser</SelectItem>
                                                 <SelectItem value="Amazon">Amazon</SelectItem>
                                                 <SelectItem value="Other">Other</SelectItem>
@@ -579,7 +606,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        <ScrollArea className="w-full rounded-md pr-3 h-full">
+                        <ScrollArea className="w-full rounded-md pr-3 flex-1 min-h-0">
                             {(status == 'needsAproval' || status == 'approved') && (
                                 <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
                                     {(status == 'approved' && expidited != "approved") && (
@@ -618,19 +645,19 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     <div className="p-2 bg-mist-700 m-2 rounded-md mt-3">
                                         <Progress
                                             className=""
-                                            max={4000}
+                                            max={categoryMax}
                                             value={calculatePrice()}
                                         >
                                             <div className="flex w-full">
                                                 <ProgressLabel className="text-zinc-100 text-sm mr-auto">Remaining Budget</ProgressLabel>
                                                 {(calcPercent() > 10) && (
-                                                    <h1 className="ml-auto text-green-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                    <h1 className="ml-auto text-green-500 text-sm">{calcPercent()}% Remains</h1>
                                                 )}
                                                 {(calcPercent() < 10 && !(calcPercent() < 0)) && (
-                                                    <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                    <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}% Remains</h1>
                                                 )}
                                                 {(calcPercent() < 0) && (
-                                                    <h1 className="ml-auto text-red-500 text-sm">{calcPercent()}%% Remains</h1>
+                                                    <h1 className="ml-auto text-red-500 text-sm">{calcPercent()}% Remains</h1>
                                                 )}
                                             </div>
                                         </Progress>
