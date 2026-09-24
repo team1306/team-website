@@ -29,17 +29,62 @@ export function getCost(items: SlackItemData[]): number {
 
 const STATUS_LABELS: Record<string, { status: string; ordering: string }> = {
     needsAproval: { status: "Needs Approval", ordering: "Awaiting Approval" },
-    approved:     { status: "Approved", ordering: "Ready to Order" },
-    purchased:    { status: "Purchased", ordering: "Purchased" },
-    recived:      { status: "Received", ordering: "Received" },
-    onHold:       { status: "On Hold", ordering: "On Hold" },
-    rejected:     { status: "Rejected", ordering: "Rejected" },
+    approved: { status: "Approved", ordering: "Ready to Order" },
+    purchased: { status: "Purchased", ordering: "Purchased" },
+    recived: { status: "Received", ordering: "Received" },
+    onHold: { status: "On Hold", ordering: "On Hold" },
+    rejected: { status: "Rejected", ordering: "Rejected" },
 };
 
-function labelsForStatus(status: string): { status: string; ordering: string } {
+export function labelsForStatus(status: string): { status: string; ordering: string } {
     if (STATUS_LABELS[status]) return STATUS_LABELS[status];
     const fallback = status.charAt(0).toUpperCase() + status.slice(1);
     return { status: fallback, ordering: fallback };
+}
+
+function getChicagoNow(): Date {
+    const chicagoString = new Date().toLocaleString("en-US", { timeZone: "America/Chicago" });
+    return new Date(chicagoString);
+}
+
+function isOrderingDay(now: Date): boolean {
+    const day = now.getDay();
+    return day === 1 || day === 4;
+}
+
+function nextOrderingDate(now: Date): string {
+    const dayOfWeek = now.getDay();
+    const daysUntilMonday = ((1 - dayOfWeek + 7) % 7) || 0;
+    const daysUntilThursday = ((4 - dayOfWeek + 7) % 7) || 0;
+    const soonest = Math.min(daysUntilMonday, daysUntilThursday);
+
+    const result = new Date(now);
+    result.setDate(now.getDate() + soonest);
+
+    const mm = String(result.getMonth() + 1).padStart(2, '0');
+    const dd = String(result.getDate()).padStart(2, '0');
+    const yy = String(result.getFullYear()).slice(-2);
+
+    return `${mm}/${dd}/${yy}`;
+}
+
+function labelsForBlocks(status: string, expidited: string): { status: string; ordering: string } {
+    const base = STATUS_LABELS[status] || { status: "Unknown Status", ordering: "Unknown" };
+
+    if (status !== "approved") {
+        return base;
+    }
+
+    if (expidited === "approved") {
+        return { status: base.status, ordering: "Expidited" };
+    }
+
+    const now = getChicagoNow();
+    if (isOrderingDay(now)) {
+        return { status: base.status, ordering: "Ready to Order" };
+    }
+
+    return { status: base.status, ordering: `Can Be Ordered ${nextOrderingDate(now)}` };
 }
 
 export function buildSlackBlocks(params: {
@@ -51,23 +96,11 @@ export function buildSlackBlocks(params: {
     vendor: string;
     category: string;
     status: string;
+    expidited: string;
 }) {
 
-    const STATUS_LABELS: Record<string, { status: string; ordering: string }> = {
-        needsAproval: { status: "Needs Approval", ordering: "Awaiting Approval" },
-        approved:     { status: "Approved",       ordering: "Ready to Order" },
-        purchased:    { status: "Purchased",      ordering: "Purchased" },
-        recived:      { status: "Received",       ordering: "Received" },
-        onHold:       { status: "On Hold",        ordering: "On Hold" },
-        rejected:     { status: "Rejected",       ordering: "Rejected" },
-    };
-    
-    function labelsForStatus(status: string): { status: string; ordering: string } {
-        return STATUS_LABELS[status] || { status: "Unknown Status", ordering: "Unknown" };
-    }
-
-    const { title, requesterMention, requestedDate, items, totalCost, vendor, category, status } = params;
-    const { status: statusLabel, ordering: orderingLabel } = labelsForStatus(status);
+    const { title, requesterMention, requestedDate, items, totalCost, vendor, category, status, expidited } = params;
+    const { status: statusLabel, ordering: orderingLabel } = labelsForBlocks(status, expidited);
 
     const shownItems = items.slice(0, MAX_ITEM_ROWS);
     const hiddenCount = items.length - shownItems.length;

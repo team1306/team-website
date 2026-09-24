@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
           vendor,
           category,
           status,
+          expidited: String(purchase.expidited ?? "NULL"),
         });
 
         await updateSlackMessage(

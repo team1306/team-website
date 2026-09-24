@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       vendor,
       category,
       status: 'needsAproval',
+      expidited: 'NULL',
     });
 
     const ts = await postSlackMessage(

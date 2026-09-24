@@ -176,7 +176,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
     }
 
-    //track request info
     const [name, setName] = useState(itemName);
     const [itemCatagory, setItemCaragory] = useState(catagory);
     const [orderVendor, setOrderVendor] = useState(vendor);
@@ -580,9 +579,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                    {categories.map((selectcategory) => (
-                                                        <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
-                                                    ))}
+                                                {categories.map((selectcategory) => (
+                                                    <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>

@@ -228,6 +228,30 @@ export async function PATCH(request: NextRequest) {
       await postSlackThreadReply(`${mention} has marked this order as expedited rejected.`, threadTs);
     }
 
+    const statusChanged = updateObj.status !== undefined && updateObj.status !== existing.status;
+    const statusTransition = statusChanged ? String(updateObj.status) : null;
+    const statusReasonText = reason !== undefined ? reason : existing.reason;
+
+    if (statusTransition === "rejected") {
+      const mention = await getEditorMention();
+      const message = statusReasonText
+        ? `${mention} rejected this order: ${escapeSlack(String(statusReasonText))}`
+        : `${mention} rejected this order.`;
+      await postSlackThreadReply(message, threadTs);
+    } else if (statusTransition === "onHold") {
+      const mention = await getEditorMention();
+      const message = statusReasonText
+        ? `${mention} put this order on hold: ${escapeSlack(String(statusReasonText))}`
+        : `${mention} put this order on hold.`;
+      await postSlackThreadReply(message, threadTs);
+    } else if (statusTransition === "recived") {
+      const mention = await getEditorMention();
+      const message = statusReasonText
+        ? `${mention} marked this order as received: ${escapeSlack(String(statusReasonText))}`
+        : `${mention} marked this order as received.`;
+      await postSlackThreadReply(message, threadTs);
+    }
+
     const bullets: string[] = [];
 
     if (updateObj.requestName !== undefined && updateObj.requestName !== existing.requestName) {
@@ -239,7 +263,7 @@ export async function PATCH(request: NextRequest) {
     if (updateObj.vendor !== undefined && updateObj.vendor !== existing.vendor) {
       bullets.push(`Vendor: ${escapeSlack(String(updateObj.vendor))}`);
     }
-    if (updateObj.reason !== undefined && updateObj.reason !== existing.reason) {
+    if (updateObj.reason !== undefined && updateObj.reason !== existing.reason && statusTransition === null) {
       bullets.push(`Reason: ${escapeSlack(String(updateObj.reason))}`);
     }
     if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited && expiditeTransition === null) {
@@ -278,6 +302,7 @@ export async function PATCH(request: NextRequest) {
       const mergedVendor = String(updateObj.vendor ?? existing.vendor ?? "");
       const mergedCategory = String(updateObj.catagory ?? existing.catagory ?? "");
       const mergedStatus = String(updateObj.status ?? existing.status ?? "needsAproval");
+      const mergedExpidited = String(updateObj.expidited ?? existing.expidited ?? "NULL");
 
       const { data: userRow } = await supabase
         .from('users')
@@ -302,6 +327,7 @@ export async function PATCH(request: NextRequest) {
         vendor: mergedVendor,
         category: mergedCategory,
         status: mergedStatus,
+        expidited: mergedExpidited,
       });
 
       await updateSlackMessage(

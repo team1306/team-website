@@ -37,8 +37,6 @@ function withArticle(phrase: string): string {
 }
 
 function getNextPurchaseDate(): string {
-    // Anchor "today" to America/Chicago rather than the server's local timezone,
-    // matching the timeZone: "America/Chicago" pattern used elsewhere in this codebase.
     const today = new Date(
         new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
     );
@@ -226,6 +224,7 @@ export async function POST(request: NextRequest) {
                 vendor,
                 category,
                 status: newStatus,
+                expidited: String(purchase.expidited ?? "NULL"),
             });
 
             await updateSlackMessage(
