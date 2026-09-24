@@ -69,6 +69,9 @@ export default function Page() {
 
     useEffect(() => {
         loadUser();
+        if (!((currentUser?.role == "president") || (currentUser?.role == "programDirector") || (currentUser?.role == "teamAdministrator"))) {
+            router.push("/");
+        }
         loadUsers();
     }, []);
 
@@ -85,7 +88,7 @@ export default function Page() {
                 </div>
                 <div className="p-2 pt-0 flex flex-col gap-2">
                     {users?.map((user) => (
-                        <User key={user.id} id={user.id} name={user.name} role={user.role} profilePicture={user.profilePicture} onRoleGranted={loadUsers}/>
+                        <User key={user.id} id={user.id} name={user.name} role={user.role} profilePicture={user.profilePicture} onRoleGranted={loadUsers} />
                     ))}
                 </div>
             </Card>

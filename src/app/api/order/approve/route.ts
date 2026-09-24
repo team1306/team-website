@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from "next/headers";
+import { currency, getCost, buildSlackBlocks, updateSlackMessage } from "@/lib/slack";
 
 export interface Approver {
     approved: boolean;
@@ -11,6 +12,14 @@ export interface Approver {
 export interface PurchaseApprove {
     itemID: string;
     approvalRole: string;
+}
+
+interface ItemData {
+    id: string;
+    ItemName: string;
+    ItemCost: number;
+    ItemQuantity: number;
+    ItemLink: string;
 }
 
 const FINAL_APPROVAL_RECIPIENT = "@Andrew";
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     const { data: purchase, error: fetchError } = await supabase
         .from("purchases")
-        .select('status, approvers, requestName, expidited, "slack-thread-id"')
+        .select('status, approvers, requestName, expidited, items, vendor, catagory, cost, requestor, "slack-thread-id"')
         .eq("purchaseID", itemID)
         .single();
 
@@ -133,12 +142,13 @@ export async function POST(request: NextRequest) {
     );
 
     const allApproved = updatedApprovers.every((a) => a.approved);
+    const newStatus = allApproved ? "approved" : "needsAproval";
 
     const { data: updated, error: updateError } = await supabase
         .from("purchases")
         .update({
             approvers: updatedApprovers,
-            status: allApproved ? "approved" : "needsAproval",
+            status: newStatus,
         })
         .eq("purchaseID", itemID)
         .select()
@@ -178,10 +188,51 @@ export async function POST(request: NextRequest) {
             const isExpidited = purchase.expidited === "approved";
 
             const finalMessage = isExpidited
-                ? `This order has been approved and expedited, ${FINAL_APPROVAL_RECIPIENT}. It can be ordered now.`
-                : `This order has been approved, ${FINAL_APPROVAL_RECIPIENT}. Next purchasing day: ${getNextPurchaseDate()}.`;
+                ? `This order has been expedited and can be ordered now ${FINAL_APPROVAL_RECIPIENT}`
+                : `This order has been approved, It can be ordered on ${getNextPurchaseDate()}`;
 
             await postSlackThreadReply(finalMessage, threadTs);
+        }
+
+        if (threadTs) {
+            const items = (purchase.items ?? []) as ItemData[];
+            const title = String(purchase.requestName ?? "Purchase Request");
+            const vendor = String(purchase.vendor ?? "");
+            const category = String(purchase.catagory ?? "");
+            const cost = purchase.cost !== undefined && purchase.cost !== null
+                ? Number(purchase.cost)
+                : getCost(items);
+
+            const { data: requestorRow } = await supabase
+                .from("users")
+                .select("name, slack_userid")
+                .eq("user_id", purchase.requestor)
+                .maybeSingle();
+
+            const requesterMention = requestorRow?.slack_userid
+                ? `<@${requestorRow.slack_userid.trim()}>`
+                : escapeSlack(requestorRow?.name ?? "Unknown user");
+
+            const requestedDate = new Date(Number(itemID) * 1000).toLocaleDateString("en-US", {
+                timeZone: "America/Chicago",
+            });
+
+            const blocks = buildSlackBlocks({
+                title,
+                requesterMention,
+                requestedDate,
+                items,
+                totalCost: cost,
+                vendor,
+                category,
+                status: newStatus,
+            });
+
+            await updateSlackMessage(
+                threadTs,
+                blocks,
+                `Purchase request: ${title} (${currency.format(cost)})`
+            );
         }
     } catch (err) {
         console.error("Slack notification failed:", err);

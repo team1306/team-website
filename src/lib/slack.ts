@@ -29,10 +29,11 @@ export function getCost(items: SlackItemData[]): number {
 
 const STATUS_LABELS: Record<string, { status: string; ordering: string }> = {
     needsAproval: { status: "Needs Approval", ordering: "Awaiting Approval" },
-    aproved: { status: "Approved", ordering: "Ready to Order" },
-    ordered: { status: "Ordered", ordering: "Order Placed" },
-    recived: { status: "Received", ordering: "Complete" },
-    denied: { status: "Denied", ordering: "Cancelled" },
+    approved:     { status: "Approved", ordering: "Ready to Order" },
+    purchased:    { status: "Purchased", ordering: "Purchased" },
+    recived:      { status: "Received", ordering: "Received" },
+    onHold:       { status: "On Hold", ordering: "On Hold" },
+    rejected:     { status: "Rejected", ordering: "Rejected" },
 };
 
 function labelsForStatus(status: string): { status: string; ordering: string } {
@@ -51,6 +52,20 @@ export function buildSlackBlocks(params: {
     category: string;
     status: string;
 }) {
+
+    const STATUS_LABELS: Record<string, { status: string; ordering: string }> = {
+        needsAproval: { status: "Needs Approval", ordering: "Awaiting Approval" },
+        approved:     { status: "Approved",       ordering: "Ready to Order" },
+        purchased:    { status: "Purchased",      ordering: "Purchased" },
+        recived:      { status: "Received",       ordering: "Received" },
+        onHold:       { status: "On Hold",        ordering: "On Hold" },
+        rejected:     { status: "Rejected",       ordering: "Rejected" },
+    };
+    
+    function labelsForStatus(status: string): { status: string; ordering: string } {
+        return STATUS_LABELS[status] || { status: "Unknown Status", ordering: "Unknown" };
+    }
+
     const { title, requesterMention, requestedDate, items, totalCost, vendor, category, status } = params;
     const { status: statusLabel, ordering: orderingLabel } = labelsForStatus(status);
 

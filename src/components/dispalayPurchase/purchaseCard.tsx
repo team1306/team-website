@@ -492,16 +492,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuGroup>
                                                         <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
-                                                        {(userRole == "programDirector") && (
+                                                        {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
                                                         )}
-                                                        {((expidited == "requested" || expidited == "approved") && userRole == "programDirector") && (
+                                                        {((expidited == "requested" || expidited == "approved") && (userRole == "programDirector" || userRole == "teamAdministrator")) && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "rejected") }}>Reject Expedite</DropdownMenuItem>
                                                         )}
-                                                        {(userRole == "programDirector") && (
+                                                        {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                                         )}
-                                                        <DropdownMenuItem variant="destructive" >Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
                                                     </DropdownMenuGroup>
                                                 </div>
                                             )}
