@@ -69,11 +69,22 @@ export default function Page() {
 
     useEffect(() => {
         loadUser();
-        if (!((currentUser?.role == "president") || (currentUser?.role == "programDirector") || (currentUser?.role == "teamAdministrator"))) {
-            router.push("/");
-        }
-        loadUsers();
     }, []);
+
+    useEffect(() => {
+        if (userLoading) return;
+
+        const authorized = currentUser?.role === "president" ||
+            currentUser?.role === "programDirector" ||
+            currentUser?.role === "teamAdministrator";
+
+        if (!authorized) {
+            router.push("/");
+            return;
+        }
+
+        loadUsers();
+    }, [currentUser, userLoading]);
 
     function setRole(newRole: string) {
         setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
