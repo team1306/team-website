@@ -77,11 +77,11 @@ export function Page() {
       setCurrentUser(user);
     } catch (err) {
       console.error("Failed to load user:", err);
-      if(err instanceof Error && err.message === "Not authenticated"){
+      if (err instanceof Error && err.message === "Not authenticated") {
         router.push("/login?notAuthed=true");
       }
-      else{
-      router.push("/login");
+      else {
+        router.push("/login");
       }
     } finally {
       setUserLoading(false);
@@ -109,7 +109,7 @@ export function Page() {
   function clearFilters() {
     setCatagoryFilter(['Robot', "Competition", "Tools", "Field", "Outreach"]);
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
-    setNameFilter("");
+    setSearchBarValue("");
   }
 
   function setRole(newRole: string) {
@@ -130,14 +130,67 @@ export function Page() {
     return purchases.filter((purchase) => {
       const categoryMatch = purchases; //Temp Overide Until Fix
       const statusMatch = statusFilter.includes(purchase.status);
-      const nameMatch = purchase.title.toLowerCase().includes(nameFilter.toLowerCase());
+      const nameMatch = fuzzyMatch(purchase.title, nameFilter);
       return categoryMatch && statusMatch && nameMatch;
     });
   }
 
+  function fuzzyMatch(text: string, query: string): boolean {
+    if (!query) return true;
+    const t = text.toLowerCase();
+    const q = query.toLowerCase();
+    if (t.includes(q)) return true;
+    let ti = 0;
+    for (let qi = 0; qi < q.length; qi++) {
+      ti = t.indexOf(q[qi], ti);
+      if (ti === -1) return false;
+      ti++;
+    }
+    return true;
+  }
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setNameFilter(searchBarValue);
+    }, 200);
+    return () => clearTimeout(handle);
+  }, [searchBarValue]);
+
   function formatDate(isoString: string): string {
     return new Date(isoString).toLocaleDateString('en-US');
   }
+
+  const ALL_STATUSES = ['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold'];
+
+  function handleStatusFilterChange(newValue: string[]) {
+    const wasAllOn = ALL_STATUSES.every((s) => statusFilter.includes(s));
+    const clickedAll = newValue.includes("all") && !wasAllOn;
+    const unclickedAll = !newValue.includes("all") && wasAllOn && newValue.length > 0;
+
+    if (clickedAll) {
+      setStatusFilter(ALL_STATUSES);
+      return;
+    }
+
+    const realStatuses = newValue.filter((v) => v !== "all");
+
+    if (unclickedAll || (wasAllOn && realStatuses.length === 0 && newValue.length === 0)) {
+      setStatusFilter([]);
+      return;
+    }
+
+    if (wasAllOn && realStatuses.length < ALL_STATUSES.length) {
+      const clickedStatus = ALL_STATUSES.find((s) => !realStatuses.includes(s));
+      setStatusFilter(clickedStatus ? [clickedStatus] : realStatuses);
+      return;
+    }
+
+    setStatusFilter(realStatuses);
+  }
+
+  const statusToggleValue = ALL_STATUSES.every((s) => statusFilter.includes(s))
+    ? [...statusFilter, "all"]
+    : statusFilter;
 
   if (!loading && currentUser) {
     return (
@@ -149,19 +202,19 @@ export function Page() {
               <Field>
                 <div className="flex gap-2">
                   <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <ButtonGroup className="flex items-stretch gap-1">
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-1 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                    <Button onClick={() => { setNameFilter(searchBarValue) }} className="bg-mist-400 text-base rounded-lg hover:bg-mist-500 cursor-pointer"><Search /></Button>
-                  </ButtonGroup>
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                  </div>
                 </div>
               </Field>
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
             <div className="ml-auto flex gap-2">
-            {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
-              <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
-            )}
-                <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
+              {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
+                <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
+              )}
+              <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
             </div>
           </div>
           <div className="flex gap-4">
@@ -177,13 +230,14 @@ export function Page() {
             </div>
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
-              <ToggleGroup multiple value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
+              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
                 <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-sm font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-bold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-bold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-bold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
                 <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-sm font-bold hover:border-orange-400 hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
               </ToggleGroup>
             </div>
           </div>
@@ -194,10 +248,10 @@ export function Page() {
               <Field>
                 <div className="flex gap-2">
                   <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <ButtonGroup className="flex items-stretch gap-1">
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-1 w-fit rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                    <Button onClick={() => { setNameFilter(searchBarValue) }} className="bg-mist-400 text-base rounded-lg hover:bg-mist-500 cursor-pointer"><Search /></Button>
-                  </ButtonGroup>
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                  </div>
                 </div>
               </Field>
             </div>
@@ -225,10 +279,10 @@ export function Page() {
               <Field>
                 <div className="flex gap-2">
                   <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <ButtonGroup className="flex items-stretch gap-1">
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-1 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                    <Button onClick={() => { setNameFilter(searchBarValue) }} className="bg-mist-400 text-base rounded-lg hover:bg-mist-500 cursor-pointer"><Search /></Button>
-                  </ButtonGroup>
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                  </div>
                 </div>
               </Field>
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
@@ -247,13 +301,14 @@ export function Page() {
             </div>
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
-              <ToggleGroup multiple value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
+              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
                 <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-sm font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-bold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-bold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-bold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
                 <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-sm font-bold hover:border-orange-400 hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
               </ToggleGroup>
             </div>
           </div>
