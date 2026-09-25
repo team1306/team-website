@@ -3,9 +3,9 @@ import Navbar from "../components/ui/navbar";
 import Purchase from "../components/dispalayPurchase/purchaseCard";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Cog, Swords, Wrench, Volleyball, Handshake, Search } from "lucide-react"
+import { Search, ChevronDown } from "lucide-react";
 import CreatePurchase from "../components/createPurchase/createPurchase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@base-ui/react";
 import { getUserInfo } from "./auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
@@ -66,6 +67,15 @@ export interface PurchaseData {
   expidited: string;
 }
 
+interface CategoryData {
+  categoryID: string;
+  categoryName: string;
+  categoryPhase: string;
+  categoryBudget: number;
+  categorySpent: number;
+  enabled: boolean;
+}
+
 export function Page() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -93,7 +103,10 @@ export function Page() {
 
   const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
-  const [catagoryFilter, setCatagoryFilter] = useState(['Robot', "Competition", "Tools", "Field", "Outreach"])
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [catagoryFilter, setCatagoryFilter] = useState<string[]>([]);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const [statusFilter, setStatusFilter] = useState(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold'])
   const [nameFilter, setNameFilter] = useState("");
 
@@ -106,8 +119,15 @@ export function Page() {
     setPurchases(data.parsed ?? []);
   }
 
+  async function loadCategories() {
+    const res = await fetch('/api/budget/getCategories', { cache: 'no-store' });
+    const data: CategoryData[] = await res.json();
+    setCategories(data ?? []);
+    setCatagoryFilter((data ?? []).map((c) => c.categoryID));
+  }
+
   function clearFilters() {
-    setCatagoryFilter(['Robot', "Competition", "Tools", "Field", "Outreach"]);
+    setCatagoryFilter(categories.map((c) => c.categoryID));
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
     setSearchBarValue("");
   }
@@ -120,7 +140,7 @@ export function Page() {
     async function init() {
       setLoading(true);
       await loadUser();
-      await loadPurchases();
+      await Promise.all([loadPurchases(), loadCategories()]);
       setLoading(false);
     }
     init();
@@ -128,7 +148,7 @@ export function Page() {
 
   function filterPurchases(): PurchaseData[] {
     return purchases.filter((purchase) => {
-      const categoryMatch = purchases; //Temp Overide Until Fix
+      const categoryMatch = catagoryFilter.includes(purchase.catagory);
       const statusMatch = statusFilter.includes(purchase.status);
       const nameMatch = fuzzyMatch(purchase.title, nameFilter);
       return categoryMatch && statusMatch && nameMatch;
@@ -148,6 +168,16 @@ export function Page() {
     }
     return true;
   }
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -192,11 +222,63 @@ export function Page() {
     ? [...statusFilter, "all"]
     : statusFilter;
 
+  const ALL_CATEGORY_IDS = categories.map((c) => c.categoryID);
+
+  function toggleCategory(categoryID: string) {
+    setCatagoryFilter((prev) =>
+      prev.includes(categoryID) ? prev.filter((c) => c !== categoryID) : [...prev, categoryID]
+    );
+  }
+
+  function toggleAllCategories() {
+    setCatagoryFilter((prev) => (prev.length === ALL_CATEGORY_IDS.length ? [] : ALL_CATEGORY_IDS));
+  }
+
+  function renderCategoryFilter() {
+    const allSelected = ALL_CATEGORY_IDS.length > 0 && catagoryFilter.length === ALL_CATEGORY_IDS.length;
+    const label = catagoryFilter.length === 0
+      ? "No categories"
+      : allSelected
+        ? "All categories"
+        : `${catagoryFilter.length} of ${ALL_CATEGORY_IDS.length} selected`;
+
+    return (
+      <div ref={categoryDropdownRef} className="relative">
+        <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
+        <Button
+          onClick={() => setCategoryDropdownOpen((open) => !open)}
+          className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
+        >
+          {label}
+          <ChevronDown className="size-4" />
+        </Button>
+        {categoryDropdownOpen && (
+          <div className="absolute z-50 mt-1 w-64 max-h-80 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2 shadow-lg">
+            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
+              <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
+              All
+            </label>
+            <div className="border-t border-mist-500 my-1" />
+            {categories.map((cat) => (
+              <label key={cat.categoryID} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer text-zinc-100 text-sm">
+                <Checkbox
+                  checked={catagoryFilter.includes(cat.categoryID)}
+                  onCheckedChange={() => toggleCategory(cat.categoryID)}
+                />
+                {cat.categoryID}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!loading && currentUser) {
     return (
       <div className="bg-background min-h-screen">
         <Navbar updateUserRole={setRole} user={currentUser} />
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block">
+        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block overflow-visible">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
               <Field>
@@ -218,16 +300,7 @@ export function Page() {
             </div>
           </div>
           <div className="flex gap-4">
-            <div>
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
-              <ToggleGroup multiple value={catagoryFilter} onValueChange={(value) => setCatagoryFilter(value)}>
-                <ToggleGroupItem value="Robot" className="cursor-pointer border-yellow-600 text-yellow-600 border-3 text-sm font-bold hover:bg-yellow-500 hover:text-black group aria-pressed:bg-yellow-600 aria-pressed:text-black"><Cog className="size-4 text-yellow-600 group-hover:text-black group-aria-pressed:text-black" /> Robot</ToggleGroupItem>
-                <ToggleGroupItem value="Competition" className="cursor-pointer border-emerald-600 text-emerald-600 border-3 text-sm font-bold hover:bg-emerald-500 hover:text-black group aria-pressed:bg-emerald-600 aria-pressed:text-black"><Swords className="size-4 text-emerald-600 group-hover:text-black group-aria-pressed:text-black" /> Competition</ToggleGroupItem>
-                <ToggleGroupItem value="Tools" className="cursor-pointer border-rose-600 text-rose-600 border-3 text-sm font-bold hover:bg-rose-500 hover:text-black group aria-pressed:bg-rose-600 aria-pressed:text-black"><Wrench className="size-4 text-rose-600 group-hover:text-black group-aria-pressed:text-black" /> Tools</ToggleGroupItem>
-                <ToggleGroupItem value="Field" className="cursor-pointer border-lime-600 text-lime-600 border-3 text-sm font-bold hover:bg-lime-500 hover:text-black group aria-pressed:bg-lime-600 aria-pressed:text-black"><Volleyball className="size-4 text-lime-600 group-hover:text-black group-aria-pressed:text-black" /> Field</ToggleGroupItem>
-                <ToggleGroupItem value="Outreach" className="cursor-pointer border-cyan-600 text-cyan-600 border-3 text-sm font-bold hover:bg-cyan-500 hover:text-black group aria-pressed:bg-cyan-600 aria-pressed:text-black"><Handshake className="size-4 text-cyan-600 group-hover:text-black group-aria-pressed:text-black" /> Outreach</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
+            {renderCategoryFilter()}
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
@@ -273,7 +346,7 @@ export function Page() {
     return (
       <div className="bg-background min-h-screen flex flex-col">
         <Navbar updateUserRole={setRole} user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} />
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block w-full">
+        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block w-full overflow-visible">
           <div className="flex justify-between items-start">
             <div className="flex mb-2">
               <Field>
@@ -289,16 +362,7 @@ export function Page() {
             </div>
           </div>
           <div className="flex gap-4">
-            <div>
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
-              <ToggleGroup multiple value={catagoryFilter} onValueChange={(value) => setCatagoryFilter(value)}>
-                <ToggleGroupItem value="Robot" className="cursor-pointer border-yellow-600 text-yellow-600 border-3 text-sm font-bold hover:bg-yellow-500 hover:text-black group aria-pressed:bg-yellow-600 aria-pressed:text-black"><Cog className="size-4 text-yellow-600 group-hover:text-black group-aria-pressed:text-black" /> Robot</ToggleGroupItem>
-                <ToggleGroupItem value="Competition" className="cursor-pointer border-emerald-600 text-emerald-600 border-3 text-sm font-bold hover:bg-emerald-500 hover:text-black group aria-pressed:bg-emerald-600 aria-pressed:text-black"><Swords className="size-4 text-emerald-600 group-hover:text-black group-aria-pressed:text-black" /> Competition</ToggleGroupItem>
-                <ToggleGroupItem value="Tools" className="cursor-pointer border-rose-600 text-rose-600 border-3 text-sm font-bold hover:bg-rose-500 hover:text-black group aria-pressed:bg-rose-600 aria-pressed:text-black"><Wrench className="size-4 text-rose-600 group-hover:text-black group-aria-pressed:text-black" /> Tools</ToggleGroupItem>
-                <ToggleGroupItem value="Field" className="cursor-pointer border-lime-600 text-lime-600 border-3 text-sm font-bold hover:bg-lime-500 hover:text-black group aria-pressed:bg-lime-600 aria-pressed:text-black"><Volleyball className="size-4 text-lime-600 group-hover:text-black group-aria-pressed:text-black" /> Field</ToggleGroupItem>
-                <ToggleGroupItem value="Outreach" className="cursor-pointer border-cyan-600 text-cyan-600 border-3 text-sm font-bold hover:bg-cyan-500 hover:text-black group aria-pressed:bg-cyan-600 aria-pressed:text-black"><Handshake className="size-4 text-cyan-600 group-hover:text-black group-aria-pressed:text-black" /> Outreach</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
+            {renderCategoryFilter()}
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
