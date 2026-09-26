@@ -334,11 +334,22 @@ export function Page() {
             </div>
           </div>
         </Card>
-        {[...filterPurchases()].sort((a, b) => Number(b.id) - Number(a.id)).map((purchase) => (
-          <div key={purchase.id} className="m-3 mt-4">
-            <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} />
+        {filterPurchases().length === 0 ? (
+          <div className="w-full text-center mt-6">
+            <div className="w-fit bg-mist-800 p-3 rounded-lg mx-auto">
+              <h1 className="text-zinc-100 text-3xl bg-mist-600 p-3 rounded-md w-fit mx-auto">:(</h1>
+              <h1 className="text-zinc-100 text-2xl w-fit mx-aut p-2">No Items Found</h1>
+              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
+            </div>
           </div>
-        ))}
+        ) : (
+
+          [...filterPurchases()].sort((a, b) => Number(b.id) - Number(a.id)).map((purchase) => (
+            <div key={purchase.id} className="m-3 mt-4">
+              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} />
+            </div>
+          ))
+        )}
       </div>
     );
   }
@@ -398,8 +409,5 @@ export function Page() {
         </div>
       </div>
     );
-  }
-  if (filterPurchases().length == 0) {
-    <h1>Hello World</h1>
   }
 }
