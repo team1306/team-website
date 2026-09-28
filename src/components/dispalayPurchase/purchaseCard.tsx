@@ -132,6 +132,27 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
+    async function deletePurchase(): Promise<void> {
+        const res = await fetch("/api/order/delete", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        });
+      
+        if (!res.ok) {
+          let message = "Failed to delete order";
+          try {
+            const data = await res.json();
+            if (data?.error) message = data.error;
+          } catch {}
+          throw new Error(message);
+        }
+
+        onPurchaseEdited();
+      }
+
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -500,7 +521,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                                         )}
-                                                        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => { deletePurchase(); }} variant="destructive">Delete</DropdownMenuItem>
                                                     </DropdownMenuGroup>
                                                 </div>
                                             )}

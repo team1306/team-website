@@ -128,9 +128,11 @@ export default function Page() {
             <Card className="p-2 bg-mist-700 m-3">
                 <div className="flex">
                     <CardDescription className="text-mist-200 text-2xl font-bold mb-0">Budget Categories:</CardDescription>
-                    <div className="ml-auto">
-                        <NewCatagory onCreate={fetchCategories} />
-                    </div>
+                    {currentUser?.role === "treasurer" ||  currentUser?.role === "president" || currentUser?.role === "programDirector" || currentUser?.role === "teamAdministrator" && (
+                        <div className="ml-auto">
+                            <NewCatagory onCreate={fetchCategories} />
+                        </div>
+                    )}
                 </div>
                 <Card className="bg-mist-600 p-2 gap-2">
                     <CardTitle className="text-zinc-100 text-lg font-semi p-0">Offseason</CardTitle>
