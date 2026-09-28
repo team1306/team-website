@@ -134,24 +134,24 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     async function deletePurchase(): Promise<void> {
         const res = await fetch("/api/order/delete", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id }),
         });
-      
+
         if (!res.ok) {
-          let message = "Failed to delete order";
-          try {
-            const data = await res.json();
-            if (data?.error) message = data.error;
-          } catch {}
-          throw new Error(message);
+            let message = "Failed to delete order";
+            try {
+                const data = await res.json();
+                if (data?.error) message = data.error;
+            } catch { }
+            throw new Error(message);
         }
 
         onPurchaseEdited();
-      }
+    }
 
     useEffect(() => {
         fetchCategories();
@@ -265,6 +265,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             case "purchased":
                 return (
                     <Badge className="text-sm w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400 ml-auto md:ml-0">Purchased</Badge>
+                )
+            case "selfPurchased":
+                return (
+                    <Badge className="text-sm w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400 ml-auto md:ml-0">Self Purchased</Badge>
                 )
             case "recived":
                 return (
@@ -486,10 +490,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 <div className="ml-auto">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
-                                        <DropdownMenuContent className="w-fit bg-mist-500">
+                                        <DropdownMenuContent className="w-fit">
                                             <DropdownMenuGroup>
                                                 {(status == "purchased") && (
                                                     <DropdownMenuItem className="text-green-500" onClick={() => setReceivedOpen(true)}>Mark as Received</DropdownMenuItem>
+                                                )}
+                                                {(status == "approved" || status == "needsApproval") && (
+                                                    <DropdownMenuItem className="text-pink-700" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>
                                                 {(!editMode) && (
@@ -510,7 +517,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <div>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>
-                                                        <DropdownMenuLabel className="text-zinc-100">Admin Actions</DropdownMenuLabel>
+                                                        <DropdownMenuLabel className="text-zinc-500">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>

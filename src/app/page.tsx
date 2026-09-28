@@ -149,7 +149,8 @@ export function Page() {
   function filterPurchases(): PurchaseData[] {
     return purchases.filter((purchase) => {
       const categoryMatch = catagoryFilter.includes(purchase.catagory);
-      const statusMatch = statusFilter.includes(purchase.status);
+      const effectiveStatus = purchase.status === 'selfPurchased' ? 'purchased' : purchase.status;
+      const statusMatch = statusFilter.includes(effectiveStatus);
       const nameMatch = fuzzyMatch(purchase.title, nameFilter);
       return categoryMatch && statusMatch && nameMatch;
     });

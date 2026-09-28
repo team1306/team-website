@@ -31,6 +31,7 @@ const STATUS_LABELS: Record<string, { status: string; ordering: string }> = {
     needsAproval: { status: "Needs Approval", ordering: "Awaiting Approval" },
     approved: { status: "Approved", ordering: "Ready to Order" },
     purchased: { status: "Purchased", ordering: "Purchased" },
+    selfPurchased: { status: "Self Purchased", ordering: "Self Purchased" },
     recived: { status: "Received", ordering: "Received" },
     onHold: { status: "On Hold", ordering: "On Hold" },
     rejected: { status: "Rejected", ordering: "Rejected" },

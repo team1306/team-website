@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 import { recalculateCategorySpent } from "@/lib/budget";
-import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage } from "@/lib/slack";
+import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage, postSlackThreadReply } from "@/lib/slack";
 
 export interface RequestInfo {
   id: string;
@@ -91,6 +91,13 @@ export async function POST(request: NextRequest) {
           blocks,
           `Purchase request: ${title} (${currency.format(cost)})`
         );
+
+        if (status === "selfPurchased") {
+          await postSlackThreadReply(
+            `${requesterMention} has marked the order as self purchased.`,
+            threadTs
+          );
+        }
       } catch (err) {
         console.error("Slack main message update failed:", err);
       }
