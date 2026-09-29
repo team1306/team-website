@@ -23,7 +23,9 @@ interface PendingOrder {
 
 const PENDING_STATUS = "needsAproval";
 const PURCHASE_DELAY_HOURS = 24;
-const MAX_CALLOUTS_PER_MESSAGE = 45;
+const MAX_ORDERS_PER_MESSAGE = 45;
+const MAX_TITLE_LENGTH = 150;
+const MAX_BODY_LENGTH = 200;
 
 const ROLE_LABELS: Record<string, string> = {
     mentorLead: "Lead Mentor",
@@ -38,6 +40,14 @@ function formatRole(role: string): string {
         .trim();
 }
 
+function escapeMrkdwn(text: string): string {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function truncate(text: string, max: number): string {
+    return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
 function getRemainingApprovers(approvers: ApproverEntry[] | null): string[] {
     if (!Array.isArray(approvers)) return [];
 
@@ -46,52 +56,37 @@ function getRemainingApprovers(approvers: ApproverEntry[] | null): string[] {
         .map((entry) => formatRole(entry.requiredRole));
 }
 
-function buildCallout(order: PendingOrder) {
+function buildOrderCard(order: PendingOrder) {
+    const requires =
+        order.remaining.length > 0
+            ? `Requires: ${order.remaining.join(", ")}`
+            : "Awaiting final approval";
+
     return {
-        type: "callout",
-        block_id: `order_callout_${order.id}`,
-        background_color: "orange",
-        child_blocks: [
-            {
-                type: "rich_text",
-                block_id: `order_header_${order.id}`,
-                elements: [
-                    {
-                        type: "rich_text_header",
-                        level: 2,
-                        elements: [
-                            {
-                                type: "text",
-                                text: order.name,
-                                style: { bold: true },
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                type: "section",
-                block_id: `order_body_${order.id}`,
-                text: {
-                    type: "mrkdwn",
-                    text:
-                        order.remaining.length > 0
-                            ? `Requires: ${order.remaining.join(", ")}`
-                            : "Awaiting final approval",
-                },
-            },
-        ],
+        type: "card",
+        block_id: `order_${order.id}`.slice(0, 255),
+        title: {
+            type: "mrkdwn",
+            text: truncate(escapeMrkdwn(order.name), MAX_TITLE_LENGTH),
+        },
+        body: {
+            type: "mrkdwn",
+            text: truncate(escapeMrkdwn(requires), MAX_BODY_LENGTH),
+        },
     };
 }
 
 function buildBlocks(orders: PendingOrder[]) {
     return [
         {
-            type: "markdown",
-            text: `<!channel>, Orders that have been approved will be purchased in ${PURCHASE_DELAY_HOURS} hours.`,
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: `@channel, Orders that have been approved will be purchased in ${PURCHASE_DELAY_HOURS} hours.`,
+            },
         },
         { type: "divider" },
-        ...orders.map(buildCallout),
+        ...orders.map(buildOrderCard),
     ];
 }
 
@@ -116,7 +111,12 @@ async function postToSlack(
     const data = await res.json();
 
     if (!data.ok) {
-        throw new Error(`Slack error: ${data.error}`);
+        const details = Array.isArray(data.response_metadata?.messages)
+            ? data.response_metadata.messages.join("; ")
+            : "";
+        throw new Error(
+            `Slack error: ${data.error}${details ? ` (${details})` : ""}`
+        );
     }
 }
 
@@ -154,11 +154,11 @@ export async function notifyPendingOrders() {
 
     let messages = 0;
 
-    for (let i = 0; i < pending.length; i += MAX_CALLOUTS_PER_MESSAGE) {
+    for (let i = 0; i < pending.length; i += MAX_ORDERS_PER_MESSAGE) {
         await postToSlack(
             token,
             channel,
-            pending.slice(i, i + MAX_CALLOUTS_PER_MESSAGE)
+            pending.slice(i, i + MAX_ORDERS_PER_MESSAGE)
         );
         messages += 1;
     }
