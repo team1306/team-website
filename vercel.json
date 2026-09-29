@@ -1,0 +1,13 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "crons": [
+      {
+        "path": "/api/cron/notify-pending-orders",
+        "schedule": "0 14 * * 0"
+      },
+      {
+        "path": "/api/cron/notify-pending-orders",
+        "schedule": "30 1 * * 4"
+      }
+    ]
+  }
