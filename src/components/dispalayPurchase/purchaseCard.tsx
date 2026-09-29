@@ -495,7 +495,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 {(status == "purchased") && (
                                                     <DropdownMenuItem className="text-green-500" onClick={() => setReceivedOpen(true)}>Mark as Received</DropdownMenuItem>
                                                 )}
-                                                {(status == "approved" || status == "needsApproval") && (
+                                                {(status == "approved" || status == "needsAproval") && (
                                                     <DropdownMenuItem className="text-pink-700" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>

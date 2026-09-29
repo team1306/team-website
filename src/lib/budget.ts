@@ -1,6 +1,6 @@
 import { createServiceClient } from "../../utils/supabase/service";
 
-const SPENT_STATUSES = ["purchased", "recived"];
+const SPENT_STATUSES = ["purchased", "recived", "selfPurchased"];
 
 export async function recalculateCategorySpent(
   categoryIDs: Array<string | null | undefined>

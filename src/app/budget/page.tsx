@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { ExportPurchases } from "@/components/exportPurchases";
 
 function formatMoney(amount: number): string {
     return new Intl.NumberFormat("en-US", {
@@ -129,7 +130,8 @@ export default function Page() {
                 <div className="flex">
                     <CardDescription className="text-mist-200 text-2xl font-bold mb-0">Budget Categories:</CardDescription>
                     {currentUser?.role === "treasurer" ||  currentUser?.role === "president" || currentUser?.role === "programDirector" || currentUser?.role === "teamAdministrator" && (
-                        <div className="ml-auto">
+                        <div className="ml-auto flex gap-2">
+                            <ExportPurchases/>
                             <NewCatagory onCreate={fetchCategories} />
                         </div>
                     )}
