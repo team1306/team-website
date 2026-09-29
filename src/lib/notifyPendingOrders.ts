@@ -122,10 +122,10 @@ async function postToSlack(
 
 export async function notifyPendingOrders() {
     const token = process.env.SLACK_BOT_TOKEN;
-    const channel = process.env.SLACK_ORDERS_CHANNEL_ID;
+    const channel = process.env.SLACK_CHANNEL_ID;
 
     if (!token || !channel) {
-        throw new Error("Missing SLACK_BOT_TOKEN or SLACK_ORDERS_CHANNEL_ID");
+        throw new Error("Missing SLACK_BOT_TOKEN or SLACK_CHANNEL_ID");
     }
 
     const supabase = await createServiceClient();
