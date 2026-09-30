@@ -161,23 +161,8 @@ export default function Navbar({ user, updateUserRole }: user) {
                                     </Avatar>
                                 </div>
                             </HoverCardTrigger>
-                            <HoverCardContent className="rounded-md bg-red-400 w-64 justify-center">
-                                <Select value={userRole} onValueChange={(value) => updateUserRole(String(value))}>
-                                    <SelectTrigger className="cursor-pointer w-fit min-w-32">
-                                        <SelectValue className="text-zinc-100" placeholder="Select a Role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="student">Student</SelectItem>
-                                        <SelectItem value="studentLead">Student Lead</SelectItem>
-                                        <SelectItem value="mentor">Mentor</SelectItem>
-                                        <SelectItem value="mentorLead">Lead Mentor</SelectItem>
-                                        <SelectItem value="treasurer">Treasurer</SelectItem>
-                                        <SelectItem value="president">President</SelectItem>
-                                        <SelectItem value="programDirector">Program Director</SelectItem>
-                                        <SelectItem value="teamAdministrator">Team Administrator</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Button onClick={() => handleSignOut()} className="cursor-pointer text-slate-100 bg-red-600 m-2 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
+                            <HoverCardContent className="rounded-md bg-red-400 w-64 justify-center p-3">
+                                <Button onClick={() => handleSignOut()} className="cursor-pointer text-slate-100 bg-red-600 w-full rounded-sm hover:bg-red-700">Sign Out</Button>
                             </HoverCardContent>
                         </HoverCard>
                     </div>

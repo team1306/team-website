@@ -509,7 +509,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 {(status == "onHold") && (
                                                     <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
                                                 )}
-                                                {(status != "rejected") && (
+                                                {(status == "needsAproval" || status == "approved") && (userRole == "studentLead" || userRole == "mentor" || userRole == "mentorLead" || userRole == "treasurer" || userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                     <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
                                                 )}
                                             </DropdownMenuGroup>
