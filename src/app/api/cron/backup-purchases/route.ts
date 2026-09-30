@@ -57,11 +57,16 @@ function toRow(row: Record<string, unknown>): (string | number)[] {
 }
 
 async function fetchAllPurchases(): Promise<Record<string, unknown>[]> {
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false, autoRefreshToken: false } }
-    )
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SECRET_KEY
+
+    if (!url || !key) {
+        throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY')
+    }
+
+    const supabase = createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false },
+    })
 
     const rows: Record<string, unknown>[] = []
     let from = 0
