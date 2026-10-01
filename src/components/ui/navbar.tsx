@@ -29,6 +29,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { useEffect } from "react";
 
 type user = {
     user: UserData;
@@ -46,6 +47,30 @@ export default function Navbar({ user, updateUserRole }: user) {
     const userName = user.name;
     const userRole = user.role;
     const userPicture = user.profilePicture;
+
+    const BANNER = [
+        "███████╗██████╗░░█████╗░░░░████████╗███████╗░█████╗░███╗░░░███╗░░░░░░███╗░░██████╗░░█████╗░░█████╗░",
+        "██╔════╝██╔══██╗██╔══██╗░░░╚══██╔══╝██╔════╝██╔══██╗████╗░████║░░░░░████║░░╚════██╗██╔══██╗██╔═══╝░",
+        "█████╗░░██████╔╝██║░░╚═╝░░░░░░██║░░░█████╗░░███████║██╔████╔██║░░░░██╔██║░░░█████╔╝██║░░██║██████╗░",
+        "██╔══╝░░██╔══██╗██║░░██╗░░░░░░██║░░░██╔══╝░░██╔══██║██║╚██╔╝██║░░░░╚═╝██║░░░╚═══██╗██║░░██║██╔══██╗",
+        "██║░░░░░██║░░██║╚█████╔╝░░░░░░██║░░░███████╗██║░░██║██║░╚═╝░██║░░░░███████╗██████╔╝╚█████╔╝╚█████╔╝",
+        "╚═╝░░░░░╚═╝░░╚═╝░╚════╝░░░░░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝░░░░╚══════╝╚═════╝░░╚════╝░░╚════╝░",
+    ].join("\n");
+
+    const STYLE = [
+        "color: #ff2200ff",
+        "font-family: 'Source Code Pro', monospace",
+        "font-size: 12px",
+        "font-weight: bold",
+    ].join(";");
+
+    function printBanner() {
+        console.log(`%c${BANNER}`, STYLE);
+    }
+
+    useEffect(() => {
+        printBanner();
+    }, []);
 
     const roleBadge = () => {
         switch (userRole) {
@@ -194,7 +219,7 @@ export default function Navbar({ user, updateUserRole }: user) {
                                         <DropdownMenuItem className={activeCSSmobile("/admin")}><Crown />Admin Panel</DropdownMenuItem>
                                     )}
                                 </DropdownMenuGroup>
-                                <DropdownMenuSeparator className="m-1"/>
+                                <DropdownMenuSeparator className="m-1" />
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem variant="destructive" onClick={() => handleSignOut()}>Sign Out</DropdownMenuItem>
                                 </DropdownMenuGroup>

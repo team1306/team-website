@@ -29,6 +29,34 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { ExportPurchases } from "@/components/exportPurchases";
 
+const ALLOWED_PHASES = ["Offseason", "Season", "Champs"];
+
+interface FieldErrors {
+    name?: string;
+    phase?: string;
+    budget?: string;
+}
+
+function validateCategory(name: string, phase: string, budgetInput: string): { errors: FieldErrors; budget: number } {
+    const errors: FieldErrors = {};
+
+    if (name.trim() === "") {
+        errors.name = "Category name is required";
+    }
+
+    if (!ALLOWED_PHASES.includes(phase)) {
+        errors.phase = "Select a category phase";
+    }
+
+    const trimmedBudget = budgetInput.trim();
+    const parsedBudget = Number(trimmedBudget);
+    if (trimmedBudget === "" || !Number.isFinite(parsedBudget) || parsedBudget <= 0) {
+        errors.budget = "Budget must be a number greater than 0";
+    }
+
+    return { errors, budget: parsedBudget };
+}
+
 function formatMoney(amount: number): string {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -129,9 +157,9 @@ export default function Page() {
             <Card className="p-2 bg-mist-700 m-3">
                 <div className="flex">
                     <CardDescription className="text-mist-200 text-2xl font-bold mb-0">Budget Categories:</CardDescription>
-                    {currentUser?.role === "treasurer" ||  currentUser?.role === "president" || currentUser?.role === "programDirector" || currentUser?.role === "teamAdministrator" && (
+                    {currentUser?.role === "treasurer" || currentUser?.role === "president" || currentUser?.role === "programDirector" || currentUser?.role === "teamAdministrator" && (
                         <div className="ml-auto flex gap-2">
-                            <ExportPurchases/>
+                            <ExportPurchases />
                             <NewCatagory onCreate={fetchCategories} />
                         </div>
                     )}
@@ -164,48 +192,69 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
 
     const [name, setName] = useState("");
     const [phase, setPhase] = useState("Please select a phase");
-    const [budget, setBudget] = useState(0);
     const [budgetInput, setBudgetInput] = useState("");
     const [enabled, setEnabled] = useState(false);
 
-    const [valid, setValid] = useState(true);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+    const [error, setError] = useState("");
+
+    function handleNameChange(value: string) {
+        setName(value);
+        setFieldErrors(prev => ({ ...prev, name: undefined }));
+    }
+
+    function handlePhaseChange(value: string) {
+        setPhase(value || "Please select a phase");
+        setFieldErrors(prev => ({ ...prev, phase: undefined }));
+    }
 
     function handleBudgetChange(value: string) {
         setBudgetInput(value);
+        setFieldErrors(prev => ({ ...prev, budget: undefined }));
+    }
 
-        if (value.trim() === "") {
-            setBudget(0);
+    async function createCategory() {
+        setError("");
+
+        const { errors, budget } = validateCategory(name, phase, budgetInput);
+        setFieldErrors(errors);
+
+        if (Object.keys(errors).length > 0) {
             return;
         }
 
-        const parsed = Number(value);
-        if (!Number.isNaN(parsed)) {
-            setBudget(parsed);
-        }
-    }
-
-
-    async function createCategory() {
-        if (valid) {
+        try {
             const res = await fetch('/api/budget/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    categoryName: name,
+                    categoryName: name.trim(),
                     categoryPhase: phase,
                     categoryBudget: budget,
                     enabled: enabled,
                 }),
             });
 
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setError(data.error || "Failed to create category");
+                return;
+            }
+
             onCreate();
+            setName("");
+            setPhase("Please select a phase");
+            setBudgetInput("");
+            setEnabled(false);
             setOpen(false);
+        } catch (err) {
+            setError("Failed to create category");
         }
     }
 
     return (
         <div>
-            <Button onClick={() => setOpen(true)} className="cursor-pointer text-base w-fit p-3"><StickyNotePlus className="mr-1" />New Category</Button>
+            <Button onClick={() => { setFieldErrors({}); setError(""); setOpen(true); }} className="cursor-pointer text-base w-fit p-3"><StickyNotePlus className="mr-1" />New Category</Button>
             <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
                 <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
                     <div className="bg-mist-700 w-full p-2">
@@ -214,11 +263,12 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
                     <div className="p-2">
                         <Field>
                             <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="New Budget Category Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="New Budget Category Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            {fieldErrors.name && <p className="text-destructive text-xs mt-1">{fieldErrors.name}</p>}
                         </Field>
                         <Field className="mt-3">
-                            <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Select value={phase} onValueChange={(value) => setPhase(value || "Please select a phase")} id="name">
+                            <FieldLabel>Category Phase: <span className="text-destructive">*</span></FieldLabel>
+                            <Select value={phase} onValueChange={(value) => handlePhaseChange(value || "")} id="phase">
                                 <SelectTrigger className="cursor-pointer w-full">
                                     <SelectValue className="text-zinc-100" placeholder="Select a Phase" />
                                 </SelectTrigger>
@@ -228,10 +278,12 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
                                     <SelectItem value="Champs">Champs</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {fieldErrors.phase && <p className="text-destructive text-xs mt-1">{fieldErrors.phase}</p>}
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
                             <Input value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            {fieldErrors.budget && <p className="text-destructive text-xs mt-1">{fieldErrors.budget}</p>}
                         </Field>
                         <Field className="mt-3">
                             <div className="flex gap-1">
@@ -239,6 +291,7 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
                                 <Checkbox checked={enabled} onCheckedChange={setEnabled} />
                             </div>
                         </Field>
+                        {error && <p className="text-destructive text-sm mt-3">{error}</p>}
                     </div>
                     <Button onClick={() => createCategory()} className="cursor-pointer text-base w-full m-2 p-3">Create Category</Button>
                 </DrawerContent>
@@ -260,10 +313,10 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
 
     const [open, setOpen] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
     const [name, setName] = useState(categoryName);
     const [phase, setPhase] = useState(categoryPhase);
-    const [budget, setBudget] = useState(categoryBudget);
     const [budgetInput, setBudgetInput] = useState(String(categoryBudget));
     const [newenabled, setEnabled] = useState(enabled);
 
@@ -297,35 +350,44 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
         };
     }
 
+    function handleNameChange(value: string) {
+        setName(value);
+        setFieldErrors(prev => ({ ...prev, name: undefined }));
+    }
+
+    function handlePhaseChange(value: string) {
+        setPhase(value || "Please select a phase");
+        setFieldErrors(prev => ({ ...prev, phase: undefined }));
+    }
+
     function handleBudgetChange(value: string) {
         setBudgetInput(value);
-
-        if (value.trim() === "") {
-            setBudget(0);
-            return;
-        }
-
-        const parsed = Number(value);
-        if (!Number.isNaN(parsed)) {
-            setBudget(parsed);
-        }
+        setFieldErrors(prev => ({ ...prev, budget: undefined }));
     }
 
     function resetFields() {
         setName(categoryName);
         setPhase(categoryPhase);
-        setBudget(categoryBudget);
         setBudgetInput(String(categoryBudget));
         setEnabled(enabled);
         setError("");
+        setFieldErrors({});
     }
 
     async function editCategory() {
         setError("");
 
+        const { errors, budget } = validateCategory(name, phase, budgetInput);
+        setFieldErrors(errors);
+
+        if (Object.keys(errors).length > 0) {
+            return;
+        }
+
+        const trimmedName = name.trim();
         const payload: Record<string, unknown> = { categoryID };
 
-        if (name !== categoryName) payload.categoryName = name;
+        if (trimmedName !== categoryName) payload.categoryName = trimmedName;
         if (phase !== categoryPhase) payload.categoryPhase = phase;
         if (budget !== categoryBudget) payload.categoryBudget = budget;
         if (newenabled !== enabled) payload.enabled = newenabled;
@@ -375,11 +437,12 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                     <div className="p-2">
                         <Field>
                             <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="New Budget Category Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="New Budget Category Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            {fieldErrors.name && <p className="text-destructive text-xs mt-1">{fieldErrors.name}</p>}
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Phase: <span className="text-destructive">*</span></FieldLabel>
-                            <Select value={phase} onValueChange={(value) => setPhase(value || "Please select a phase")} id="phase">
+                            <Select value={phase} onValueChange={(value) => handlePhaseChange(value || "")} id="phase">
                                 <SelectTrigger className="cursor-pointer w-full">
                                     <SelectValue className="text-zinc-100" placeholder="Select a Phase" />
                                 </SelectTrigger>
@@ -389,10 +452,12 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                                     <SelectItem value="Champs">Champs</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {fieldErrors.phase && <p className="text-destructive text-xs mt-1">{fieldErrors.phase}</p>}
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
                             <Input value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                            {fieldErrors.budget && <p className="text-destructive text-xs mt-1">{fieldErrors.budget}</p>}
                         </Field>
                         <Field className="mt-3">
                             <div className="flex gap-1">
@@ -400,6 +465,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                                 <Checkbox checked={newenabled} onCheckedChange={setEnabled} />
                             </div>
                         </Field>
+                        {error && <p className="text-destructive text-sm mt-3">{error}</p>}
                     </div>
                     <Button onClick={() => editCategory()} className="cursor-pointer text-base w-full m-2 p-3">Save</Button>
                 </DrawerContent>
