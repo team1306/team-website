@@ -6,6 +6,30 @@ import { Trash2, Pencil, Save, Globe, StickyNote } from "lucide-react"
 import { useState } from "react"
 import { Input } from "@base-ui/react/input"
 
+export interface ItemErrors {
+    name?: string;
+    cost?: string;
+    quantity?: string;
+}
+
+export function validateItem(name: string, cost: number, quantity: number): ItemErrors {
+    const errors: ItemErrors = {};
+
+    if (name.trim() === "") {
+        errors.name = "Item name is invalid";
+    }
+
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+        errors.quantity = "Quantity is invalid";
+    }
+
+    if (!Number.isFinite(cost) || cost <= 0) {
+        errors.cost = "Cost is invalid";
+    }
+
+    return errors;
+}
+
 interface Item {
     id: string;
     name: string;
@@ -15,9 +39,10 @@ interface Item {
     onDelete: (id: string) => void;
     onUpdate: (id: string, updates: Partial<{ name: string; cost: number; quantity: number; link: string }>) => void;
     defaultEdit?: boolean;
+    showErrors?: boolean;
 }
 
-export default function Item({ id, name, cost, quantity, link, onDelete, onUpdate, defaultEdit}: Item) {
+export default function Item({ id, name, cost, quantity, link, onDelete, onUpdate, defaultEdit, showErrors }: Item) {
     const [editMode, setEditMode] = useState(defaultEdit);
     const [containsNote, setcontainsNote] = useState(false);
     const [nameValue, setNameValue] = useState(name);
@@ -25,6 +50,8 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
     const [costValue, setcostValue] = useState(String(cost));
     const [linkValue, setLinkValue] = useState(String(link));
     const [notes, setNotes] = useState(String(""));
+
+    const errors: ItemErrors = showErrors ? validateItem(name, cost, quantity) : {};
 
     const handleQuantityChange = (value: string) => {
         setQuantityValue(value);
@@ -56,7 +83,10 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                         <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
                     </div>
                 </div>
-                <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
+                {errors.name && <p className="text-destructive text-xs mb-1">{errors.name}</p>}
+                <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" step="1" min="1" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" step="0.01" min="0" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
+                {errors.quantity && <p className="text-destructive text-xs mt-1">{errors.quantity}</p>}
+                {errors.cost && <p className="text-destructive text-xs mt-1">{errors.cost}</p>}
                 <div className="flex items-center gap-1 mt-1">
                     <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
                     <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
@@ -76,7 +106,10 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                             <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
                         </div>
                     </div>
-                    <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
+                    {errors.name && <p className="text-destructive text-xs mb-1">{errors.name}</p>}
+                    <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" step="1" min="1" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" step="0.01" min="0" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
+                    {errors.quantity && <p className="text-destructive text-xs mt-1">{errors.quantity}</p>}
+                    {errors.cost && <p className="text-destructive text-xs mt-1">{errors.cost}</p>}
                     <div className="flex items-center gap-1 mt-1">
                         <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
                         <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
@@ -88,4 +121,6 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
             </Card>
         );
     }
+
+    return null;
 }

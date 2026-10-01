@@ -35,7 +35,7 @@ import {
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { Input } from "@base-ui/react"
 import { useState } from "react";
-import Item from "./itemCard";
+import Item, { validateItem } from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useEffect } from "react"
@@ -56,6 +56,14 @@ interface UserData {
     name: string;
     role: string;
     profilePicture: string;
+}
+
+interface FormErrors {
+    name?: string;
+    category?: string;
+    supplier?: string;
+    otherSupplier?: string;
+    items?: string;
 }
 
 export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchaseCreated?: () => void, user: UserData }) {
@@ -81,6 +89,9 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
     const [catagory, setCatagory] = useState(String(""));
     const [supplierPicker, setSupplierPicker] = useState(String(""));
     const [otherSupplier, setOtherSupplier] = useState(String(""));
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [showItemErrors, setShowItemErrors] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
@@ -113,6 +124,49 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
     ];
     const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
 
+    function clearError(key: keyof FormErrors) {
+        setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+
+    function handleNameChange(value: string) {
+        setName(value);
+        clearError("name");
+    }
+
+    function handleCategoryChange(value: string) {
+        setCatagory(value);
+        clearError("category");
+    }
+
+    function handleSupplierChange(value: string) {
+        setSupplierPicker(value);
+        clearError("supplier");
+        clearError("otherSupplier");
+    }
+
+    function handleOtherSupplierChange(value: string) {
+        setOtherSupplier(value);
+        clearError("otherSupplier");
+    }
+
+    function resetForm() {
+        setItems([]);
+        setName("");
+        setCatagory("");
+        setSupplierPicker("");
+        setOtherSupplier("");
+        setErrors({});
+        setShowItemErrors(false);
+    }
+
+    function handleOpenChange(next: boolean) {
+        setOpen(next);
+        if (!next) {
+            setErrors({});
+            setShowItemErrors(false);
+        }
+    }
+
     const addItem = () => {
         setItems((prev) => [
             ...prev,
@@ -124,11 +178,12 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                 ItemLink: "",
             },
         ]);
-        console.log(items);
+        clearError("items");
     };
 
     const deleteItem = (id: string) => {
         setItems((prev) => prev.filter((item) => item.id !== id));
+        clearError("items");
     };
 
     const updateItem = (
@@ -148,41 +203,94 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                     : item
             )
         );
+        clearError("items");
     };
 
     function supplier() {
-        if (supplierPicker == "Other" && !otherSupplier) {
-            return ("Other - " + otherSupplier);
+        if (supplierPicker == "Other" && otherSupplier.trim() !== "") {
+            return ("Other - " + otherSupplier.trim());
         }
         else {
             return (supplierPicker);
         }
     }
 
-    async function submitPurchase() {
-        const res = await fetch('/api/order/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: name,
-                requestor: user.id,
-                category: catagory,
-                items: items,
-                vendor: supplier(),
-            }),
-        });
+    function validate(): FormErrors {
+        const found: FormErrors = {};
 
-        const data = await res.json();
+        if (name.trim() === "") {
+            found.name = "Request name is required";
+        }
 
-        if (res.ok) {
-            toast.add({
-                title: "Item Created",
-            });
-            onPurchaseCreated?.();
+        const selected = categories.find((c) => c.categoryID === catagory);
+        if (!selected || !selected.enabled) {
+            found.category = "Select a category";
+        }
+
+        if (supplierPicker === "") {
+            found.supplier = "Select a supplier";
+        } else if (supplierPicker === "Other" && otherSupplier.trim() === "") {
+            found.otherSupplier = "Enter the vendor name";
+        }
+
+        if (items.length === 0) {
+            found.items = "Add at least one item";
         } else {
+            const hasInvalidItem = items.some(
+                (item) => Object.keys(validateItem(item.ItemName, item.ItemCost, item.ItemQuantity)).length > 0
+            );
+            if (hasInvalidItem) {
+                found.items = "Fix the highlighted items";
+            }
+        }
+
+        return found;
+    }
+
+    async function submitPurchase() {
+        if (submitting) return;
+
+        const found = validate();
+        setErrors(found);
+        setShowItemErrors(true);
+
+        if (Object.keys(found).length > 0) {
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+            const res = await fetch('/api/order/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: name.trim(),
+                    requestor: user.id,
+                    category: catagory,
+                    items: items.map((item) => ({ ...item, ItemName: item.ItemName.trim() })),
+                    vendor: supplier(),
+                }),
+            });
+
+            if (res.ok) {
+                toast.add({
+                    title: "Item Created",
+                });
+                onPurchaseCreated?.();
+                resetForm();
+                setOpen(false);
+            } else {
+                toast.add({
+                    title: "Error",
+                });
+            }
+        } catch (err) {
             toast.add({
                 title: "Error",
             });
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -203,7 +311,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
 
     return (
         <div>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={handleOpenChange}>
                 <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
                 <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                     <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
@@ -243,12 +351,13 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                 <div className="p-2 w-full">
                                     <Field>
                                         <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                        <Input value={name} onValueChange={(value) => setName(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
+                                        {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
                                     </Field>
                                     <div className="grid grid-cols-2 gap-4">
                                         <Field className="w-full">
                                             <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
-                                            <Select value={catagory} onValueChange={(value) => setCatagory(String(value))}>
+                                            <Select value={catagory} onValueChange={(value) => handleCategoryChange(String(value))}>
                                                 <SelectTrigger className="cursor-pointer w-full">
                                                     <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                                 </SelectTrigger>
@@ -258,10 +367,11 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                                     ))}
                                                 </SelectContent>
                                             </Select>
+                                            {errors.category && <p className="text-destructive text-xs mt-1">{errors.category}</p>}
                                         </Field>
                                         <Field className="mt-2">
-                                            <FieldLabel>Supplier:</FieldLabel>
-                                            <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
+                                            <FieldLabel>Supplier: <span className="text-destructive">*</span></FieldLabel>
+                                            <Select value={supplierPicker} onValueChange={(value) => handleSupplierChange(String(value))}>
                                                 <SelectTrigger className="cursor-pointer w-full">
                                                     <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                                 </SelectTrigger>
@@ -275,9 +385,11 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                                     <SelectItem value="Other">Other</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                            {errors.supplier && <p className="text-destructive text-xs mt-1">{errors.supplier}</p>}
                                             {(supplierPicker == "Other") && (
-                                                <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                                <Input value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
                                             )}
+                                            {errors.otherSupplier && <p className="text-destructive text-xs mt-1">{errors.otherSupplier}</p>}
                                         </Field>
                                     </div>
                                 </div>
@@ -300,7 +412,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                 <div className="p-2 w-full flex-1 overflow-auto min-h-0">
                                     <ScrollArea className="h-[310px] w-full rounded-md pr-4">
                                         {items.map((item) => (
-                                            <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
+                                            <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} showErrors={showItemErrors} />
                                         ))}
                                     </ScrollArea>
                                 </div>
@@ -309,7 +421,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                 <h2>Order Total:</h2>
                                 <div className="flex">
                                     <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
-                                    <Button onClick={() => { setOpen(false); submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
+                                    <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
                                 </div>
                             </Card>
                         </div>
