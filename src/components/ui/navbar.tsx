@@ -216,7 +216,7 @@ export default function Navbar({ user, updateUserRole }: user) {
                                     <DropdownMenuItem onClick={() => router.push('/')} className={activeCSSmobile("/")}><Package /> Orders</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push('/budget')} className={activeCSSmobile("/budget")}><CircleDollarSign />Budget</DropdownMenuItem>
                                     {(userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
-                                        <DropdownMenuItem className={activeCSSmobile("/admin")}><Crown />Admin Panel</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push('/admin')} className={activeCSSmobile("/admin")}><Crown />Admin Panel</DropdownMenuItem>
                                     )}
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator className="m-1" />
