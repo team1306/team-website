@@ -39,17 +39,7 @@ import Item, { validateItem } from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useEffect } from "react"
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Progress, ProgressLabel } from "@/components/ui/progress"
+import { useRouter } from 'next/navigation'
 
 interface UserData {
     id: string;
@@ -95,6 +85,18 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
+
+    const [isMobile, setIsMobile] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        const mql = window.matchMedia("(max-width: 767px)");
+        setIsMobile(mql.matches);
+
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mql.addEventListener("change", handler);
+        return () => mql.removeEventListener("change", handler);
+    }, []);
 
     async function fetchCategories() {
         try {
@@ -308,11 +310,19 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
     }
 
+    function openCreatePurchase() {
+        if (isMobile) {
+            router.push("/create");
+        }
+        else {
+            setOpen(true);
+        }
+    }
 
     return (
         <div>
             <Dialog open={open} onOpenChange={handleOpenChange}>
-                <DialogTrigger render={<Button onClick={() => setOpen(true)} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
+                <DialogTrigger render={<Button onClick={() => openCreatePurchase()} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
                 <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
                     <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
                     <div className="flex gap-2 items-stretch">
