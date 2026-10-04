@@ -42,6 +42,9 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         if (requiredRole == "president" && user.role == "president") {
             return (true);
         }
+        if (user.role == "teamAdministrator") {
+            return (true);
+        }
         else {
             return (false);
         }

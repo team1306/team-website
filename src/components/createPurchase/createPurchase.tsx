@@ -161,6 +161,11 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         setShowItemErrors(false);
     }
 
+    function discard(){
+        resetForm();
+        setOpen(false);
+    }
+
     function handleOpenChange(next: boolean) {
         setOpen(next);
         if (!next) {
@@ -255,6 +260,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         const found = validate();
         setErrors(found);
         setShowItemErrors(true);
+
+        resetForm();
 
         if (Object.keys(found).length > 0) {
             return;
@@ -431,7 +438,10 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                 <h2>Order Total:</h2>
                                 <div className="flex">
                                     <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
-                                    <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
+                                    <div className="ml-auto flex gap-2">
+                                        <Button onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
+                                        <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
+                                    </div>
                                 </div>
                             </Card>
                         </div>

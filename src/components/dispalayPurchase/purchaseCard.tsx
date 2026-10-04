@@ -469,7 +469,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
-                                    <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg ml-auto text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase("needsAproval", true); }}>Save</Button>
+                                    <div className="flex ml-auto">
+                                        <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase("needsAproval", true); }}>Save</Button>
+                                        <Button className="cursor-pointer ml-auto bg-red-700 text-zinc-100 text-lg hover:bg-red-800 rounded-lg text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false) }}>X</Button>
+                                    </div>
                                 </div>
                             )}
                             <div className="mt-1 pb-0">
