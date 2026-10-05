@@ -76,6 +76,55 @@ interface CategoryData {
   enabled: boolean;
 }
 
+function fieldScore(text: string, token: string): number {
+  const t = text.toLowerCase();
+  if (!t) return 0;
+  if (t === token) return 100;
+  if (t.startsWith(token)) return 90;
+  const idx = t.indexOf(token);
+  if (idx !== -1) {
+    return /[^a-z0-9]/.test(t[idx - 1]) ? 80 : 60;
+  }
+  if (token.length < 3) return 0;
+  let pos = -1;
+  let first = -1;
+  for (const ch of token) {
+    pos = t.indexOf(ch, pos + 1);
+    if (pos === -1) return 0;
+    if (first === -1) first = pos;
+  }
+  const span = pos - first + 1;
+  if (span > token.length * 2) return 0;
+  return 20;
+}
+
+function searchScore(purchase: PurchaseData, query: string): number {
+  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return 1;
+
+  const fields: [string, number][] = [
+    [purchase.title ?? "", 3],
+    [(purchase.items ?? []).map((item) => item.ItemName).join(" "), 2],
+    [purchase.vendor ?? "", 1.5],
+    [purchase.requestor ?? "", 1],
+    [purchase.catagory ?? "", 1],
+    [purchase.reason ?? "", 0.5],
+    [String(purchase.id ?? ""), 1],
+  ];
+
+  let total = 0;
+  for (const token of tokens) {
+    let best = 0;
+    for (const [text, weight] of fields) {
+      const score = fieldScore(text, token) * weight;
+      if (score > best) best = score;
+    }
+    if (best === 0) return 0;
+    total += best;
+  }
+  return total;
+}
+
 export function Page() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -178,27 +227,24 @@ export function Page() {
   }, []);
 
   function filterPurchases(): PurchaseData[] {
-    return purchases.filter((purchase) => {
-      const categoryMatch = catagoryFilter.includes(purchase.catagory);
-      const effectiveStatus = purchase.status === 'selfPurchased' ? 'purchased' : purchase.status;
-      const statusMatch = statusFilter.includes(effectiveStatus);
-      const nameMatch = fuzzyMatch(purchase.title, nameFilter);
-      return categoryMatch && statusMatch && nameMatch;
-    });
-  }
+    const hasQuery = nameFilter.trim().length > 0;
 
-  function fuzzyMatch(text: string, query: string): boolean {
-    if (!query) return true;
-    const t = text.toLowerCase();
-    const q = query.toLowerCase();
-    if (t.includes(q)) return true;
-    let ti = 0;
-    for (let qi = 0; qi < q.length; qi++) {
-      ti = t.indexOf(q[qi], ti);
-      if (ti === -1) return false;
-      ti++;
-    }
-    return true;
+    const scored = purchases
+      .filter((purchase) => {
+        const categoryMatch = catagoryFilter.includes(purchase.catagory);
+        const effectiveStatus = purchase.status === 'selfPurchased' ? 'purchased' : purchase.status;
+        const statusMatch = statusFilter.includes(effectiveStatus);
+        return categoryMatch && statusMatch;
+      })
+      .map((purchase) => ({ purchase, score: searchScore(purchase, nameFilter) }))
+      .filter((entry) => entry.score > 0);
+
+    scored.sort((a, b) => {
+      if (hasQuery && b.score !== a.score) return b.score - a.score;
+      return Number(b.purchase.id) - Number(a.purchase.id);
+    });
+
+    return scored.map((entry) => entry.purchase);
   }
 
   useEffect(() => {
@@ -307,6 +353,8 @@ export function Page() {
     );
   }
 
+  const filteredPurchases = filterPurchases();
+
   if (!loading && currentUser) {
     return (
       <div className="bg-background min-h-screen">
@@ -369,7 +417,7 @@ export function Page() {
             </div>
           </div>
         </Card>
-        {filterPurchases().length === 0 ? (
+        {filteredPurchases.length === 0 ? (
           <div className="w-full text-center mt-6">
             <div className="w-fit bg-mist-800 p-3 rounded-lg mx-auto">
               <h1 className="text-zinc-100 text-3xl bg-mist-600 p-3 rounded-md w-fit mx-auto">:(</h1>
@@ -378,8 +426,7 @@ export function Page() {
             </div>
           </div>
         ) : (
-
-          [...filterPurchases()].sort((a, b) => Number(b.id) - Number(a.id)).map((purchase) => (
+          filteredPurchases.map((purchase) => (
             <div key={purchase.id} className="m-3 mt-4">
               <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} />
             </div>
