@@ -161,7 +161,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         setShowItemErrors(false);
     }
 
-    function discard(){
+    function discard() {
         resetForm();
         setOpen(false);
     }
@@ -379,8 +379,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                                     <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {categories.map((selectcategory) => (
-                                                        <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                    {categories.filter((selectcategory) => selectcategory.enabled).map((selectcategory) => (
+                                                        <SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>

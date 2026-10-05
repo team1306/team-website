@@ -113,21 +113,44 @@ export function Page() {
   const [loading, setLoading] = useState(true);
   const [searchBarValue, setSearchBarValue] = useState("");
 
-  async function loadPurchases() {
+  async function loadPurchases(): Promise<PurchaseData[]> {
     const res = await fetch('/api/order/getOrders', { cache: 'no-store' });
     const data = await res.json();
-    setPurchases(data.parsed ?? []);
+    const loadedPurchases = data.parsed ?? [];
+    setPurchases(loadedPurchases);
+    return loadedPurchases;
   }
 
-  async function loadCategories() {
+  async function loadCategories(): Promise<CategoryData[]> {
     const res = await fetch('/api/budget/getCategories', { cache: 'no-store' });
     const data: CategoryData[] = await res.json();
-    setCategories(data ?? []);
-    setCatagoryFilter((data ?? []).map((c) => c.categoryID));
+    const loadedCategories = data ?? [];
+    setCategories(loadedCategories);
+    return loadedCategories;
+  }
+
+  function getVisibleCategories(categoryList: CategoryData[] = categories, purchaseList: PurchaseData[] = purchases) {
+    return categoryList
+      .filter((category) =>
+        category.enabled ||
+        purchaseList.some((purchase) => purchase.catagory === category.categoryID)
+      )
+      .sort((a, b) => {
+        const aParts = a.categoryID.split("-");
+        const bParts = b.categoryID.split("-");
+
+        const aGroup = aParts.slice(1).join("-");
+        const bGroup = bParts.slice(1).join("-");
+
+        const groupCompare = aGroup.localeCompare(bGroup, undefined, { numeric: true });
+        if (groupCompare !== 0) return groupCompare;
+
+        return aParts[0].localeCompare(bParts[0], undefined, { numeric: true });
+      });
   }
 
   function clearFilters() {
-    setCatagoryFilter(categories.map((c) => c.categoryID));
+    setCatagoryFilter(getVisibleCategories().map((c) => c.categoryID));
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
     setSearchBarValue("");
   }
@@ -140,7 +163,15 @@ export function Page() {
     async function init() {
       setLoading(true);
       await loadUser();
-      await Promise.all([loadPurchases(), loadCategories()]);
+
+      const [loadedPurchases, loadedCategories] = await Promise.all([
+        loadPurchases(),
+        loadCategories()
+      ]);
+
+      const visibleCategories = getVisibleCategories(loadedCategories, loadedPurchases);
+      setCatagoryFilter(visibleCategories.map((category) => category.categoryID));
+
       setLoading(false);
     }
     init();
@@ -223,7 +254,8 @@ export function Page() {
     ? [...statusFilter, "all"]
     : statusFilter;
 
-  const ALL_CATEGORY_IDS = categories.map((c) => c.categoryID);
+  const visibleCategories = getVisibleCategories();
+  const ALL_CATEGORY_IDS = visibleCategories.map((c) => c.categoryID);
 
   function toggleCategory(categoryID: string) {
     setCatagoryFilter((prev) =>
@@ -260,7 +292,7 @@ export function Page() {
               All
             </label>
             <div className="border-t border-mist-500 my-1" />
-            {categories.map((cat) => (
+            {visibleCategories.map((cat) => (
               <label key={cat.categoryID} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer text-zinc-100 text-sm">
                 <Checkbox
                   checked={catagoryFilter.includes(cat.categoryID)}

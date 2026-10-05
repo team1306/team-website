@@ -609,11 +609,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                {categories.map((selectcategory) => (
-                                                    <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
-                                                ))}
-                                            </SelectContent>
+                                            <SelectContent> {categories.filter((selectcategory) => selectcategory.enabled || selectcategory.categoryID === itemCatagory).map((selectcategory) => (<SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>))} </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="pl-2 pr-2 flex-1 mt-1">
