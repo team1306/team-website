@@ -256,31 +256,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         switch (status) {
             case "needsAproval":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-amber-400 bg-transparent font-bold text-amber-400 ml-auto md:ml-0">Needs Approval</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
                 )
             case "approved":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-blue-400 bg-transparent font-bold text-blue-400 ml-auto md:ml-0">Approved</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-sky-500 bg-transparent font-bold text-sky-500 ml-auto md:ml-0">Approved</Badge>
                 )
             case "purchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400 ml-auto md:ml-0">Purchased</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
                 )
             case "selfPurchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-400 bg-transparent font-bold text-pink-400 ml-auto md:ml-0">Self Purchased</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
                 )
             case "recived":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400 ml-auto md:ml-0">Received</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
                 )
             case "rejected":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400 ml-auto md:ml-0">Rejected</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
                 )
             case "onHold":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-orange-400 bg-transparent font-bold text-orange-400 ml-auto md:ml-0">On Hold</Badge>
+                    <Badge className="text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
                 )
         }
     }
@@ -444,10 +444,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500 hidden md:block">Expedited Requested</Badge>
                             )}
                             {(expidited == "approved") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-green-400 bg-transparent font-bold text-green-400 hidden md:block">Expedited</Badge>
+                                <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 hidden md:block">Expedited</Badge>
                             )}
                             {(expidited == "rejected") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-red-400 bg-transparent font-bold text-red-400 hidden md:block">Expedited Rejected</Badge>
+                                <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 hidden md:block">Expedited Rejected</Badge>
                             )}
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>

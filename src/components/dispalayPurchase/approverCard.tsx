@@ -42,7 +42,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         if (requiredRole == "president" && user.role == "president") {
             return (true);
         }
-        if (user.role == "teamAdministrator") {
+        if (user.role == "teamAdministrator" && requiredRole != "nProgramDirector") {
             return (true);
         }
         else {
