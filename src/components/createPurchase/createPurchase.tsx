@@ -218,7 +218,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
             found.items = "Add at least one item";
         } else {
             const hasInvalidItem = items.some(
-                (item) => Object.keys(validateItem(item.ItemName, item.ItemCost, item.ItemQuantity)).length > 0
+                (item) => Object.keys(validateItem(item.ItemName, item.ItemCost, item.ItemQuantity, item.ItemLink)).length > 0
             );
             if (hasInvalidItem) {
                 found.items = "Fix the highlighted items";
@@ -249,7 +249,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                     title: name.trim(),
                     requestor: user.id,
                     category: catagory,
-                    items: items.map((item) => ({ ...item, ItemName: item.ItemName.trim() })),
+                    items: items.map((item) => ({ ...item, ItemName: item.ItemName.trim(), ItemLink: item.ItemLink.trim() })),
                     vendor: supplier(),
                 }),
             });
@@ -332,14 +332,13 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 <div className="p-2 w-full">
                                     <Field>
                                         <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
-                                        {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
+                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className={`bg-input/20 ${errors.name ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-xs p-1 w-full`} />
                                     </Field>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <Field className="w-full min-w-0">
                                             <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
                                             <Select value={catagory} onValueChange={(value) => handleCategoryChange(String(value))}>
-                                                <SelectTrigger className="cursor-pointer w-full">
+                                                <SelectTrigger className={`cursor-pointer w-full ${errors.category ? "border-2 border-red-600" : ""}`}>
                                                     <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -348,12 +347,11 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            {errors.category && <p className="text-destructive text-xs mt-1">{errors.category}</p>}
                                         </Field>
                                         <Field className="mt-2 min-w-0">
                                             <FieldLabel>Supplier: <span className="text-destructive">*</span></FieldLabel>
                                             <Select value={supplierPicker} onValueChange={(value) => handleSupplierChange(String(value))}>
-                                                <SelectTrigger className="cursor-pointer w-full">
+                                                <SelectTrigger className={`cursor-pointer w-full ${errors.supplier ? "border-2 border-red-600" : ""}`}>
                                                     <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -366,11 +364,9 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                                     <SelectItem value="Other">Other</SelectItem>
                                                 </SelectContent>
                                             </Select>
-                                            {errors.supplier && <p className="text-destructive text-xs mt-1">{errors.supplier}</p>}
                                             {(supplierPicker == "Other") && (
-                                                <Input value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                                <Input value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="value" autoComplete="off" placeholder="Other Vendor Name" className={`bg-input/20 ${errors.otherSupplier ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-sm p-1 w-full`} />
                                             )}
-                                            {errors.otherSupplier && <p className="text-destructive text-xs mt-1">{errors.otherSupplier}</p>}
                                         </Field>
                                     </div>
                                 </div>

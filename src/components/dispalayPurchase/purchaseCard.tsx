@@ -502,7 +502,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuItem className="text-pink-700" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>
-                                                {(!editMode) && (
+                                                {(!editMode && (status == "needsAproval" || status == "approved")) && (
                                                     <DropdownMenuItem onClick={() => setEditMode(true)}>Edit</DropdownMenuItem>
                                                 )}
                                                 {(expidited == "NULL") && (<DropdownMenuItem onClick={() => updateExpidite(id, "requested")}>Request Expedite</DropdownMenuItem>)}
