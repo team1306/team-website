@@ -1,18 +1,10 @@
 'use client'
-import Navbar from "@/components/ui/navbar"
-import { useRouter } from 'next/navigation'
-import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
 import { useEffect, useState } from "react";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import {
     Drawer,
-    DrawerClose,
     DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
     DrawerTitle,
-    DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@base-ui/react";
@@ -21,7 +13,6 @@ import { StickyNotePlus, EllipsisVertical } from "lucide-react";
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -30,15 +21,42 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ExportPurchases } from "@/components/exportPurchases";
 
 const ALLOWED_PHASES = ["Offseason", "Season", "Champs"];
+const MANAGER_ROLES = ["treasurer", "president", "programDirector", "teamAdministrator"];
 
 interface FieldErrors {
     name?: string;
     phase?: string;
     budget?: string;
+    permission?: string;
 }
 
-function validateCategory(name: string, phase: string, budgetInput: string): { errors: FieldErrors; budget: number } {
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+    slack_userid: string;
+}
+
+interface CategoryData {
+    categoryID: string;
+    categoryName: string;
+    categoryPhase: string;
+    categoryBudget: number;
+    categorySpent: number;
+    enabled: boolean;
+}
+
+function canManageBudget(user: UserData | null | undefined): boolean {
+    return !!user && MANAGER_ROLES.includes(user.role);
+}
+
+function validateCategory(name: string, phase: string, budgetInput: string, currentUser: UserData | null): { errors: FieldErrors; budget: number } {
     const errors: FieldErrors = {};
+
+    if (!canManageBudget(currentUser)) {
+        errors.permission = "You do not have permission to manage budget categories";
+    }
 
     if (name.trim() === "") {
         errors.name = "Category name is required";
@@ -64,37 +82,9 @@ function formatMoney(amount: number): string {
     }).format(amount);
 }
 
-export default function Page() {
-    interface UserData {
-        id: string;
-        name: string;
-        role: string;
-        profilePicture: string;
-        slack_userid: string;
-    }
-
-    const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-    const [userLoading, setUserLoading] = useState(true);
-    const router = useRouter();
-
+export default function Budget({ currentUser }: { currentUser: UserData }){
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [loading, setLoading] = useState(true);
-
-    function setRole(newRole: string) {
-        setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
-    }
-
-    async function loadUser() {
-        try {
-            const user = await getUserInfo();
-            setCurrentUser(user);
-        } catch (err) {
-            console.error("Failed to load user:", err);
-            router.push("/login");
-        } finally {
-            setUserLoading(false);
-        }
-    }
 
     async function fetchCategories() {
         try {
@@ -110,7 +100,6 @@ export default function Page() {
     }
 
     useEffect(() => {
-        loadUser();
         fetchCategories();
     }, []);
 
@@ -124,6 +113,7 @@ export default function Page() {
 
     const totalBudget = findTotalBudget();
     const totalSpent = findTotalSpent();
+    const canManage = canManageBudget(currentUser);
 
     function budgetHue(): number {
         if (totalBudget <= 0) return 220;
@@ -147,7 +137,6 @@ export default function Page() {
 
     return (
         <div>
-            <Navbar user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} updateUserRole={setRole} />
             <Card className="p-2 bg-mist-700 m-3 gap-0">
                 <CardDescription className="text-mist-200 text-2xl mb-0 font-bold">Total Season Spending:</CardDescription>
                 <div className="rounded-md mt-2 mb-2" style={budgetFill()}>
@@ -157,29 +146,30 @@ export default function Page() {
             <Card className="p-2 bg-mist-700 m-3">
                 <div className="flex">
                     <CardDescription className="text-mist-200 text-2xl font-bold mb-0">Budget Categories:</CardDescription>
-                    {currentUser?.role === "treasurer" || currentUser?.role === "president" || currentUser?.role === "programDirector" || currentUser?.role === "teamAdministrator" && (
+                    {canManage && (
                         <div className="ml-auto flex gap-2">
                             <ExportPurchases />
-                            <NewCatagory onCreate={fetchCategories} />
+                            <NewCatagory currentUser={currentUser} onCreate={fetchCategories} />
                         </div>
                     )}
                 </div>
+                {loading && <p className="text-zinc-100">Loading...</p>}
                 <Card className="bg-mist-600 p-2 gap-2">
-                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Offseason</CardTitle>
+                    <CardTitle className="text-zinc-100 text-lg font-semibold p-0">Offseason</CardTitle>
                     {getCategories("Offseason").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
+                        <BudgetCategory key={category.categoryID} {...category} currentUser={currentUser} onEdited={fetchCategories} />
                     ))}
                 </Card>
                 <Card className="bg-mist-600 p-2 gap-2">
-                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Season</CardTitle>
+                    <CardTitle className="text-zinc-100 text-lg font-semibold p-0">Season</CardTitle>
                     {getCategories("Season").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
+                        <BudgetCategory key={category.categoryID} {...category} currentUser={currentUser} onEdited={fetchCategories} />
                     ))}
                 </Card>
                 <Card className="bg-mist-600 p-2 gap-2">
-                    <CardTitle className="text-zinc-100 text-lg font-semi p-0">Champs</CardTitle>
+                    <CardTitle className="text-zinc-100 text-lg font-semibold p-0">Champs</CardTitle>
                     {getCategories("Champs").map((category) => (
-                        <BudgetCategory key={category.categoryID} {...category} onEdited={fetchCategories} />
+                        <BudgetCategory key={category.categoryID} {...category} currentUser={currentUser} onEdited={fetchCategories} />
                     ))}
                 </Card>
             </Card>
@@ -187,7 +177,7 @@ export default function Page() {
     )
 }
 
-function NewCatagory({ onCreate }: { onCreate: () => void }) {
+function NewCatagory({ currentUser, onCreate }: { currentUser: UserData | null; onCreate: () => void }) {
     const [open, setOpen] = useState(false);
 
     const [name, setName] = useState("");
@@ -216,8 +206,12 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
     async function createCategory() {
         setError("");
 
-        const { errors, budget } = validateCategory(name, phase, budgetInput);
+        const { errors, budget } = validateCategory(name, phase, budgetInput, currentUser);
         setFieldErrors(errors);
+
+        if (errors.permission) {
+            setError(errors.permission);
+        }
 
         if (Object.keys(errors).length > 0) {
             return;
@@ -288,7 +282,7 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
                         <Field className="mt-3">
                             <div className="flex gap-1">
                                 <FieldLabel>Category Enabled:</FieldLabel>
-                                <Checkbox checked={enabled} onCheckedChange={setEnabled} />
+                                <Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(Boolean(checked))} />
                             </div>
                         </Field>
                         {error && <p className="text-destructive text-sm mt-3">{error}</p>}
@@ -300,16 +294,7 @@ function NewCatagory({ onCreate }: { onCreate: () => void }) {
     )
 }
 
-interface CategoryData {
-    categoryID: string;
-    categoryName: string;
-    categoryPhase: string;
-    categoryBudget: number;
-    categorySpent: number;
-    enabled: boolean;
-}
-
-function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudget, categorySpent, enabled, onEdited }: CategoryData & { onEdited: () => void }) {
+function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudget, categorySpent, enabled, currentUser, onEdited }: CategoryData & { currentUser: UserData | null; onEdited: () => void }) {
 
     const [open, setOpen] = useState(false);
     const [error, setError] = useState("");
@@ -377,8 +362,12 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
     async function editCategory() {
         setError("");
 
-        const { errors, budget } = validateCategory(name, phase, budgetInput);
+        const { errors, budget } = validateCategory(name, phase, budgetInput, currentUser);
         setFieldErrors(errors);
+
+        if (errors.permission) {
+            setError(errors.permission);
+        }
 
         if (Object.keys(errors).length > 0) {
             return;
@@ -404,7 +393,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                 body: JSON.stringify(payload),
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setError(data.error || "Failed to save changes");
@@ -427,7 +416,9 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                 <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
                     <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}/{formatMoney(categoryBudget)}</h1>
                 </div>
-                <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />
+                {canManageBudget(currentUser) && (
+                    <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />
+                )}
             </div>
             <Drawer open={open} onOpenChange={(next) => { if (!next) resetFields(); setOpen(next); }} swipeDirection="right" modal={false}>
                 <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
@@ -462,7 +453,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                         <Field className="mt-3">
                             <div className="flex gap-1">
                                 <FieldLabel>Category Enabled:</FieldLabel>
-                                <Checkbox checked={newenabled} onCheckedChange={setEnabled} />
+                                <Checkbox checked={newenabled} onCheckedChange={(checked) => setEnabled(Boolean(checked))} />
                             </div>
                         </Field>
                         {error && <p className="text-destructive text-sm mt-3">{error}</p>}

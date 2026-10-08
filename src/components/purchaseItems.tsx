@@ -7,7 +7,7 @@ import { Input } from "@base-ui/react";
 import { Field, FieldLabel } from "./ui/field";
 import { Globe } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ItemData, PurchaseData } from "@/app/page";
+import { ItemData, PurchaseData } from "@/app/orders/page";
 
 
 interface PurchaseItemsProps {

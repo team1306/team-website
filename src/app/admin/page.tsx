@@ -7,17 +7,16 @@ import { Card, CardTitle } from "@/components/ui/card";
 import User from "./user";
 import { toast } from "@/components/ui/toast";
 
-export default function Page() {
-    interface UserData {
-        id: string;
-        name: string;
-        role: string;
-        profilePicture: string;
-        slack_userid: string;
-    }
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+    slack_userid: string;
+}
 
-    const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-    const [userLoading, setUserLoading] = useState(true);
+export default function Admin({ currentUser }: { currentUser: UserData }) {
+
     const router = useRouter();
     const [users, setUsers] = useState<UserData[] | null>(null);
     const roles = [
@@ -50,30 +49,7 @@ export default function Page() {
         setUsers(sorted);
     }
 
-    async function loadUser() {
-        try {
-            const user = await getUserInfo();
-            setCurrentUser(user);
-        } catch (err) {
-            console.error("Failed to load user:", err);
-            if (err instanceof Error && err.message === "Not authenticated") {
-                router.push("/login?notAuthed=true");
-            }
-            else {
-                router.push("/login");
-            }
-        } finally {
-            setUserLoading(false);
-        }
-    }
-
     useEffect(() => {
-        loadUser();
-    }, []);
-
-    useEffect(() => {
-        if (userLoading) return;
-
         const authorized = currentUser?.role === "president" ||
             currentUser?.role === "programDirector" ||
             currentUser?.role === "teamAdministrator";
@@ -84,15 +60,10 @@ export default function Page() {
         }
 
         loadUsers();
-    }, [currentUser, userLoading]);
-
-    function setRole(newRole: string) {
-        setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
-    }
+    }, [currentUser]);
 
     return (
         <div>
-            <Navbar user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} updateUserRole={setRole} />
             <Card className="bg-mist-600 p-0 m-3">
                 <div className="bg-mist-800 p-2">
                     <CardTitle className="text-zinc-100 text-2xl font-bold">Manage My Team</CardTitle>

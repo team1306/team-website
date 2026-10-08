@@ -33,9 +33,20 @@ import Item from "@/components/createPurchase/itemCard";
 import { toast } from "@/components/ui/toast";
 import { useEffect } from "react";
 
+interface UserData {
+    id: string;
+    name: string;
+    role: string;
+    profilePicture: string;
+    slack_userid: string;
+}
 
-export default function Page() {
-    const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+type CreateProps = {
+    currentUser: UserData;
+    onDiscard: () => void;
+};
+
+export default function Create({ currentUser, onDiscard }: CreateProps) {
     const [userLoading, setUserLoading] = useState(true);
     const router = useRouter();
 
@@ -61,27 +72,6 @@ export default function Page() {
         categoryBudget: number;
         categorySpent: number;
         enabled: boolean;
-    }
-
-    function setRole(newRole: string) {
-        setCurrentUser(prev => prev ? { ...prev, role: newRole } : prev);
-    }
-
-    async function loadUser() {
-        try {
-            const user = await getUserInfo();
-            setCurrentUser(user);
-        } catch (err) {
-            console.error("Failed to load user:", err);
-            if (err instanceof Error && err.message === "Not authenticated") {
-                router.push("/login?notAuthed=true");
-            }
-            else {
-                router.push("/login");
-            }
-        } finally {
-            setUserLoading(false);
-        }
     }
 
     const addItem = () => {
@@ -180,7 +170,6 @@ export default function Page() {
     }
 
     useEffect(() => {
-        loadUser();
         fetchCategories();
     }, []);
 
@@ -204,7 +193,6 @@ export default function Page() {
 
     return (
         <div className="">
-            <Navbar user={currentUser ?? { id: "", name: "", role: "", profilePicture: "" }} updateUserRole={setRole} />
             <div className="p-3">
                 <Card className="w-full gap-0 bg-mist-600 text-zinc-100 pt-0 pb-0 rounded-md mb-3">
                     <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
@@ -280,7 +268,10 @@ export default function Page() {
                     <h2>Order Total:</h2>
                     <div className="flex items-center">
                         <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
-                        <Button onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 ml-auto hover:bg-zinc-300">Create</Button>
+                        <div className="flex ml-auto gap-3">
+                            <Button onClick={() => { onDiscard(); }} className="cursor-pointer w-fit text-base bg-red-500 text-zinc-100 border-0 hover:bg-red-600">Discard</Button>
+                            <Button onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
+                        </div>
                     </div>
                 </Card>
             </div>

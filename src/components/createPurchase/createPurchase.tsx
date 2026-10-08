@@ -1,45 +1,29 @@
 'use client'
 import {
     Dialog,
-    DialogClose,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
 import {
     Field,
-    FieldContent,
-    FieldDescription,
-    FieldError,
-    FieldGroup,
     FieldLabel,
-    FieldLegend,
-    FieldSeparator,
-    FieldSet,
-    FieldTitle,
 } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
-import { StickyNotePlus, Plus, ArrowDown } from "lucide-react"
-import { Card, CardAction, CardDescription, CardTitle } from "@/components/ui/card";
+import { StickyNotePlus, Plus } from "lucide-react"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { Input } from "@base-ui/react"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Item, { validateItem } from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useEffect } from "react"
-import { useRouter } from 'next/navigation'
 
 interface UserData {
     id: string;
@@ -56,24 +40,31 @@ interface FormErrors {
     items?: string;
 }
 
-export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchaseCreated?: () => void, user: UserData }) {
-    interface ItemData {
-        id: string;
-        ItemName: string;
-        ItemCost: number;
-        ItemQuantity: number;
-        ItemLink: string;
-    }
+interface ItemData {
+    id: string;
+    ItemName: string;
+    ItemCost: number;
+    ItemQuantity: number;
+    ItemLink: string;
+}
 
-    interface CategoryData {
-        categoryID: string;
-        categoryName: string;
-        categoryPhase: string;
-        categoryBudget: number;
-        categorySpent: number;
-        enabled: boolean;
-    }
+interface CategoryData {
+    categoryID: string;
+    categoryName: string;
+    categoryPhase: string;
+    categoryBudget: number;
+    categorySpent: number;
+    enabled: boolean;
+}
 
+type CreatePurchaseProps = {
+    onPurchaseCreated?: () => void;
+    user: UserData;
+    overrideOpen: (value: boolean) => void;
+    isOpen: boolean;
+};
+
+export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, isOpen }: CreatePurchaseProps) {
     const [items, setItems] = useState<ItemData[]>([]);
     const [name, setName] = useState(String(""));
     const [catagory, setCatagory] = useState(String(""));
@@ -84,19 +75,6 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
     const [submitting, setSubmitting] = useState(false);
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
-    const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
-
-    const [isMobile, setIsMobile] = useState(false);
-    const router = useRouter();
-
-    useEffect(() => {
-        const mql = window.matchMedia("(max-width: 767px)");
-        setIsMobile(mql.matches);
-
-        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-        mql.addEventListener("change", handler);
-        return () => mql.removeEventListener("change", handler);
-    }, []);
 
     async function fetchCategories() {
         try {
@@ -117,11 +95,9 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
     const selectedCategoryBudget = categories.find((c) => c.categoryID === catagory)?.categoryBudget ?? 0;
     const selectedCategorySpent = categories.find((c) => c.categoryID === catagory)?.categorySpent ?? 0;
 
-    const [open, setOpen] = useState(false)
-
     const data = [
         { name: "Spent", value: selectedCategorySpent },
-        { name: "Remains", value: ((selectedCategoryBudget - selectedCategorySpent) - orderTotal) },
+        { name: "Remains", value: Math.max(0, selectedCategoryBudget - selectedCategorySpent - orderTotal) },
         { name: "Order Cost", value: orderTotal },
     ];
     const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
@@ -163,11 +139,11 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
 
     function discard() {
         resetForm();
-        setOpen(false);
+        overrideOpen(false);
     }
 
     function handleOpenChange(next: boolean) {
-        setOpen(next);
+        overrideOpen(next);
         if (!next) {
             setErrors({});
             setShowItemErrors(false);
@@ -217,9 +193,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         if (supplierPicker == "Other" && otherSupplier.trim() !== "") {
             return ("Other - " + otherSupplier.trim());
         }
-        else {
-            return (supplierPicker);
-        }
+        return supplierPicker;
     }
 
     function validate(): FormErrors {
@@ -261,8 +235,6 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         setErrors(found);
         setShowItemErrors(true);
 
-        resetForm();
-
         if (Object.keys(found).length > 0) {
             return;
         }
@@ -288,13 +260,14 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                 });
                 onPurchaseCreated?.();
                 resetForm();
-                setOpen(false);
+                overrideOpen(false);
             } else {
                 toast.add({
                     title: "Error",
                 });
             }
         } catch (err) {
+            console.error(err);
             toast.add({
                 title: "Error",
             });
@@ -317,30 +290,21 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
     }
 
-    function openCreatePurchase() {
-        if (isMobile) {
-            router.push("/create");
-        }
-        else {
-            setOpen(true);
-        }
-    }
-
     return (
         <div>
-            <Dialog open={open} onOpenChange={handleOpenChange}>
-                <DialogTrigger render={<Button onClick={() => openCreatePurchase()} className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1 text-" />New Request</Button>}></DialogTrigger>
-                <DialogContent className="bg-red-900 w-fit max-w-fit sm:max-w-fit">
+            <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+                <DialogTrigger render={<Button className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
+                <DialogContent className="bg-red-900 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:w-[min(88rem,calc(100vw-2rem))] lg:max-w-none max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
                     <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
-                    <div className="flex gap-2 items-stretch">
-                        <Card className="w-sm gap-0 bg-mist-600 text-zinc-100 pt-0">
+                    <div className="flex flex-col lg:flex-row gap-2 items-stretch w-full min-w-0">
+                        <Card className="w-full min-w-0 lg:flex-[24_1_0%] gap-0 bg-mist-600 text-zinc-100 pt-0">
                             <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                 <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                             </Card>
                             <div className="p-2 w-full">
-                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
-                                <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
-                                <ResponsiveContainer width="100%" height={300}>
+                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-4xl sm:text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                                <h2 className="text-lg mt-2">Remains in Robot ({budgetRemainPercent()}%)</h2>
+                                <ResponsiveContainer width="100%" height={260}>
                                     <PieChart>
                                         <Pie
                                             data={data}
@@ -348,7 +312,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                             nameKey="name"
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={100}
+                                            outerRadius={90}
                                             isAnimationActive={true}
                                         >
                                             {data.map((entry, index) => (
@@ -360,8 +324,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                 </ResponsiveContainer>
                             </div>
                         </Card>
-                        <div>
-                            <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 pt-0">
+                        <div className="w-full min-w-0 lg:flex-[32_1_0%]">
+                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 pt-0">
                                 <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                     <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Info</CardTitle>
                                 </Card>
@@ -371,8 +335,8 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                         <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-xs p-1 w-full" />
                                         {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
                                     </Field>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Field className="w-full">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <Field className="w-full min-w-0">
                                             <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
                                             <Select value={catagory} onValueChange={(value) => handleCategoryChange(String(value))}>
                                                 <SelectTrigger className="cursor-pointer w-full">
@@ -386,7 +350,7 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                             </Select>
                                             {errors.category && <p className="text-destructive text-xs mt-1">{errors.category}</p>}
                                         </Field>
-                                        <Field className="mt-2">
+                                        <Field className="mt-2 min-w-0">
                                             <FieldLabel>Supplier: <span className="text-destructive">*</span></FieldLabel>
                                             <Select value={supplierPicker} onValueChange={(value) => handleSupplierChange(String(value))}>
                                                 <SelectTrigger className="cursor-pointer w-full">
@@ -411,15 +375,15 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                     </div>
                                 </div>
                             </Card>
-                            <Card className="w-lg gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0 pt-0">
+                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0 pt-0">
                                 <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                     <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Best Practices</CardTitle>
                                 </Card>
                                 <CardDescription className="ml-2 pb-5 text-zinc-100">Purchasing Guidelines</CardDescription>
                             </Card>
                         </div>
-                        <div className="flex flex-col gap-2 h-full">
-                            <Card className="w-md gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
+                        <div className="flex flex-col gap-2 w-full min-w-0 lg:flex-[28_1_0%]">
+                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
                                 <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                     <div className="flex m-1">
                                         <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
@@ -427,14 +391,14 @@ export default function CreatePurchase({ onPurchaseCreated, user }: { onPurchase
                                     </div>
                                 </Card>
                                 <div className="p-2 w-full flex-1 overflow-auto min-h-0">
-                                    <ScrollArea className="h-[310px] w-full rounded-md pr-4">
+                                    <ScrollArea className="h-[240px] sm:h-[310px] w-full rounded-md pr-4">
                                         {items.map((item) => (
                                             <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} showErrors={showItemErrors} />
                                         ))}
                                     </ScrollArea>
                                 </div>
                             </Card>
-                            <Card className="w-md gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
+                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
                                 <h2>Order Total:</h2>
                                 <div className="flex">
                                     <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>

@@ -105,7 +105,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
             case "teamAdministrator":
                 return (
                     <Badge className="rounded-md text-base bg-violet-600">Team Adminstrator</Badge>
-                )
+                 )
         }
     }
     const router = useRouter();
