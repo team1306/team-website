@@ -63,6 +63,7 @@ type request = {
     approvers: Approver[];
     reason?: string;
     expidited: string;
+    isKrakenMode: boolean;
 }
 
 interface ItemData {
@@ -89,8 +90,9 @@ interface UserData {
     profilePicture: string;
 }
 
+const KRAKEN_DIVISOR = 217.99;
 
-export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited }: request) {
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited, isKrakenMode }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
             const res = await fetch('/api/order/setStatus', {
@@ -196,6 +198,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const calculatePrice = () => {
         return itemsArray.reduce((total, item) => total + item.ItemCost * item.ItemQuantity, 0);
     }
+
+    const displayPrice = () => {
+        const total = calculatePrice();
+        if (isKrakenMode) {
+            return `${(total / KRAKEN_DIVISOR).toFixed(2)} krkns`;
+        }
+        return `$${total.toFixed(2)}`;
+    }
+
+    const priceColor = isKrakenMode ? "text-blue-500" : "text-zinc-100";
 
     const [name, setName] = useState(itemName);
     const [itemCatagory, setItemCaragory] = useState(catagory);
@@ -427,6 +439,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     link={item.ItemLink}
                     defaultEdit={editMode}
                     onUpdate={updateItem}
+                    isKrakenMode={isKrakenMode}
                 />
             ))}
         </div>
@@ -452,9 +465,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-28 h-fit mt-2 pt-1 pb-1 hidden md:block">
+                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit min-w-28 h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
-                        <h2 className="text-base font-bold text-zinc-100">${calculatePrice().toFixed(2)}</h2>
+                        <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                     </div>
                     <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1 hidden md:block">
                         <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
@@ -690,7 +703,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     </div>
                                 )}
                                 <div className="flex p-2">
-                                    <h1 className="text-2xl text-zinc-100 font-bold">${calculatePrice().toFixed(2)}</h1>
+                                    <h1 className={`text-2xl font-bold ${priceColor}`}>{displayPrice()}</h1>
                                     <div className="ml-auto">
                                     </div>
                                 </div>

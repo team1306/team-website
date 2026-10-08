@@ -368,6 +368,7 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
             <div className="ml-auto flex gap-2">
+              <Switch checked={krakenMode} onCheckedChange={setKrakenMode} size="md" logo={<img src="/kraken.png" alt="Kraken Mode" />} />
               {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
                 <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
               )}
@@ -376,7 +377,7 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
           </div>
           <div className="flex gap-4">
             {renderCategoryFilter()}
-            <div className="">
+            <div>
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
@@ -414,14 +415,12 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
               <h1 className="text-zinc-100 text-3xl bg-mist-600 p-3 rounded-md w-fit mx-auto">:(</h1>
               <h1 className="text-zinc-100 text-2xl w-fit mx-aut p-2">No Items Found</h1>
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
-              <Switch className="bg-red-600 size-lg" logo="/public/kraken.png"></Switch>
-
             </div>
           </div>
         ) : (
           filteredPurchases.map((purchase) => (
             <div key={purchase.id} className="m-3 mt-4">
-              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} />
+              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} isKrakenMode={krakenMode} />
             </div>
           ))
         )}
