@@ -97,25 +97,13 @@ function searchScore(purchase: PurchaseData, query: string): number {
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return 1;
 
-  const fields: [string, number][] = [
-    [purchase.title ?? "", 3],
-    [(purchase.items ?? []).map((item) => item.ItemName).join(" "), 2],
-    [purchase.vendor ?? "", 1.5],
-    [purchase.requestor ?? "", 1],
-    [purchase.catagory ?? "", 1],
-    [purchase.reason ?? "", 0.5],
-    [String(purchase.id ?? ""), 1],
-  ];
+  const titleText = (purchase.title ?? "").toLowerCase();
 
   let total = 0;
   for (const token of tokens) {
-    let best = 0;
-    for (const [text, weight] of fields) {
-      const score = fieldScore(text, token) * weight;
-      if (score > best) best = score;
-    }
-    if (best === 0) return 0;
-    total += best;
+    const score = fieldScore(titleText, token);
+    if (score === 0) return 0;
+    total += score;
   }
   return total;
 }

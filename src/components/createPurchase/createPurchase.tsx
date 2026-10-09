@@ -277,7 +277,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     }
 
     function budgetHue(): number {
-        if (selectedCategoryBudget <= 0) return 220;
+        if (selectedCategoryBudget <= 0) return 205;
         const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
         if (percent >= 100) return 0;
         if (percent >= 75) return 20;
