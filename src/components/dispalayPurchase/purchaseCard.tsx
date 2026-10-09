@@ -185,7 +185,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
     const [editMode, setEditMode] = useState(false);
-    const [userRole, setUserRole] = useState(user.role);
+    const userRole = user?.role;
 
     const [overideStatusOpen, setOverideStatusOpen] = useState(false);
     const [rejectOpen, setRejectOpen] = useState(false);
@@ -452,7 +452,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     return (
         <div>
-            <Card className="p-2 bg-mist-700 h-fit cursor-pointer" onClick={() => setOpen(true)}>
+            <Card className="p-2 bg-mist-700 h-fit cursor-pointer hover:bg-mist-800" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
