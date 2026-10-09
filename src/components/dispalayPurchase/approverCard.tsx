@@ -8,13 +8,16 @@ import { useState } from "react";
 interface approvalInfo {
     approverName: string;
     approverPicture: string;
+    approverID?: string;
     requiredRole: string;
     approved: boolean;
     user: UserData;
     rejected?: boolean
     onApproved?: () => void;
+    onWithdrawn?: () => void;
     itemID: string;
     disable?: boolean;
+    disableWithdraw?: boolean;
     tierTwo?: boolean;
 }
 
@@ -23,9 +26,11 @@ interface UserData {
     name: string;
     role: string;
     profilePicture: string;
-  }
+}
 
-export default function Approver({ approverName, approverPicture, requiredRole, approved, user, rejected, onApproved, itemID, disable, tierTwo }: approvalInfo) {
+export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onApproved, onWithdrawn, itemID, disable, disableWithdraw, tierTwo }: approvalInfo) {
+    const [withdrawing, setWithdrawing] = useState(false);
+
     const userCanApprove = () => {
         if (requiredRole == "mentor" && (user.role == "mentor" || user.role == "mentorLead" || user.role == "programDirector")) {
             return (true);
@@ -36,7 +41,7 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
         if (requiredRole == "studentLead" && (user.role == "studentLead" || user.role == "president") && !tierTwo) {
             return (true);
         }
-        if (requiredRole == "studentLead" && user.role == "studentLead"&& tierTwo) {
+        if (requiredRole == "studentLead" && user.role == "studentLead" && tierTwo) {
             return (true);
         }
         if (requiredRole == "president" && user.role == "president") {
@@ -60,7 +65,26 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
             })
         });
 
-        if (onApproved) { onApproved(); }
+        if (res.ok && onApproved) { onApproved(); }
+    }
+
+    async function withdraw() {
+        if (withdrawing) { return; }
+        setWithdrawing(true);
+        try {
+            const res = await fetch('/api/order/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    itemID: itemID,
+                    approvalRole: requiredRole,
+                })
+            });
+
+            if (res.ok && onWithdrawn) { onWithdrawn(); }
+        } finally {
+            setWithdrawing(false);
+        }
     }
 
     const cleanuser = () => {
@@ -134,6 +158,9 @@ export default function Approver({ approverName, approverPicture, requiredRole, 
                         <AvatarFallback>!</AvatarFallback>
                     </Avatar>
                     <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                    {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
+                        <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base ml-auto bg-red-700 text-zinc-100 hover:bg-red-800 p-3 mr-2">Withdraw</Button>
+                    )}
                 </div>
             </Card>
         );

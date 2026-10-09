@@ -12,6 +12,7 @@ interface ItemData {
 
 interface Approver {
   approved: boolean;
+  approverID: string;
   approverName: string;
   requiredRole: string;
   approverPicture: string;
@@ -60,6 +61,7 @@ function parsePurchases(
       const approverId = approver.approver ? String(approver.approver).trim() : "";
       return {
         approved: approver.approved,
+        approverID: approverId,
         approverName: approverId ? userNames.get(approverId) ?? approver.approver : "",
         requiredRole: approver.requiredRole,
         approverPicture: approverId ? userPictures.get(approverId) ?? "" : "",

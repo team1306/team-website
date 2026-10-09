@@ -78,6 +78,7 @@ interface ItemData {
 
 interface Approver {
     approved: boolean;
+    approverID: string;
     approverName: string;
     requiredRole: string;
     approverPicture: string;
@@ -312,6 +313,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     const purchaseApprovers = () => {
         const approvalDisabled = status === "onHold" || status === "rejected";
+        const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
                 {approvers.map((approver) => (
@@ -319,12 +321,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         key={approver.requiredRole}
                         approverName={approver.approverName}
                         approverPicture={approver.approverPicture}
+                        approverID={approver.approverID}
                         requiredRole={approver.requiredRole}
                         approved={approver.approved}
                         user={user}
                         onApproved={onPurchaseEdited}
+                        onWithdrawn={onPurchaseEdited}
                         itemID={id}
                         disable={approvalDisabled}
+                        disableWithdraw={withdrawDisabled}
                         tierTwo={isTierTwo()}
                     />
                 ))}
@@ -512,7 +517,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuItem className="text-green-500" onClick={() => setReceivedOpen(true)}>Mark as Received</DropdownMenuItem>
                                                 )}
                                                 {(status == "approved" || status == "needsAproval") && (
-                                                    <DropdownMenuItem className="text-pink-700" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-pink-800" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>
                                                 {(!editMode && (status == "needsAproval" || status == "approved")) && (
@@ -533,7 +538,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <div>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>
-                                                        <DropdownMenuLabel className="text-zinc-500">Admin Actions</DropdownMenuLabel>
+                                                        <DropdownMenuLabel className="text-zinc-800 font-bold">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>

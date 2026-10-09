@@ -19,6 +19,7 @@ import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
 import PurchaseItems from "@/components/purchaseItems";
 import { Switch } from "@/components/ui/switch";
+import { RotateCcw } from "lucide-react";
 
 interface UserData {
   id: string;
@@ -40,6 +41,7 @@ export interface ItemData {
 
 interface Approver {
   approved: boolean;
+  approverID: string;
   approverName: string;
   requiredRole: string;
   approverPicture: string;
@@ -389,6 +391,7 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
                 <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-bold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
+            <Button onClick={() => { loadPurchases(); }} className="ml-auto mt-auto bg-mist-900 hover:bg-mist-800"><RotateCcw/></Button>
           </div>
         </Card>
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 block md:hidden sticky top-0 z-10">
