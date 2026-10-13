@@ -82,26 +82,14 @@ function formatMoney(amount: number): string {
     }).format(amount);
 }
 
-export default function Budget({ currentUser }: { currentUser: UserData }){
-    const [categories, setCategories] = useState<CategoryData[]>([]);
-    const [loading, setLoading] = useState(true);
+interface BudgetPage {
+    currentUser: UserData;
+    categories: CategoryData[];
+    fetchCategories: () => void;
+}
 
-    async function fetchCategories() {
-        try {
-            const res = await fetch("/api/budget/getCategories");
-            if (!res.ok) throw new Error("Failed to fetch categories");
-            const data: CategoryData[] = await res.json();
-            setCategories(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }
+export default function Budget({ currentUser, categories, fetchCategories }: BudgetPage){
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
 
     function getCategories(phase: string): CategoryData[] {
         return categories.filter((category) => category.categoryPhase === phase);
@@ -153,7 +141,6 @@ export default function Budget({ currentUser }: { currentUser: UserData }){
                         </div>
                     )}
                 </div>
-                {loading && <p className="text-zinc-100">Loading...</p>}
                 <Card className="bg-mist-600 p-2 gap-2">
                     <CardTitle className="text-zinc-100 text-lg font-semibold p-0">Offseason</CardTitle>
                     {getCategories("Offseason").map((category) => (

@@ -111,12 +111,12 @@ function searchScore(purchase: PurchaseData, query: string): number {
 type HomeProps = {
   currentUser: UserData;
   onCreate: () => void;
+  purchases: PurchaseData[];
+  loadPurchases: () => void; 
 };
 
-export default function Home({ currentUser, onCreate }: HomeProps) {
+export default function Home({ currentUser, onCreate, purchases, loadPurchases }: HomeProps) {
   const router = useRouter();
-
-  const [purchases, setPurchases] = useState<PurchaseData[]>([]);
 
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [catagoryFilter, setCatagoryFilter] = useState<string[]>([]);
@@ -129,14 +129,6 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
   const [searchBarValue, setSearchBarValue] = useState("");
 
   const [krakenMode, setKrakenMode] = useState(false);
-
-  async function loadPurchases(): Promise<PurchaseData[]> {
-    const res = await fetch('/api/order/getOrders', { cache: 'no-store' });
-    const data = await res.json();
-    const loadedPurchases = data.parsed ?? [];
-    setPurchases(loadedPurchases);
-    return loadedPurchases;
-  }
 
   async function loadCategories(): Promise<CategoryData[]> {
     const res = await fetch('/api/budget/getCategories', { cache: 'no-store' });
@@ -176,12 +168,11 @@ export default function Home({ currentUser, onCreate }: HomeProps) {
     async function init() {
       setLoading(true);
 
-      const [loadedPurchases, loadedCategories] = await Promise.all([
-        loadPurchases(),
+      const [loadedCategories] = await Promise.all([
         loadCategories()
       ]);
 
-      const visibleCategories = getVisibleCategories(loadedCategories, loadedPurchases);
+      const visibleCategories = getVisibleCategories(loadedCategories);
       setCatagoryFilter(visibleCategories.map((category) => category.categoryID));
 
       setLoading(false);

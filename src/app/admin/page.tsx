@@ -1,11 +1,6 @@
 'use client'
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
-import Navbar from "@/components/ui/navbar";
 import { Card, CardTitle } from "@/components/ui/card";
 import User from "./user";
-import { toast } from "@/components/ui/toast";
 
 interface UserData {
     id: string;
@@ -15,52 +10,13 @@ interface UserData {
     slack_userid: string;
 }
 
-export default function Admin({ currentUser }: { currentUser: UserData }) {
+interface AdminPage {
+    currentUser: UserData;
+    users: UserData[];
+    loadUsers: () => void;
+}
 
-    const router = useRouter();
-    const [users, setUsers] = useState<UserData[] | null>(null);
-    const roles = [
-        "teamAdministrator",
-        "programDirector",
-        "president",
-        "treasurer",
-        "mentorLead",
-        "mentor",
-        "studentLead",
-        "student",
-    ];
-
-    async function loadUsers() {
-        const res = await fetch('/api/admin/getUsers', { cache: 'no-store' });
-        if (!res.ok) {
-            console.error('Failed to load users:', res.status);
-            toast.add({
-                title: "Failed to load users",
-            });
-            setUsers([]);
-            return;
-        }
-        const data: UserData[] = await res.json();
-
-        const sorted = [...data].sort(
-            (a, b) => roles.indexOf(a.role) - roles.indexOf(b.role)
-        );
-
-        setUsers(sorted);
-    }
-
-    useEffect(() => {
-        const authorized = currentUser?.role === "president" ||
-            currentUser?.role === "programDirector" ||
-            currentUser?.role === "teamAdministrator";
-
-        if (!authorized) {
-            router.push("/");
-            return;
-        }
-
-        loadUsers();
-    }, [currentUser]);
+export default function Admin({ currentUser, users, loadUsers }: AdminPage) {
 
     return (
         <div>
