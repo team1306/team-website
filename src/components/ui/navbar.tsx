@@ -164,6 +164,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         width={55}
                         height={55}
                         className="cursor-pointer"
+                        onClick={() => updateCurrentPage('/')}
                         preload
                     />
                     <h1 className="text-zinc-100 text-2xl font-bold ml-4">

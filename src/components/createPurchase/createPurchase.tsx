@@ -293,7 +293,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     return (
         <div>
             <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-                <DialogTrigger render={<Button className="cursor-pointer text-xl w-fit p-3"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
+                <DialogTrigger render={<Button className="cursor-pointer text-xl w-full p-3 md:w-fit"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
                 <DialogContent className="bg-red-900 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:w-[min(88rem,calc(100vw-2rem))] lg:max-w-none max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
                     <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
                     <div className="flex flex-col lg:flex-row gap-2 items-stretch w-full min-w-0">

@@ -3,7 +3,7 @@ import Navbar from "../../components/ui/navbar";
 import Purchase from "../../components/dispalayPurchase/purchaseCard";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, SlidersHorizontal, Menu, X } from "lucide-react";
 import CreatePurchase from "../../components/createPurchase/createPurchase";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -28,6 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface UserData {
   id: string;
@@ -328,6 +333,8 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   function overrideOpen(newValue: boolean) {
     if ((isOpen == false) && (newValue == true) && (isMobile == true)) {
@@ -405,6 +412,60 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
     );
   }
 
+  function renderFilterDialog() {
+    const allSelected = ALL_CATEGORY_IDS.length > 0 && catagoryFilter.length === ALL_CATEGORY_IDS.length;
+
+    return (
+      <>
+        <Button onClick={() => setFilterDialogOpen(true)} className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer w-full">
+          <SlidersHorizontal className="size-4" />
+          Filters
+        </Button>
+        <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+          <DialogContent className="bg-mist-400 p-4 max-h-[85vh] overflow-y-auto">
+            <DialogTitle className="font-jetbrains text-xl font-bold">Filters</DialogTitle>
+            <div>
+              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
+              <div className="max-h-48 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2">
+                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
+                  <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
+                  All
+                </label>
+                <div className="border-t border-mist-500 my-1" />
+                {visibleCategories.map((cat) => (
+                  <label key={cat.categoryID} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer text-zinc-100 text-sm">
+                    <Checkbox
+                      checked={catagoryFilter.includes(cat.categoryID)}
+                      onCheckedChange={() => toggleCategory(cat.categoryID)}
+                    />
+                    {cat.categoryID}
+                  </label>
+                ))}
+              </div>
+            </div>
+            {renderSortSelect()}
+            <div>
+              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
+              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
+                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-bold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-bold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-bold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
+                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-bold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
+                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-bold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
+                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-bold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer">Clear All Filters</Button>
+              <Button onClick={() => setFilterDialogOpen(false)} className="bg-green-700 text-base text-zinc-100 rounded-lg hover:bg-green-800 cursor-pointer ml-auto">Done</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   const filteredPurchases = filterPurchases();
 
   if (!loading) {
@@ -459,8 +520,17 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
                   <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-full min-w-0 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
                 </div>
               </Field>
+              <Button
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+                className="ml-2 shrink-0 bg-mist-500 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer"
+              >
+                {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+              </Button>
             </div>
-            <div className="ml-auto flex gap-2 mt-2">
+            <div className={`flex-col gap-2 mt-2 ${mobileMenuOpen ? "flex" : "hidden"}`}>
+              {renderFilterDialog()}
               {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
                 <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
               )}
