@@ -20,6 +20,14 @@ import { useRouter } from 'next/navigation'
 import PurchaseItems from "@/components/purchaseItems";
 import { Switch } from "@/components/ui/switch";
 import { RotateCcw } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface UserData {
   id: string;
@@ -71,6 +79,31 @@ interface CategoryData {
   enabled: boolean;
 }
 
+type SortOption = "none" | "dateNO" | "dateON" | "priceLH" | "priceHL";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "dateNO", label: "Date (New to Old)" },
+  { value: "dateON", label: "Date (Old to New)" },
+  { value: "priceLH", label: "Price (Low to High)" },
+  { value: "priceHL", label: "Price (High to Low)" },
+];
+
+function sortComparison(a: PurchaseData, b: PurchaseData, sortBy: SortOption): number {
+  switch (sortBy) {
+    case "dateNO":
+      return new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime();
+    case "dateON":
+      return new Date(a.requestedDate).getTime() - new Date(b.requestedDate).getTime();
+    case "priceLH":
+      return a.cost - b.cost;
+    case "priceHL":
+      return b.cost - a.cost;
+    default:
+      return 0;
+  }
+}
+
 function fieldScore(text: string, token: string): number {
   const t = text.toLowerCase();
   if (!t) return 0;
@@ -112,7 +145,7 @@ type HomeProps = {
   currentUser: UserData;
   onCreate: () => void;
   purchases: PurchaseData[];
-  loadPurchases: () => void; 
+  loadPurchases: () => void;
 };
 
 export default function Home({ currentUser, onCreate, purchases, loadPurchases }: HomeProps) {
@@ -122,8 +155,10 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   const [catagoryFilter, setCatagoryFilter] = useState<string[]>([]);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const categoryFilterTouched = useRef(false);
   const [statusFilter, setStatusFilter] = useState(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold'])
   const [nameFilter, setNameFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("none");
 
   const [loading, setLoading] = useState(true);
   const [searchBarValue, setSearchBarValue] = useState("");
@@ -159,8 +194,10 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   }
 
   function clearFilters() {
+    categoryFilterTouched.current = false;
     setCatagoryFilter(getVisibleCategories().map((c) => c.categoryID));
     setStatusFilter(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold']);
+    setSortBy("none");
     setSearchBarValue("");
   }
 
@@ -180,6 +217,11 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
     init();
   }, []);
 
+  useEffect(() => {
+    if (categoryFilterTouched.current) return;
+    setCatagoryFilter(getVisibleCategories(categories, purchases).map((category) => category.categoryID));
+  }, [categories, purchases]);
+
   function filterPurchases(): PurchaseData[] {
     const hasQuery = nameFilter.trim().length > 0;
 
@@ -194,7 +236,12 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
       .filter((entry) => entry.score > 0);
 
     scored.sort((a, b) => {
-      if (hasQuery && b.score !== a.score) return b.score - a.score;
+      if (sortBy !== "none") {
+        const sortCompare = sortComparison(a.purchase, b.purchase, sortBy);
+        if (sortCompare !== 0) return sortCompare;
+      } else if (hasQuery && b.score !== a.score) {
+        return b.score - a.score;
+      }
       return Number(b.purchase.id) - Number(a.purchase.id);
     });
 
@@ -258,12 +305,14 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   const ALL_CATEGORY_IDS = visibleCategories.map((c) => c.categoryID);
 
   function toggleCategory(categoryID: string) {
+    categoryFilterTouched.current = true;
     setCatagoryFilter((prev) =>
       prev.includes(categoryID) ? prev.filter((c) => c !== categoryID) : [...prev, categoryID]
     );
   }
 
   function toggleAllCategories() {
+    categoryFilterTouched.current = true;
     setCatagoryFilter((prev) => (prev.length === ALL_CATEGORY_IDS.length ? [] : ALL_CATEGORY_IDS));
   }
 
@@ -329,6 +378,33 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
     );
   }
 
+  function renderSortSelect() {
+    return (
+      <div>
+        <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Sort by:</h1>
+        <Select value={sortBy} onValueChange={(value) => setSortBy((value as SortOption) ?? "none")}>
+          <SelectTrigger className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between border-0 [&_svg:not([data-sort-chevron])]:hidden">
+            <SelectValue className="text-zinc-100" placeholder="Sort by">
+              {(value: string) => SORT_OPTIONS.find((option) => option.value === value)?.label ?? "Sort by"}
+            </SelectValue>
+            <ChevronDown data-sort-chevron className="size-4" />
+          </SelectTrigger>
+          <SelectContent className="min-w-48 bg-mist-700 border border-mist-500 rounded-lg p-2 shadow-lg">
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="px-2 py-1.5 rounded text-zinc-100 text-sm cursor-pointer hover:bg-mist-500 focus:bg-mist-500 focus:text-zinc-100"
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
   const filteredPurchases = filterPurchases();
 
   if (!loading) {
@@ -358,6 +434,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
           </div>
           <div className="flex gap-4">
             {renderCategoryFilter()}
+            {renderSortSelect()}
             <div>
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
@@ -370,7 +447,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
                 <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-bold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <Button onClick={() => { loadPurchases(); }} className="ml-auto mt-auto bg-mist-900 hover:bg-mist-800"><RotateCcw/></Button>
+            <Button onClick={() => { loadPurchases(); }} className="ml-auto mt-auto bg-mist-900 hover:bg-mist-800"><RotateCcw /></Button>
           </div>
         </Card>
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 block md:hidden sticky top-0 z-10">
@@ -429,6 +506,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
           </div>
           <div className="flex gap-4">
             {renderCategoryFilter()}
+            {renderSortSelect()}
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
