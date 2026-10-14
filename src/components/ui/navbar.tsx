@@ -76,35 +76,35 @@ export default function Navbar({ user, setCurrentPage }: user) {
         switch (userRole) {
             case "student":
                 return (
-                    <Badge className="rounded-md text-base bg-red-600">Student</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-red-600">Student</Badge>
                 )
             case "mentor":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Mentor</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-emerald-600">Mentor</Badge>
                 )
             case "mentorLead":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Lead Mentor</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-emerald-600">Lead Mentor</Badge>
                 )
             case "treasurer":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Treasurer</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-emerald-600">Treasurer</Badge>
                 )
             case "studentLead":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Student Lead</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-emerald-600">Student Lead</Badge>
                 )
             case "president":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">President</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-violet-600">President</Badge>
                 )
             case "programDirector":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">Program Director</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-violet-600">Program Director</Badge>
                 )
             case "teamAdministrator":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">Team Adminstrator</Badge>
+                    <Badge className="font-jetbrains rounded-md text-base bg-violet-600">Team Adminstrator</Badge>
                 )
         }
     }

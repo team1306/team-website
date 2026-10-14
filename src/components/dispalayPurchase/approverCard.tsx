@@ -110,7 +110,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
                 <div className="flex items-center justify-start">
                     <div>
                         <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
                     <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
                 </div>
@@ -123,7 +123,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
                 <div className="flex items-center justify-start">
                     <div>
                         <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
                     <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
                 </div>
@@ -157,7 +157,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
                         <AvatarImage src={approverPicture} />
                         <AvatarFallback>!</AvatarFallback>
                     </Avatar>
-                    <CardDescription className="text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
+                    <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
                         <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base ml-auto bg-red-700 text-zinc-100 hover:bg-red-800 p-3 mr-2">Withdraw</Button>
                     )}

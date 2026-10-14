@@ -208,7 +208,7 @@ function DrawerDescription({
     <DrawerPrimitive.Description
       data-slot="drawer-description"
       className={cn(
-        "text-xs/relaxed text-balance text-muted-foreground",
+        "font-sans text-xs/relaxed text-balance text-muted-foreground",
         className
       )}
       {...props}
