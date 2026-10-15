@@ -4,11 +4,10 @@ import { getUserInfo } from "./auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
 import Navbar from "@/components/ui/navbar";
 
-
-import Home from "./orders/page";
-import Budget from "./budget/page";
-import Admin from "./admin/page";
-import Create from "./create/page";
+import Home from "@/components/orders/page";
+import Budget from "@/components/budget/page";
+import Admin from "@/components/admin/page";
+import Create from "@/components/create/page";
 
 interface UserData {
     id: string;

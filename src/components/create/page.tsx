@@ -1,7 +1,6 @@
 'use client'
 import Navbar from "@/components/ui/navbar"
 import { useState } from "react";
-import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
 import {
     Field,

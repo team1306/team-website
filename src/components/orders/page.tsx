@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@base-ui/react";
-import { getUserInfo } from "../auth/getUserInfo/getUserInfo";
+import { Input } from "@base-ui/react"
 import { useRouter } from 'next/navigation'
 import PurchaseItems from "@/components/purchaseItems";
 import { Switch } from "@/components/ui/switch";
