@@ -97,6 +97,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const privateKeyPem = process.env.BROKER_PRIVATE_KEY;
+    const tokenSecret = process.env.BROKER_TOKEN_SECRET;
+    const kid = process.env.BROKER_KID;
+    const audienceClientId = process.env.BROKER_CLIENT_ID;
+
+    if (!privateKeyPem || !tokenSecret || !kid || !audienceClientId) {
+      console.error("Broker token endpoint missing configuration:", {
+        BROKER_PRIVATE_KEY: Boolean(privateKeyPem),
+        BROKER_TOKEN_SECRET: Boolean(tokenSecret),
+        BROKER_KID: Boolean(kid),
+        BROKER_CLIENT_ID: Boolean(audienceClientId),
+      });
+
+      return NextResponse.json(
+        {
+          error: "server_error",
+        },
+        { status: 500 }
+      );
+    }
+
+    const privateKey = await importPKCS8(
+      privateKeyPem.replace(/\\n/g, "\n"),
+      "RS256"
+    );
+
     const { data: claims, error } = await brokerDb.rpc(
       "consume_oauth_transaction",
       {
@@ -128,11 +154,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const privateKey = await importPKCS8(
-      process.env.BROKER_PRIVATE_KEY!.replace(/\\n/g, "\n"),
-      "RS256"
-    );
-
     const issuer =
       `${process.env.NEXT_PUBLIC_SITE_URL}/api/broker`;
 
@@ -154,11 +175,11 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({
         alg: "RS256",
-        kid: process.env.BROKER_KID!,
+        kid,
         typ: "JWT",
       })
       .setIssuer(issuer)
-      .setAudience(process.env.BROKER_CLIENT_ID!)
+      .setAudience(audienceClientId)
       .setIssuedAt(now)
       .setExpirationTime(now + expiresIn)
       .setJti(randomUUID())
@@ -186,11 +207,7 @@ export async function POST(request: NextRequest) {
       .setIssuedAt(now)
       .setExpirationTime(now + expiresIn)
       .setJti(randomUUID())
-      .sign(
-        new TextEncoder().encode(
-          process.env.BROKER_TOKEN_SECRET!
-        )
-      );
+      .sign(new TextEncoder().encode(tokenSecret));
 
     return NextResponse.json({
       access_token: accessToken,
