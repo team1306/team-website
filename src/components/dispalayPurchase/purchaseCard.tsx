@@ -312,11 +312,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const purchaseApprovers = () => {
+        const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
         const approvalDisabled = status === "onHold" || status === "rejected";
         const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
-                {approvers.map((approver) => (
+                {approvers.filter((approver) => approver.requiredRole !== "programDirector").map((approver) => (
                     <Approver
                         key={approver.requiredRole}
                         approverName={approver.approverName}
@@ -334,7 +335,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     />
                 ))}
                 {(expidited == "approved") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
                 )}
                 {(expidited == "requested") && (
                     <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={approvalDisabled} />
