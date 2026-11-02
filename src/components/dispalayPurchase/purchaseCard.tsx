@@ -64,6 +64,7 @@ type request = {
     reason?: string;
     expidited: string;
     isKrakenMode: boolean;
+    hasOtherApprovedVendorOrders: boolean;
 }
 
 interface ItemData {
@@ -93,7 +94,7 @@ interface UserData {
 
 const KRAKEN_DIVISOR = 217.99;
 
-export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited, isKrakenMode }: request) {
+export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited, isKrakenMode, hasOtherApprovedVendorOrders }: request) {
     async function updateStatus(id: string, newStatus: string) {
         try {
             const res = await fetch('/api/order/setStatus', {
@@ -716,7 +717,14 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             </Card>
                             {(!editMode) && (
                                 <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
-                                    <CardTitle className="text-lg ml-4 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
+                                    <CardTitle className="text-lg ml-3 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
+                                    {hasOtherApprovedVendorOrders && (
+                                        <div className="p-2 pt-1 pb-0">
+                                            <Card className="w-full bg-amber-700 p-1">
+                                                <h1 className="font-bold text-zinc-100">This vendor has other approved orders</h1>
+                                            </Card>
+                                        </div>
+                                    )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
                                     </div>

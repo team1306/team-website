@@ -548,7 +548,11 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
         ) : (
           filteredPurchases.map((purchase) => (
             <div key={purchase.id} className="m-3 mt-4">
-              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} isKrakenMode={krakenMode} />
+              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} isKrakenMode={krakenMode} hasOtherApprovedVendorOrders={purchases.some((other) =>
+                other.id !== purchase.id &&
+                other.status === "approved" &&
+                other.vendor.trim().toLowerCase() === purchase.vendor.trim().toLowerCase()
+              )} />
             </div>
           ))
         )}
