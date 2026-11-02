@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from "next/headers";
 import { currency, getCost, buildSlackBlocks, updateSlackMessage } from "@/lib/slack";
@@ -156,86 +156,89 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Failed to update purchase" }, { status: 500 });
     }
 
-    try {
-        const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
+    after(async () => {
+        try {
+            const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
 
-        const { data: userRow, error: userError } = await supabase
-            .from("users")
-            .select("name, slack_userid")
-            .eq("user_id", approverUserId)
-            .maybeSingle();
-
-        if (userError) {
-            console.error("Failed to look up approver:", userError.message);
-        }
-
-        const slackUserId = userRow?.slack_userid?.trim() || null;
-        const approverMention = slackUserId
-            ? `<@${slackUserId}>`
-            : escapeSlack(userRow?.name ?? "Someone");
-
-        const orderName = escapeSlack(purchase.requestName ?? "this order");
-        const roleText = withArticle(formatRole(approvalRole));
-
-        await postSlackThreadReply(
-            `${approverMention} has approved ${orderName} as ${roleText}.`,
-            threadTs
-        );
-
-        if (allApproved) {
-            const isExpidited = purchase.expidited === "approved";
-
-            const finalMessage = isExpidited
-                ? `This order has been expedited and can be ordered now ${FINAL_APPROVAL_RECIPIENT}`
-                : `This order has been approved, It can be ordered on ${getNextPurchaseDate()}`;
-
-            await postSlackThreadReply(finalMessage, threadTs);
-        }
-
-        if (threadTs) {
-            const items = (purchase.items ?? []) as ItemData[];
-            const title = String(purchase.requestName ?? "Purchase Request");
-            const vendor = String(purchase.vendor ?? "");
-            const category = String(purchase.catagory ?? "");
-            const cost = purchase.cost !== undefined && purchase.cost !== null
-                ? Number(purchase.cost)
-                : getCost(items);
-
-            const { data: requestorRow } = await supabase
+            const { data: userRow, error: userError } = await supabase
                 .from("users")
                 .select("name, slack_userid")
-                .eq("user_id", purchase.requestor)
+                .eq("user_id", approverUserId)
                 .maybeSingle();
 
-            const requesterMention = requestorRow?.slack_userid
-                ? `<@${requestorRow.slack_userid.trim()}>`
-                : escapeSlack(requestorRow?.name ?? "Unknown user");
+            if (userError) {
+                console.error("Failed to look up approver:", userError.message);
+            }
 
-            const requestedDate = new Date(Number(itemID) * 1000).toLocaleDateString("en-US", {
-                timeZone: "America/Chicago",
-            });
+            const slackUserId = userRow?.slack_userid?.trim() || null;
+            const approverMention = slackUserId
+                ? `<@${slackUserId}>`
+                : escapeSlack(userRow?.name ?? "Someone");
 
-            const blocks = buildSlackBlocks({
-                title,
-                requesterMention,
-                requestedDate,
-                items,
-                totalCost: cost,
-                vendor,
-                category,
-                status: newStatus,
-                expidited: String(purchase.expidited ?? "NULL"),
-            });
+            const orderName = escapeSlack(purchase.requestName ?? "this order");
+            const roleText = withArticle(formatRole(approvalRole));
 
-            await updateSlackMessage(
-                threadTs,
-                blocks,
-                `Purchase request: ${title} (${currency.format(cost)})`
+            await postSlackThreadReply(
+                `${approverMention} has approved ${orderName} as ${roleText}.`,
+                threadTs
             );
+
+            if (allApproved) {
+                const isExpidited = purchase.expidited === "approved";
+
+                const finalMessage = isExpidited
+                    ? `This order has been expedited and can be ordered now ${FINAL_APPROVAL_RECIPIENT}`
+                    : `This order has been approved, It can be ordered on ${getNextPurchaseDate()}`;
+
+                await postSlackThreadReply(finalMessage, threadTs);
+            }
+
+            if (threadTs) {
+                const items = (purchase.items ?? []) as ItemData[];
+                const title = String(purchase.requestName ?? "Purchase Request");
+                const vendor = String(purchase.vendor ?? "");
+                const category = String(purchase.catagory ?? "");
+                const cost = purchase.cost !== undefined && purchase.cost !== null
+                    ? Number(purchase.cost)
+                    : getCost(items);
+
+                const { data: requestorRow } = await supabase
+                    .from("users")
+                    .select("name, slack_userid")
+                    .eq("user_id", purchase.requestor)
+                    .maybeSingle();
+
+                const requesterMention = requestorRow?.slack_userid
+                    ? `<@${requestorRow.slack_userid.trim()}>`
+                    : escapeSlack(requestorRow?.name ?? "Unknown user");
+
+                const requestedDate = new Date(Number(itemID) * 1000).toLocaleDateString("en-US", {
+                    timeZone: "America/Chicago",
+
+      });
+
+                const blocks = buildSlackBlocks({
+                    title,
+                    requesterMention,
+                    requestedDate,
+                    items,
+                    totalCost: cost,
+                    vendor,
+                    category,
+                    status: newStatus,
+                    expidited: String(purchase.expidited ?? "NULL"),
+                });
+
+                await updateSlackMessage(
+                    threadTs,
+                    blocks,
+                    `Purchase request: ${title} (${currency.format(cost)})`
+                );
+            }
+        } catch (err) {
+            console.error("Slack notification failed:", err);
         }
-    } catch (err) {
-        console.error("Slack notification failed:", err);
-    }
+    });
 
     return NextResponse.json({ purchase: updated }, { status: 200 });
 }

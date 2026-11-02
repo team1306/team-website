@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 import { recalculateCategorySpent } from "@/lib/budget";
@@ -125,7 +125,7 @@ export async function PATCH(request: NextRequest) {
 
   const { data: existing, error: existingError } = await supabase
     .from('purchases')
-    .select('catagory, requestName, vendor, reason, status, cost, expidited, items, requestor, "slack-thread-id"')
+    .select('catagory, requestName, vendor, reason, status, cost, expidited, approvers, items, requestor, "slack-thread-id"')
     .eq('purchaseID', id)
     .maybeSingle();
 
@@ -135,6 +135,40 @@ export async function PATCH(request: NextRequest) {
 
   if (!existing) {
     return NextResponse.json({ error: 'No purchase found with that id' }, { status: 404 });
+  }
+
+  // Keep expedite attribution in the existing approval JSON, separate from
+  // the required purchasing approvals. Resolve the identity on the server.
+  const existingApprovers = Array.isArray(existing.approvers) ? existing.approvers : [];
+  const expediteApprover = existingApprovers.find(
+    (approver) => approver.requiredRole === "programDirector"
+  );
+
+  if (expidited !== undefined) {
+    const approvers = (Array.isArray(updateObj.approvers) ? updateObj.approvers : existingApprovers)
+      .filter((approver) => approver.requiredRole !== "programDirector");
+
+    if (expidited === "approved") {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      }
+
+      if (existing.expidited === "approved" && expediteApprover) {
+        approvers.push(expediteApprover);
+      } else {
+        approvers.push({
+          requiredRole: "programDirector",
+          approved: true,
+          approver: authData.user.id,
+        });
+      }
+    }
+
+    updateObj.approvers = approvers;
+  } else if (Array.isArray(updateObj.approvers) && existing.expidited === "approved" && expediteApprover) {
+    // Editing items can reset required approvals without clearing the expedite.
+    updateObj.approvers.push(expediteApprover);
   }
 
   const previousCategory: string | null = existing.catagory ?? null;
@@ -187,158 +221,160 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
+  after(async () => {
+    const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
 
-  try {
-    let cachedEditorMention: string | null = null;
+    try {
+      let cachedEditorMention: string | null = null;
 
-    async function getEditorMention(): Promise<string> {
-      if (cachedEditorMention) return cachedEditorMention;
+      async function getEditorMention(): Promise<string> {
+        if (cachedEditorMention) return cachedEditorMention;
 
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id;
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
 
-      if (userId) {
+        if (userId) {
+          const { data: userRow } = await supabase
+            .from('users')
+            .select('name, slack_userid')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const slackUserId = userRow?.slack_userid?.trim() || null;
+          cachedEditorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(userRow?.name ?? "Someone");
+        } else {
+          cachedEditorMention = "Someone";
+        }
+
+        return cachedEditorMention;
+      }
+
+      const expiditeChanged = updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited;
+      const expiditeTransition = expiditeChanged ? String(updateObj.expidited) : null;
+
+      if (expiditeTransition === "requested") {
+        const mention = await getEditorMention();
+        await postSlackThreadReply(`${mention} has requested this order to be expedited @Andrew.`, threadTs);
+      } else if (expiditeTransition === "approved") {
+        const mention = await getEditorMention();
+        await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);
+      } else if (expiditeTransition === "rejected") {
+        const mention = await getEditorMention();
+        await postSlackThreadReply(`${mention} has marked this order as expedited rejected.`, threadTs);
+      }
+
+      const statusChanged = updateObj.status !== undefined && updateObj.status !== existing.status;
+      const statusTransition = statusChanged ? String(updateObj.status) : null;
+      const statusReasonText = reason !== undefined ? reason : existing.reason;
+
+      if (statusTransition === "rejected") {
+        const mention = await getEditorMention();
+        const message = statusReasonText
+          ? `${mention} rejected this order: ${escapeSlack(String(statusReasonText))}`
+          : `${mention} rejected this order.`;
+        await postSlackThreadReply(message, threadTs);
+      } else if (statusTransition === "onHold") {
+        const mention = await getEditorMention();
+        const message = statusReasonText
+          ? `${mention} put this order on hold: ${escapeSlack(String(statusReasonText))}`
+          : `${mention} put this order on hold.`;
+        await postSlackThreadReply(message, threadTs);
+      } else if (statusTransition === "recived") {
+        const mention = await getEditorMention();
+        const message = statusReasonText
+          ? `${mention} marked this order as received: ${escapeSlack(String(statusReasonText))}`
+          : `${mention} marked this order as received.`;
+        await postSlackThreadReply(message, threadTs);
+      }
+
+      const bullets: string[] = [];
+
+      if (updateObj.requestName !== undefined && updateObj.requestName !== existing.requestName) {
+        bullets.push(`Order Name: ${escapeSlack(String(updateObj.requestName))}`);
+      }
+      if (updateObj.catagory !== undefined && updateObj.catagory !== existing.catagory) {
+        bullets.push(`Budget Category: ${escapeSlack(String(updateObj.catagory))}`);
+      }
+      if (updateObj.vendor !== undefined && updateObj.vendor !== existing.vendor) {
+        bullets.push(`Vendor: ${escapeSlack(String(updateObj.vendor))}`);
+      }
+      if (updateObj.reason !== undefined && updateObj.reason !== existing.reason && statusTransition === null) {
+        bullets.push(`Reason: ${escapeSlack(String(updateObj.reason))}`);
+      }
+      if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited && expiditeTransition === null) {
+        bullets.push(`Expedited: ${escapeSlack(String(updateObj.expidited))}`);
+      }
+      if (updateObj.cost !== undefined && updateObj.items === undefined && updateObj.cost !== existing.cost) {
+        bullets.push(`Cost: ${currency.format(Number(updateObj.cost))}`);
+      }
+      if (updateObj.items !== undefined) {
+        const newItems = updateObj.items as ItemData[];
+        const oldItems = (existing.items ?? []) as ItemData[];
+        const itemLines = diffItems(oldItems, newItems);
+        bullets.push(...itemLines);
+      }
+
+      if (bullets.length > 0) {
+        const editorMention = await getEditorMention();
+        const orderName = escapeSlack(String(updateObj.requestName ?? existing.requestName ?? "this order"));
+
+        const message = [
+          `${editorMention} edited ${orderName},`,
+          ...bullets.map((bullet) => `• ${bullet}`),
+        ].join("\n");
+
+        await postSlackThreadReply(message, threadTs);
+      }
+    } catch (err) {
+      console.error("Slack thread notification failed:", err);
+    }
+
+    if (threadTs) {
+      try {
+        const mergedItems = (updateObj.items ?? existing.items ?? []) as ItemData[];
+        const mergedCost = updateObj.cost !== undefined ? Number(updateObj.cost) : Number(existing.cost ?? getCost(mergedItems));
+        const mergedTitle = String(updateObj.requestName ?? existing.requestName ?? "Purchase Request");
+        const mergedVendor = String(updateObj.vendor ?? existing.vendor ?? "");
+        const mergedCategory = String(updateObj.catagory ?? existing.catagory ?? "");
+        const mergedStatus = String(updateObj.status ?? existing.status ?? "needsAproval");
+        const mergedExpidited = String(updateObj.expidited ?? existing.expidited ?? "NULL");
+
         const { data: userRow } = await supabase
           .from('users')
           .select('name, slack_userid')
-          .eq('user_id', userId)
+          .eq('user_id', existing.requestor)
           .maybeSingle();
 
-        const slackUserId = userRow?.slack_userid?.trim() || null;
-        cachedEditorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(userRow?.name ?? "Someone");
-      } else {
-        cachedEditorMention = "Someone";
+        const requesterMention = userRow?.slack_userid
+          ? `<@${userRow.slack_userid.trim()}>`
+          : escapeSlack(userRow?.name ?? "Unknown user");
+
+        const requestedDate = new Date(Number(id) * 1000).toLocaleDateString("en-US", {
+          timeZone: "America/Chicago",
+        });
+
+        const blocks = buildSlackBlocks({
+          title: mergedTitle,
+          requesterMention,
+          requestedDate,
+          items: mergedItems,
+          totalCost: mergedCost,
+          vendor: mergedVendor,
+          category: mergedCategory,
+          status: mergedStatus,
+          expidited: mergedExpidited,
+        });
+
+        await updateSlackMessage(
+          threadTs,
+          blocks,
+          `Purchase request: ${mergedTitle} (${currency.format(mergedCost)})`
+        );
+      } catch (err) {
+        console.error("Slack main message update failed:", err);
       }
-
-      return cachedEditorMention;
     }
-
-    const expiditeChanged = updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited;
-    const expiditeTransition = expiditeChanged ? String(updateObj.expidited) : null;
-
-    if (expiditeTransition === "requested") {
-      const mention = await getEditorMention();
-      await postSlackThreadReply(`${mention} has requested this order to be expedited @Andrew.`, threadTs);
-    } else if (expiditeTransition === "approved") {
-      const mention = await getEditorMention();
-      await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);
-    } else if (expiditeTransition === "rejected") {
-      const mention = await getEditorMention();
-      await postSlackThreadReply(`${mention} has marked this order as expedited rejected.`, threadTs);
-    }
-
-    const statusChanged = updateObj.status !== undefined && updateObj.status !== existing.status;
-    const statusTransition = statusChanged ? String(updateObj.status) : null;
-    const statusReasonText = reason !== undefined ? reason : existing.reason;
-
-    if (statusTransition === "rejected") {
-      const mention = await getEditorMention();
-      const message = statusReasonText
-        ? `${mention} rejected this order: ${escapeSlack(String(statusReasonText))}`
-        : `${mention} rejected this order.`;
-      await postSlackThreadReply(message, threadTs);
-    } else if (statusTransition === "onHold") {
-      const mention = await getEditorMention();
-      const message = statusReasonText
-        ? `${mention} put this order on hold: ${escapeSlack(String(statusReasonText))}`
-        : `${mention} put this order on hold.`;
-      await postSlackThreadReply(message, threadTs);
-    } else if (statusTransition === "recived") {
-      const mention = await getEditorMention();
-      const message = statusReasonText
-        ? `${mention} marked this order as received: ${escapeSlack(String(statusReasonText))}`
-        : `${mention} marked this order as received.`;
-      await postSlackThreadReply(message, threadTs);
-    }
-
-    const bullets: string[] = [];
-
-    if (updateObj.requestName !== undefined && updateObj.requestName !== existing.requestName) {
-      bullets.push(`Order Name: ${escapeSlack(String(updateObj.requestName))}`);
-    }
-    if (updateObj.catagory !== undefined && updateObj.catagory !== existing.catagory) {
-      bullets.push(`Budget Category: ${escapeSlack(String(updateObj.catagory))}`);
-    }
-    if (updateObj.vendor !== undefined && updateObj.vendor !== existing.vendor) {
-      bullets.push(`Vendor: ${escapeSlack(String(updateObj.vendor))}`);
-    }
-    if (updateObj.reason !== undefined && updateObj.reason !== existing.reason && statusTransition === null) {
-      bullets.push(`Reason: ${escapeSlack(String(updateObj.reason))}`);
-    }
-    if (updateObj.expidited !== undefined && updateObj.expidited !== existing.expidited && expiditeTransition === null) {
-      bullets.push(`Expedited: ${escapeSlack(String(updateObj.expidited))}`);
-    }
-    if (updateObj.cost !== undefined && updateObj.items === undefined && updateObj.cost !== existing.cost) {
-      bullets.push(`Cost: ${currency.format(Number(updateObj.cost))}`);
-    }
-    if (updateObj.items !== undefined) {
-      const newItems = updateObj.items as ItemData[];
-      const oldItems = (existing.items ?? []) as ItemData[];
-      const itemLines = diffItems(oldItems, newItems);
-      bullets.push(...itemLines);
-    }
-
-    if (bullets.length > 0) {
-      const editorMention = await getEditorMention();
-      const orderName = escapeSlack(String(updateObj.requestName ?? existing.requestName ?? "this order"));
-
-      const message = [
-        `${editorMention} edited ${orderName},`,
-        ...bullets.map((bullet) => `• ${bullet}`),
-      ].join("\n");
-
-      await postSlackThreadReply(message, threadTs);
-    }
-  } catch (err) {
-    console.error("Slack thread notification failed:", err);
-  }
-
-  if (threadTs) {
-    try {
-      const mergedItems = (updateObj.items ?? existing.items ?? []) as ItemData[];
-      const mergedCost = updateObj.cost !== undefined ? Number(updateObj.cost) : Number(existing.cost ?? getCost(mergedItems));
-      const mergedTitle = String(updateObj.requestName ?? existing.requestName ?? "Purchase Request");
-      const mergedVendor = String(updateObj.vendor ?? existing.vendor ?? "");
-      const mergedCategory = String(updateObj.catagory ?? existing.catagory ?? "");
-      const mergedStatus = String(updateObj.status ?? existing.status ?? "needsAproval");
-      const mergedExpidited = String(updateObj.expidited ?? existing.expidited ?? "NULL");
-
-      const { data: userRow } = await supabase
-        .from('users')
-        .select('name, slack_userid')
-        .eq('user_id', existing.requestor)
-        .maybeSingle();
-
-      const requesterMention = userRow?.slack_userid
-        ? `<@${userRow.slack_userid.trim()}>`
-        : escapeSlack(userRow?.name ?? "Unknown user");
-
-      const requestedDate = new Date(Number(id) * 1000).toLocaleDateString("en-US", {
-        timeZone: "America/Chicago",
-      });
-
-      const blocks = buildSlackBlocks({
-        title: mergedTitle,
-        requesterMention,
-        requestedDate,
-        items: mergedItems,
-        totalCost: mergedCost,
-        vendor: mergedVendor,
-        category: mergedCategory,
-        status: mergedStatus,
-        expidited: mergedExpidited,
-      });
-
-      await updateSlackMessage(
-        threadTs,
-        blocks,
-        `Purchase request: ${mergedTitle} (${currency.format(mergedCost)})`
-      );
-    } catch (err) {
-      console.error("Slack main message update failed:", err);
-    }
-  }
+  });
 
   return NextResponse.json(
     { message: 'Success', ...(budgetWarning ? { budgetWarning } : {}) },
