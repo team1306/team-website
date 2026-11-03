@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -102,12 +102,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-jetbrains: "Source Code Pro", "JetBrains Mono", monospace;
+  --font-jetbrains: "Open Sans", Arial, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Source Code Pro", "JetBrains Mono", monospace;
-  --font-mono: "Source Code Pro", "JetBrains Mono", monospace;
-  --font-heading: "Source Code Pro", "JetBrains Mono", monospace;
+  --font-sans: "Open Sans", Arial, sans-serif;
+  --font-mono: "Open Sans", Arial, sans-serif;
+  --font-heading: "Open Sans", Arial, sans-serif;
   --font-title: "JetBrains Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

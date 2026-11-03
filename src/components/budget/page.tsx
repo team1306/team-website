@@ -128,7 +128,7 @@ export default function Budget({ currentUser, categories, fetchCategories }: Bud
             <Card className="p-2 bg-mist-700 m-3 gap-0">
                 <CardDescription className="text-mist-200 text-2xl mb-0 font-bold">Total Season Spending:</CardDescription>
                 <div className="rounded-md mt-2 mb-2" style={budgetFill()}>
-                    <h1 className="text-lg font-bold text-zinc-100 p-1">{formatMoney(totalSpent)}/{formatMoney(totalBudget)}</h1>
+                    <h1 className="text-lg font-bold text-zinc-100 p-1">{formatMoney(totalSpent)}<span className="mx-2">/</span>{formatMoney(totalBudget)}</h1>
                 </div>
             </Card>
             <Card className="p-2 bg-mist-700 m-3">
@@ -401,7 +401,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                     <CardTitle className="text-zinc-100 text-xl m-0 font-bold">{categoryName}</CardTitle>
                 </div>
                 <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
-                    <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}/{formatMoney(categoryBudget)}</h1>
+                    <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}<span className="mx-2">/</span>{formatMoney(categoryBudget)}</h1>
                 </div>
                 {canManageBudget(currentUser) && (
                     <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />

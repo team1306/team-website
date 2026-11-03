@@ -47,35 +47,35 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
         switch (role) {
             case "student":
                 return (
-                    <Badge className="rounded-md text-base bg-red-600">Student</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-red-600">Student</Badge>
                 )
             case "mentor":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Mentor</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Mentor</Badge>
                 )
             case "mentorLead":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Lead Mentor</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Lead Mentor</Badge>
                 )
             case "treasurer":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Treasurer</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Treasurer</Badge>
                 )
             case "studentLead":
                 return (
-                    <Badge className="rounded-md text-base bg-emerald-600">Student Lead</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Student Lead</Badge>
                 )
             case "president":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">President</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">President</Badge>
                 )
             case "programDirector":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">Program Director</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">Program Director</Badge>
                 )
             case "teamAdministrator":
                 return (
-                    <Badge className="rounded-md text-base bg-violet-600">Team Adminstrator</Badge>
+                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">Team Adminstrator</Badge>
                 )
         }
     }
@@ -158,13 +158,13 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
 
     return (
         <Card className="bg-mist-800 p-2">
-            <div className="flex">
+            <div className="flex items-center">
                 <div className="flex items-center gap-2">
                     <Avatar className="w-10 h-10">
                         <AvatarImage src={profilePicture} />
                         <AvatarFallback className="bg-red-400 text-zinc-100 items-center">EU</AvatarFallback>
                     </Avatar>
-                    <CardTitle className="text-zinc-100 text-xl font-semibold">{name}</CardTitle>
+                    <CardTitle className="text-zinc-100 text-xl leading-none font-semibold">{name}</CardTitle>
                     {roleBadge()}
                 </div>
                 <DropdownMenu>
@@ -193,7 +193,7 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
                 <DialogContent className="bg-mist-400 p-4">
                     <DialogTitle className="font-jetbrains text-xl font-bold">Change {name}'s name</DialogTitle>
                     <Input type="text" value={newName} onValueChange={(value) => setNewName(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
-                    <div className="flex">
+                    <div className="flex items-center">
                         <Button onClick={() => { setOpen(false); updateUserName(); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Save</Button>
                     </div>
                 </DialogContent>

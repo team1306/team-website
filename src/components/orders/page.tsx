@@ -369,7 +369,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
         <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
         <Button
           onClick={() => setCategoryDropdownOpen((open) => !open)}
-          className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
+          className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
         >
           {label}
           <ChevronDown className="size-4" />
@@ -401,7 +401,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
       <div>
         <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Sort by:</h1>
         <Select value={sortBy} onValueChange={(value) => setSortBy((value as SortOption) ?? "none")}>
-          <SelectTrigger className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between border-0 [&_svg:not([data-sort-chevron])]:hidden">
+          <SelectTrigger className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between border-0 [&_svg[data-sort-chevron]]:size-4 [&_svg:not([data-sort-chevron])]:hidden">
             <SelectValue className="text-zinc-100" placeholder="Sort by">
               {(value: string) => SORT_OPTIONS.find((option) => option.value === value)?.label ?? "Sort by"}
             </SelectValue>
@@ -458,13 +458,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             <div>
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-bold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-bold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-bold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-bold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-bold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-bold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
+                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
+                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
+                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
+                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-semibold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="flex gap-2">
@@ -507,7 +507,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
               </Field>
               <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
             </div>
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex items-center gap-2 [&>div]:flex [&>div]:items-center">
               <Switch checked={krakenMode} onCheckedChange={setKrakenMode} size="md" logo={<img src="/kraken.png" alt="Kraken Mode" />} />
               {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
                 <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
@@ -521,13 +521,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             <div>
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-bold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-bold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-bold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-bold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-bold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-bold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
+                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
+                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
+                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
+                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-semibold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <Button onClick={() => { loadPurchases(); }} className="ml-auto mt-auto bg-mist-900 hover:bg-mist-800"><RotateCcw /></Button>
@@ -606,13 +606,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             <div className="">
               <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-bold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-bold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-sm font-bold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-bold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-bold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-bold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-sm font-bold hover:border-orange-400 hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
+                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
+                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-semibold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-sm font-semibold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-semibold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
+                <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-semibold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
+                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-semibold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
+                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-sm font-semibold hover:border-orange-400 hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
           </div>
