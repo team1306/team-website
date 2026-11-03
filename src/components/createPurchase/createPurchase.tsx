@@ -332,7 +332,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 <div className="p-2 w-full">
                                     <Field>
                                         <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className={`bg-input/20 ${errors.name ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-xs p-1 w-full`} />
+                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className={`font-title bg-input/20 ${errors.name ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-xs p-1 w-full`} />
                                     </Field>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <Field className="w-full min-w-0">

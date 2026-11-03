@@ -167,7 +167,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         onClick={() => updateCurrentPage('/')}
                         preload
                     />
-                    <h1 className="text-zinc-100 text-2xl font-bold ml-4">
+                    <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">
                         Purchasing App
                     </h1>
                     <Badge className="rounded-md text-base bg-amber-500 ml-2 mt-1 mr-2 p-2"><Sparkle />Beta</Badge>
@@ -208,7 +208,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         height={55}
                         className="cursor-pointer"
                     />
-                    <h1 className="text-zinc-100 text-2xl font-bold ml-4">
+                    <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">
                         Purchasing App
                     </h1>
                     <div className="ml-auto flex items-center gap-3">

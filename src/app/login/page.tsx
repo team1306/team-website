@@ -41,7 +41,7 @@ function LoginContent() {
         <div className="bg-background min-h-screen flex flex-col">
             <div className="bg-red-900 w-full h-16 flex items-center px-4">
                 <Image src="/badgerbots.svg" alt="Badgerbots logo" width={55} height={55} className="cursor-pointer" />
-                <h1 className="text-zinc-100 text-2xl font-bold ml-4">Purchasing App</h1>
+                <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">Purchasing App</h1>
             </div>
             <div className="flex-1 flex items-center justify-center">
                 <Card className="w-96 p-3 bg-red-900">

@@ -458,7 +458,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 <div className="flex gap-3 items-stretch">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <CardTitle className="text-2xl font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
+                            <CardTitle className="text-2xl font-title font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
                             {statusBadge()}
                             {(expidited == "requested") && (
                                 <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500 hidden md:block">Expedited Requested</Badge>
@@ -497,11 +497,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             )}
                             <div className="mt-1 pb-0">
                                 {(editMode) && (
-                                    <Input type="url" placeholder="Request Title" value={name} onValueChange={(value) => setName(String(value))} className="bg-mist-700 rounded-md text-2xl ml-2 text-zinc-100 p-0 m-2 pl-2 font-bold"></Input>
+                                    <Input type="url" placeholder="Request Title" value={name} onValueChange={(value) => setName(String(value))} className="bg-mist-700 rounded-md font-title text-2xl ml-2 text-zinc-100 p-0 m-2 pl-2 font-bold"></Input>
                                 )}
                                 {(!editMode) && (
                                     <div className="flex items-center justify-start mt-1 pb-0">
-                                        <CardTitle className="ml-2 text-2xl p-2 font-jetbrains font-bold text-zinc-100">{name}</CardTitle>
+                                        <CardTitle className="ml-2 text-2xl p-2 font-title font-bold text-zinc-100">{name}</CardTitle>
                                         <div className="ml-atuo mr-2">
                                             {statusBadge()}
                                         </div>

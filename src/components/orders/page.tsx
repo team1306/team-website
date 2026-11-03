@@ -165,16 +165,26 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   const [sortBy, setSortBy] = useState<SortOption>("none");
 
   const [loading, setLoading] = useState(true);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [categoryLoadAttempt, setCategoryLoadAttempt] = useState(0);
   const [searchBarValue, setSearchBarValue] = useState("");
 
   const [krakenMode, setKrakenMode] = useState(false);
 
   async function loadCategories(): Promise<CategoryData[]> {
     const res = await fetch('/api/budget/getCategories', { cache: 'no-store' });
-    const data: CategoryData[] = await res.json();
-    const loadedCategories = data ?? [];
-    setCategories(loadedCategories);
-    return loadedCategories;
+    const data: unknown = await res.json();
+    if (!res.ok) {
+      throw new Error("Unable to load budget categories. Please try again.");
+    }
+    if (!Array.isArray(data) || !data.every((category) =>
+      category !== null && typeof category === "object" &&
+      typeof category.categoryID === "string" && typeof category.enabled === "boolean"
+    )) {
+      throw new Error("The server returned invalid budget categories. Please try again.");
+    }
+    setCategories(data);
+    return data;
   }
 
   function getVisibleCategories(categoryList: CategoryData[] = categories, purchaseList: PurchaseData[] = purchases) {
@@ -209,17 +219,19 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
     async function init() {
       setLoading(true);
 
-      const [loadedCategories] = await Promise.all([
-        loadCategories()
-      ]);
-
-      const visibleCategories = getVisibleCategories(loadedCategories);
-      setCatagoryFilter(visibleCategories.map((category) => category.categoryID));
-
-      setLoading(false);
+      setCategoryError(null);
+      try {
+        const loadedCategories = await loadCategories();
+        const visibleCategories = getVisibleCategories(loadedCategories);
+        setCatagoryFilter(visibleCategories.map((category) => category.categoryID));
+      } catch (error) {
+        setCategoryError(error instanceof Error ? error.message : "Unable to load budget categories. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
     init();
-  }, []);
+  }, [categoryLoadAttempt]);
 
   useEffect(() => {
     if (categoryFilterTouched.current) return;
@@ -466,6 +478,17 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   }
 
   const filteredPurchases = filterPurchases();
+
+  if (!loading && categoryError) {
+    return (
+      <div className="p-4 text-zinc-100" role="alert">
+        <p>{categoryError}</p>
+        <Button className="mt-3" onClick={() => setCategoryLoadAttempt((attempt) => attempt + 1)}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   if (!loading) {
     return (
