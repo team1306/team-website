@@ -170,7 +170,6 @@ export default function Navbar({ user, setCurrentPage }: user) {
                     <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">
                         Purchasing App
                     </h1>
-                    <Badge className="rounded-md text-base bg-amber-500 ml-2 mt-1 mr-2 p-2"><Sparkle />Beta</Badge>
                     <div className="ml-3 mt-1">
                         <Button onClick={() => updateCurrentPage('/')} className={activeCSS("/")}><Package /> Orders</Button>
                         <Button onClick={() => updateCurrentPage('/budget')} className={activeCSS("/budget")}><CircleDollarSign />Budget</Button>

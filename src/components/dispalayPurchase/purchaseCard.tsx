@@ -472,14 +472,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit min-w-28 h-fit mt-2 pt-1 pb-1 hidden md:block">
-                        <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
-                        <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
-                    </div>
-                    <div className="bg-mist-600 pl-4 pr-4 rounded-lg w-fit h-fit mt-2 pt-1 pb-1 hidden md:block">
-                        <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
-                        <div className="flex items-center gap-2">
-                            {CategoryTitle()}
+                    <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
+                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
+                            <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
+                            <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
+                        </div>
+                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
+                            <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
+                            <div className="flex items-center gap-2">
+                                {CategoryTitle()}
+                            </div>
                         </div>
                     </div>
                 </div>
