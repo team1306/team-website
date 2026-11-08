@@ -2,7 +2,7 @@
 import { isAmazonVendor } from "@/lib/orderPolicy";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
+import { EllipsisVertical, Pencil } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -219,53 +219,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     const selectedCategoryData = categories.find((c) => c.categoryID === itemCatagory);
     const categoryMax = selectedCategoryData?.categoryBudget ?? 4000;
-
-    const CategoryTitle = () => {
-        switch (itemCatagory) {
-            case "Robot":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Cog className="size-4 text-yellow-600" />
-                        <h2 className="text-base font-bold text-yellow-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Competition":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Tools":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Wrench className="size-4 text-rose-600" />
-                        <h2 className="text-base font-bold text-rose-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Field":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Volleyball className="size-4 text-lime-600" />
-                        <h2 className="text-base font-bold text-lime-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Outreach":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Handshake className="size-4 text-cyan-600" />
-                        <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
-                    </div>
-                )
-
-        }
-    }
 
     const statusBadge = () => {
         switch (status) {
@@ -510,16 +463,14 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
+                    <div className="hidden md:grid grid-cols-[7rem_12rem] gap-3 mt-2 shrink-0">
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
                             <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                             <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                         </div>
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
-                            <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
-                            <div className="flex items-center gap-2">
-                                {CategoryTitle()}
-                            </div>
+                            <h3 className="text-xs font-bold text-zinc-100">Vendor:</h3>
+                            <h2 className="truncate text-base font-bold text-zinc-100" title={vendor || "Not specified"}>{vendor || "Not specified"}</h2>
                         </div>
                     </div>
                 </div>
