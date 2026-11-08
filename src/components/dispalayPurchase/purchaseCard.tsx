@@ -312,6 +312,45 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return (Math.round(((categoryMax - calculatePrice()) / categoryMax) * 100))
     }
 
+    const [approving, setApproving] = useState(false);
+    const [approvalError, setApprovalError] = useState("");
+
+    const nextApproval = approvers.find((approver) => {
+        if (approver.approved || ["programDirector", "nProgramDirector"].includes(approver.requiredRole)) return false;
+        if (user.role === "teamAdministrator") return true;
+        switch (approver.requiredRole) {
+            case "mentor":
+                return ["mentor", "mentorLead", "programDirector"].includes(user.role);
+            case "mentorLead":
+                return ["mentorLead", "programDirector"].includes(user.role);
+            case "studentLead":
+                return user.role === "studentLead" || (user.role === "president" && !isTierTwo());
+            case "president":
+                return user.role === "president";
+            default:
+                return false;
+        }
+    });
+
+    async function approveNextRole() {
+        if (!nextApproval || approving) return;
+        setApproving(true);
+        setApprovalError("");
+        try {
+            const res = await fetch('/api/order/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: id, approvalRole: nextApproval.requiredRole }),
+            });
+            if (!res.ok) throw new Error("Approval failed");
+            await onPurchaseEdited();
+        } catch {
+            setApprovalError("Unable to approve. Please try again.");
+        } finally {
+            setApproving(false);
+        }
+    }
+
     const purchaseApprovers = () => {
         const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
         const approvalDisabled = status === "onHold" || status === "rejected";
@@ -327,12 +366,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         requiredRole={approver.requiredRole}
                         approved={approver.approved}
                         user={user}
-                        onApproved={onPurchaseEdited}
                         onWithdrawn={onPurchaseEdited}
                         itemID={id}
                         disable={approvalDisabled}
                         disableWithdraw={withdrawDisabled}
-                        tierTwo={isTierTwo()}
                     />
                 ))}
                 {(expidited == "approved") && (
@@ -729,6 +766,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
+                                        {nextApproval && (
+                                            <Button
+                                                onClick={approveNextRole}
+                                                disabled={approving || status !== "needsAproval"}
+                                                className="cursor-pointer text-base w-full bg-green-900 text-zinc-100 hover:bg-green-950 p-3"
+                                            >
+                                                {approving ? "Approving…" : "Approve"}
+                                            </Button>
+                                        )}
+                                        {approvalError && <p role="alert" className="mt-2 text-sm text-red-400">{approvalError}</p>}
                                     </div>
                                 </Card>
                             )}
