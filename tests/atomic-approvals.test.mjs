@@ -7,6 +7,7 @@ import { createServer } from 'node:net';
 import { setTimeout } from 'node:timers/promises';
 import EmbeddedPostgres from 'embedded-postgres';
 import pg from 'pg';
+import { orderRoutes } from './helpers/order-routes.mjs';
 
 const alice = '11111111-1111-4111-8111-111111111111';
 const bob = '22222222-2222-4222-8222-222222222222';
@@ -51,14 +52,17 @@ before(async () => {
     create table public.purchases (
       "purchaseID" bigint primary key, approvers jsonb, status text,
       "requestName" text, requestor uuid, catagory text, vendor text, reason text,
-      expidited text, items jsonb, cost numeric, "slack-thread-id" text
+      expidited text, items jsonb, cost numeric, "slack-thread-id" text,
+      "vendorOrderNumber" text
     );
     alter table public.purchases enable row level security;
     create policy visible on public.purchases for select to authenticated using (true);
     create policy editable on public.purchases for update to authenticated
       using (auth.uid() in ('${alice}'::uuid, '${bob}'::uuid))
       with check (auth.uid() in ('${alice}'::uuid, '${bob}'::uuid));
-    grant select, update on public.purchases to authenticated;
+    create policy creatable on public.purchases for insert to authenticated
+      with check (requestor = auth.uid());
+    grant select, insert, update on public.purchases to authenticated;
   `);
   await admin.query(await readFile(new URL('../setup/atomic_purchase_approvals.sql', import.meta.url), 'utf8'));
   await Promise.all([
@@ -195,3 +199,70 @@ test('the function respects RLS and does not accept an unauthenticated identity'
     await first.query("select set_config('request.jwt.claim.sub', $1, false)", [alice]);
   }
 });
+
+for (const [unitCost, roles] of [
+  [100, ['studentLead', 'mentor']],
+  [300, ['studentLead', 'mentorLead', 'president']],
+]) {
+  test(`order lifecycle with ${roles.length} approval sections preserves fees and ordered items`, async () => {
+    const call = await orderRoutes(first, alice);
+    const items = [
+      { id: 'part', ItemName: 'Part', ItemCost: unitCost, ItemQuantity: 1, ItemLink: 'https://example.com/part' },
+      { id: 'spare', ItemName: 'Spare', ItemCost: 10, ItemQuantity: 2, ItemLink: 'https://example.com/spare' },
+    ];
+    const created = await call('create', {
+      title: 'Lifecycle order', requestor: alice, category: 'parts', vendor: 'Test vendor', items,
+    });
+    assert.equal(created.status, 200, JSON.stringify(created.body));
+    const readOrder = async () => (await admin.query(
+      'select * from public.purchases where requestor = $1', [alice]
+    )).rows[0];
+    const initial = await readOrder();
+    const id = String(initial.purchaseID);
+    assert.equal(initial.status, 'needsAproval');
+    assert.deepEqual(initial.approvers.map(slot => slot.requiredRole), roles);
+    assert.ok(initial.approvers.every(slot => !slot.approved));
+    assert.deepEqual(initial.items, items);
+    assert.equal(Number(initial.cost), unitCost + 20);
+
+    const statusChange = async (status, reason) => {
+      const before = await readOrder();
+      const response = await call('setStatus', { id, status, reason });
+      assert.equal(response.status, 200, JSON.stringify(response.body));
+      const saved = await readOrder();
+      assert.deepEqual(saved, { ...before, status, reason });
+      return saved;
+    };
+    await statusChange('onHold', 'Waiting for confirmation');
+    await statusChange('needsAproval', '');
+
+    for (const [index, role] of roles.entries()) {
+      const response = await call('approve', { itemID: id, approvalRole: role });
+      assert.equal(response.status, 200, JSON.stringify(response.body));
+      const saved = await readOrder();
+      assert.equal(saved.status, index === roles.length - 1 ? 'approved' : 'needsAproval');
+      assert.deepEqual(saved.approvers.map(slot => slot.approved), roles.map((_, i) => i <= index));
+      assert.ok(saved.approvers.slice(0, index + 1).every(slot => slot.approver === alice));
+    }
+
+    // The purchasing endpoint stores shipping + tax in the total via feeShare.
+    const shipping = 20;
+    const tax = 15;
+    const ordered = await call('bulkPurchase', { orders: [{
+      id, orderedItemIds: items.map(item => item.id), feeShare: shipping + tax, orderNumber: 'TEST-123',
+    }] });
+    assert.equal(ordered.status, 200, JSON.stringify(ordered.body));
+    assert.equal(ordered.body.errors, undefined);
+    const purchased = await readOrder();
+    assert.equal(purchased.status, 'purchased');
+    assert.equal(Number(purchased.cost), unitCost + 20 + shipping + tax);
+    assert.deepEqual(purchased.items, items.map(item => ({ ...item, ordered: true })));
+    assert.equal(purchased.vendorOrderNumber, 'TEST-123');
+    assert.ok(purchased.approvers.every(slot => slot.approved));
+
+    const received = await statusChange('recived', 'Stored in the workshop');
+    assert.equal(Number(received.cost), Number(purchased.cost));
+    assert.deepEqual(received.items, purchased.items);
+    assert.deepEqual(received.approvers, purchased.approvers);
+  });
+}
