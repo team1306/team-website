@@ -252,7 +252,6 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: name.trim(),
-                    requestor: user.id,
                     category: catagory,
                     items: items.map((item) => ({ ...item, ItemName: item.ItemName.trim(), ItemLink: item.ItemLink.trim() })),
                     vendor: supplier(),

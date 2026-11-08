@@ -19,7 +19,7 @@ export async function orderRoutes(client, userId) {
     }
   };
   const supabase = {
-    auth: { getUser: async () => ({ data: { user: { id: userId } } }) },
+    auth: { getUser: async () => ({ data: { user: userId ? { id: userId } : null } }) },
     async rpc(name, args) {
       if (name !== 'change_purchase_approval') throw new Error(`Unexpected RPC: ${name}`);
       const result = await query('select public.change_purchase_approval($1, $2, $3) as purchase',

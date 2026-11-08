@@ -265,6 +265,33 @@ test('the function respects RLS and does not accept an unauthenticated identity'
   }
 });
 
+for (const requestor of ['Example User', bob]) {
+  test(`create assigns the authenticated requestor despite client value ${requestor}`, async () => {
+    const call = await orderRoutes(first, alice);
+    const response = await call('create', {
+      title: 'Duplicated order', requestor, category: 'parts', vendor: 'Test vendor',
+      items: [{ id: 'part', ItemName: 'Part', ItemCost: 10, ItemQuantity: 1, ItemLink: '' }],
+    });
+    assert.equal(response.status, 200, JSON.stringify(response.body));
+    const { rows: [saved] } = await admin.query(
+      'select requestor, approvers from public.purchases where "requestName" = $1', ['Duplicated order']
+    );
+    assert.equal(saved.requestor, alice);
+    assert.equal(saved.approvers[0].approver, alice);
+  });
+}
+
+test('create without a requestor still requires authentication', async () => {
+  const call = await orderRoutes(first, null);
+  const response = await call('create', {
+    title: 'Unauthenticated order', category: 'parts', vendor: 'Test vendor',
+    items: [{ id: 'part', ItemName: 'Part', ItemCost: 10, ItemQuantity: 1, ItemLink: '' }],
+  });
+  assert.equal(response.status, 401);
+  const { rows } = await admin.query('select * from public.purchases');
+  assert.equal(rows.length, 1);
+});
+
 for (const [unitCost, roles] of [
   [100, ['studentLead', 'mentor']],
   [300, ['studentLead', 'mentorLead', 'president']],
@@ -277,7 +304,7 @@ for (const [unitCost, roles] of [
       { id: 'spare', ItemName: 'Spare', ItemCost: 10, ItemQuantity: 2, ItemLink: 'https://example.com/spare' },
     ];
     const created = await call('create', {
-      title: 'Lifecycle order', requestor: alice, category: 'parts', vendor: 'Test vendor', items,
+      title: 'Lifecycle order', category: 'parts', vendor: 'Test vendor', items,
     });
     assert.equal(created.status, 200, JSON.stringify(created.body));
     const readOrder = async () => (await admin.query(

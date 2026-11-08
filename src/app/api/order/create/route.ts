@@ -15,7 +15,6 @@ interface ItemData {
 
 export interface PurchaseCreate {
   title: string;
-  requestor: string;
   category: string;
   items: ItemData[];
   vendor: string;
@@ -42,9 +41,9 @@ export async function POST(request: NextRequest) {
   const supabase = createClient(cookieStore)
 
   const body: PurchaseCreate = await request.json();
-  const { title, requestor, category, items, vendor } = body;
+  const { title, category, items, vendor } = body;
 
-  if (!title || !requestor || !category || !vendor || !Array.isArray(items) || items.length === 0) {
+  if (!title || !category || !vendor || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Invalid Input' }, { status: 400 });
   }
 
@@ -56,9 +55,7 @@ export async function POST(request: NextRequest) {
   if (authError || !authData.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (requestor !== authData.user.id) {
-    return NextResponse.json({ error: 'Requestor must match the signed-in user' }, { status: 403 });
-  }
+  const requestor = authData.user.id;
 
   const { data: requester, error: requesterError } = await supabase
     .from('users')

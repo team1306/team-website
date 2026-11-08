@@ -148,7 +148,6 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: name,
-                    requestor: currentUser.id,
                     category: catagory,
                     items: items,
                     vendor: supplier(),
