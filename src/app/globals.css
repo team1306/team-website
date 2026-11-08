@@ -718,3 +718,46 @@ body, .login-shell, .login-panel { background: #0d0c0e; }
 .purchase-detail-approvers [data-slot="card-description"]:empty { display: none; }
 /* Pair the library's accent surface with its foreground for readable hover states. */
 .purchase-summary-card:hover { background: var(--accent); color: var(--accent-foreground); }
+
+/* Shared tag column aligns badge left edges across purchase rows. */
+.purchase-summary-row { display: grid; grid-template-columns: minmax(0, 1fr) 11rem 22rem; align-items: center; gap: 16px; }
+.purchase-summary-tags { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; align-self: stretch; }
+.purchase-summary-tags [data-slot="badge"] { max-width: 100%; white-space: normal; text-align: center; justify-content: center; margin: 0; }
+.purchase-summary-facts > div { min-width: 0; overflow-wrap: anywhere; }
+.kraken-meter { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 0 4px; }
+.kraken-meter-motors { display: flex; flex-wrap: wrap; gap: 4px; max-width: 100%; }
+.kraken-meter-motor { width: 28px; height: 18px; flex: 0 0 auto; }
+.kraken-meter-fill { transition: width 400ms ease; }
+.purchase-toolbar-top { gap: 20px; }
+.purchase-toolbar-top > .purchase-search-group { flex: 1; min-width: 0; max-width: 52rem; align-items: center; }
+.purchase-search-group > [data-slot="field"] { flex: 1; min-width: 0; }
+.purchase-search-group .filter-reset-button { flex-shrink: 0; }
+@media (max-width: 1199px) {
+  .purchase-summary-row { grid-template-columns: minmax(0, 1fr) 11rem; }
+  .purchase-summary-facts { grid-column: 1 / -1; }
+  .purchase-toolbar-top > .purchase-search-group { max-width: none; }
+}
+@media (max-width: 767px) {
+  .purchase-summary-row { grid-template-columns: minmax(0, 1fr) 9rem; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kraken-meter-fill { transition: none; }
+}
+
+/* Edit forms: 44px targets, 16px type, and a consistent spacing scale. */
+.purchase-detail-drawer { border-radius: 16px 16px 0 0 !important; }
+.purchase-edit-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 16px; color: var(--foreground); }
+.purchase-edit-toolbar > div { display: flex; align-items: center; }
+.purchase-edit-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-family: var(--font-sans); font-size: 14px; color: var(--foreground); }
+.purchase-edit-field [data-slot="input"], .purchase-edit-field [data-slot="select-trigger"] {
+  width: 100%; min-height: 44px; height: 44px; padding: 10px 12px; border: 1px solid #68434a; border-radius: 8px; background: var(--input); color: var(--foreground); font-family: var(--font-sans); font-size: 16px; line-height: 22px;
+}
+.purchase-edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.purchase-detail-drawer .purchase-edit-info { margin: 0; padding: 16px 0; border-bottom: 1px solid var(--border) !important; }
+.purchase-item-editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
+.purchase-item-editor + .purchase-item-editor { border-top: 1px solid var(--border); }
+.purchase-total-summary { margin-top: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--muted); }
+.purchase-total-summary .kraken-meter { padding: 12px 0 0; margin-top: 12px; border-top: 1px solid var(--border); gap: 8px; }
+
+/* Contain the offscreen drawer during opening and closing animations. */
+[data-slot="drawer-viewport"]:has(.purchase-detail-drawer) { overflow: hidden; }

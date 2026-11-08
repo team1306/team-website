@@ -366,7 +366,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
 
     return (
       <div ref={categoryDropdownRef} className="relative">
-        <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Category</p>
+        <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Category</p>
         <Button
           onClick={() => setCategoryDropdownOpen((open) => !open)}
           className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
@@ -434,9 +434,9 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
         </Button>
         <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
           <DialogContent className="bg-mist-400 p-4 max-h-[85vh] overflow-y-auto">
-            <DialogTitle className="font-jetbrains text-xl font-bold">Filters</DialogTitle>
+            <DialogTitle className="font-sans text-xl font-bold">Filters</DialogTitle>
             <div>
-              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Category</p>
+              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Category</p>
               <div className="max-h-48 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2">
                 <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
                   <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
@@ -456,7 +456,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             </div>
             {renderSortSelect()}
             <div>
-              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
+              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
@@ -500,13 +500,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
         </div>
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block overflow-visible">
           <div className="purchase-toolbar-top flex justify-between items-start">
-            <div className="flex mb-2">
+            <div className="purchase-search-group flex mb-2">
               <Field>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <div className="relative flex items-center">
+                  <div className="relative flex min-w-0 flex-1 items-center">
                     <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg purchase-search-input" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
                   </div>
                 </div>
               </Field>
@@ -526,7 +526,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             {renderCategoryFilter()}
             {renderSortSelect()}
             <div className="purchase-status-filter">
-              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
+              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
@@ -553,7 +553,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
               <Field className="w-full">
                 <div className="relative flex items-center w-full">
                   <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                  <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-full min-w-0 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
+                  <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
                 </div>
               </Field>
               <Button
@@ -608,13 +608,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
       <div className="bg-background min-h-screen flex flex-col">
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block w-full overflow-visible">
           <div className="flex justify-between items-start">
-            <div className="flex mb-2">
+            <div className="purchase-search-group flex mb-2">
               <Field>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <div className="relative flex items-center">
+                  <div className="relative flex min-w-0 flex-1 items-center">
                     <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-96 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
+                    <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg purchase-search-input" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
                   </div>
                 </div>
               </Field>
@@ -625,7 +625,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             {renderCategoryFilter()}
             {renderSortSelect()}
             <div className="">
-              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
+              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-semibold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
@@ -644,7 +644,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
               <Field className="w-full">
                 <div className="relative flex items-center w-full">
                   <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                  <Input className="bg-mist-500 text-base text-zinc-100 pl-8 w-full min-w-0 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
+                  <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
                 </div>
               </Field>
             </div>

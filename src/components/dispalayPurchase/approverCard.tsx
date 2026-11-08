@@ -3,7 +3,9 @@
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { Badge } from "../ui/badge";
+import { Spinner } from "../ui/spinner";
+import { useRef, useState } from "react";
 
 interface approvalInfo {
     approverName: string;
@@ -13,7 +15,7 @@ interface approvalInfo {
     approved: boolean;
     user: UserData;
     rejected?: boolean
-    onApproved?: () => void;
+    onApproved?: () => void | Promise<void>;
     onWithdrawn?: () => void;
     itemID: string;
     disable?: boolean;
@@ -29,6 +31,9 @@ interface UserData {
 }
 
 export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onApproved, onWithdrawn, itemID, disable, disableWithdraw, tierTwo }: approvalInfo) {
+    const [approving, setApproving] = useState(false);
+    const approvalInFlight = useRef(false);
+    const [approvalError, setApprovalError] = useState("");
     const [withdrawing, setWithdrawing] = useState(false);
 
     const userCanApprove = () => {
@@ -56,16 +61,24 @@ export default function Approver({ approverName, approverPicture, approverID, re
     }
 
     async function approve() {
-        const res = await fetch('/api/order/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                itemID: itemID,
-                approvalRole: requiredRole,
-            })
-        });
-
-        if (res.ok && onApproved) { onApproved(); }
+        if (approvalInFlight.current) return;
+        approvalInFlight.current = true;
+        setApproving(true);
+        setApprovalError("");
+        try {
+            const res = await fetch('/api/order/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID, approvalRole: requiredRole }),
+            });
+            if (!res.ok) throw new Error("Approval failed");
+            await onApproved?.();
+        } catch {
+            setApprovalError("Could not complete approval. Please try again.");
+        } finally {
+            approvalInFlight.current = false;
+            setApproving(false);
+        }
     }
 
     async function withdraw() {
@@ -104,65 +117,47 @@ export default function Approver({ approverName, approverPicture, approverID, re
         }
     }
 
-    if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && !disable) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button onClick={approve} aria-label={`Approve as ${cleanuser()}`} className="purchase-approve-button cursor-pointer ml-auto mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && disable) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button disabled onClick={approve} aria-label={`Approve as ${cleanuser()}`} className="purchase-approve-button cursor-pointer ml-auto mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && !userCanApprove() && !rejected) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                </div>
-            </Card>
-        );
-    }
-    else if (rejected) {
-        return (
-            <Card className="bg-red-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                </div>
-            </Card>
-        );
-    }
-    else {
-        return (
-            <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                <div className="flex items-center justify-start">
-                    <Avatar className="size-10">
-                        <AvatarImage src={approverPicture} />
-                        <AvatarFallback>!</AvatarFallback>
-                    </Avatar>
-                    <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
-                        <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base ml-auto bg-red-700 text-zinc-100 hover:bg-red-800 p-3 mr-2">Withdraw</Button>
+    const canApprove = userCanApprove() && user.role !== "nProgramDirector";
+
+    return (
+        <Card className="h-fit gap-3">
+            <div className="flex items-center justify-between gap-3">
+                <CardTitle className="min-w-0 text-base font-bold text-foreground">{cleanuser()}</CardTitle>
+                <Badge variant="outline" className="ml-auto w-36 shrink-0 justify-center whitespace-normal text-center text-foreground">
+                    {rejected ? "Rejected" : approved ? "Approved" : "Awaiting approval"}
+                </Badge>
+            </div>
+            {!approved && !rejected && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <CardDescription className="min-w-0 flex-1">
+                        {disable ? "Approval is currently unavailable." : `Still needs ${cleanuser()?.toLowerCase()} approval.`}
+                    </CardDescription>
+                    {canApprove && (
+                        <Button disabled={disable || approving} onClick={approve}
+                            aria-busy={approving}
+                            aria-label={approving ? `Approving as ${cleanuser()}` : `Approve as ${cleanuser()}`}
+                            className="purchase-approve-button ml-auto shrink-0">
+                            {approving && <Spinner aria-hidden="true" />}
+                            <span aria-live="polite">{approving ? "Approving…" : "Approve"}</span>
+                        </Button>
                     )}
                 </div>
-            </Card>
-        );
-    }
+            )}
+            {approvalError && <p role="alert" className="text-sm text-destructive">{approvalError}</p>}
+            {approved && (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-10">
+                        <AvatarImage src={approverPicture} />
+                        <AvatarFallback>{approverName?.charAt(0) || "✓"}</AvatarFallback>
+                    </Avatar>
+                    <CardDescription className="min-w-0 flex-1 text-foreground">{approverName}</CardDescription>
+                    {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
+                        <Button disabled={withdrawing} onClick={withdraw} variant="outline" className="ml-auto">
+                            {withdrawing ? "Withdrawing…" : "Withdraw"}
+                        </Button>
+                    )}
+                </div>
+            )}
+        </Card>
+    );
 }

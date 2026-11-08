@@ -23,9 +23,10 @@ import {
 import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
 import Approver from "./approverCard"
+import { KrakenMeter } from "./krakenMeter"
 import { Button } from "../ui/button"
 import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
-import { Input } from "@base-ui/react/input"
+import { Input } from "@/components/ui/input"
 import {
     Select,
     SelectContent,
@@ -203,7 +204,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const displayPrice = () => {
         const total = calculatePrice();
         if (isKrakenMode) {
-            return `${(total / KRAKEN_DIVISOR).toFixed(2)} krkns`;
+            return `${(total / KRAKEN_DIVISOR).toFixed(2)} Krakens`;
         }
         return `$${total.toFixed(2)}`;
     }
@@ -269,31 +270,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         switch (status) {
             case "needsAproval":
                 return (
-                    <Badge className="status-badge status-needs-approval text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
+                    <Badge className="status-badge status-needs-approval text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ">Needs Approval</Badge>
                 )
             case "approved":
                 return (
-                    <Badge className="status-badge status-approved text-sm w-fit h-fit font-bold ml-auto md:ml-0">Approved</Badge>
+                    <Badge className="status-badge status-approved text-sm w-fit h-fit font-bold">Approved</Badge>
                 )
             case "purchased":
                 return (
-                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
+                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ">Purchased</Badge>
                 )
             case "selfPurchased":
                 return (
-                    <Badge className="status-badge status-self-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
+                    <Badge className="status-badge status-self-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ">Self Purchased</Badge>
                 )
             case "recived":
                 return (
-                    <Badge className="status-badge status-received text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
+                    <Badge className="status-badge status-received text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ">Received</Badge>
                 )
             case "rejected":
                 return (
-                    <Badge className="status-badge status-rejected text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
+                    <Badge className="status-badge status-rejected text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ">Rejected</Badge>
                 )
             case "onHold":
                 return (
-                    <Badge className="status-badge status-on-hold text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
+                    <Badge className="status-badge status-on-hold text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ">On Hold</Badge>
                 )
         }
     }
@@ -454,26 +455,25 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     return (
         <div>
             <Card className="purchase-summary-card p-2 h-fit cursor-pointer bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => setOpen(true)}>
-                <div className="flex gap-3 items-stretch">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                            <CardTitle className="text-2xl font-title font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
-                            {statusBadge()}
-                            {(expidited == "requested") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500 hidden md:block">Expedited Requested</Badge>
-                            )}
-                            {(expidited == "approved") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 hidden md:block">Expedited</Badge>
-                            )}
-                            {(expidited == "rejected") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 hidden md:block">Expedited Rejected</Badge>
-                            )}
-                        </div>
+                <div className="purchase-summary-row">
+                    <div className="min-w-0">
+                        <CardTitle className="text-2xl font-title font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
-                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
-                            <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
+                    <div className="purchase-summary-tags">
+                            {statusBadge()}
+                            {(expidited == "requested") && (
+                                <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
+                            )}
+                            {(expidited == "approved") && (
+                                <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500">Expedited</Badge>
+                            )}
+                            {(expidited == "rejected") && (
+                                <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500">Expedited Rejected</Badge>
+                            )}
+                    </div>
+                    <div className="purchase-summary-facts hidden md:grid grid-cols-2 gap-3">
+                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28 flex items-center">
                             <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                         </div>
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
@@ -484,21 +484,23 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                     </div>
                 </div>
+                {isKrakenMode && <KrakenMeter amount={calculatePrice() / KRAKEN_DIVISOR} />}
+            </Card>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"}>
                     <DrawerContent className="purchase-detail-drawer [--drawer-inset:0px] w-full md:w-auto h-[90vh] md:h-full flex flex-col overflow-hidden">
                         <Card className="purchase-detail-header p-0 mb-0 gap-0 shrink-0">
                             {(editMode) && (
-                                <div className="bg-amber-600 flex">
-                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
+                                <div className="purchase-edit-toolbar">
+                                    <h1 className="text-lg font-semibold">Edit purchase</h1>
                                     <div className="flex ml-auto">
-                                        <Button className="cursor-pointer ml-auto bg-zinc-100 text-black text-lg hover:bg-zinc-300 rounded-lg text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false); editPurchase("needsAproval", true); }}>Save</Button>
-                                        <Button className="cursor-pointer ml-auto bg-red-700 text-zinc-100 text-lg hover:bg-red-800 rounded-lg text-sm mt-1 mb-1 mr-2" onClick={() => { setEditMode(false) }}>X</Button>
+                                        <Button className="h-11 px-4" onClick={() => { setEditMode(false); editPurchase("needsAproval", true); }}>Save</Button>
+                                        <Button variant="outline" className="ml-2 h-11 w-11" aria-label="Exit edit mode" onClick={() => { setEditMode(false) }}><X aria-hidden="true" /></Button>
                                     </div>
                                 </div>
                             )}
                             <div className="mt-1 pb-0">
                                 {(editMode) && (
-                                    <Input type="url" placeholder="Request Title" value={name} onValueChange={(value) => setName(String(value))} className="bg-mist-700 rounded-md font-title text-2xl ml-2 text-zinc-100 p-0 m-2 pl-2 font-bold"></Input>
+                                    <label className="purchase-edit-field mb-4"><span>Request title</span><Input type="text" placeholder="Request title" value={name} onValueChange={(value) => setName(String(value))} /></label>
                                 )}
                                 {(!editMode) && (
                                     <div className="purchase-detail-title-row">
@@ -622,22 +624,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             )}
                         </Card>
                         {(editMode) && (
-                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-2 rounded-2xl gap-0 shrink-0">
-                                <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Request Info</CardTitle>
-                                <div className="flex">
-                                    <div className="pl-2 pr-2 flex-1 mt-1">
-                                        <h1 className="text-zinc-100 text-xs">Catagory:</h1>
+                            <Card className="purchase-edit-info gap-3 shrink-0">
+                                <CardTitle className="text-base text-foreground font-semibold">Request details</CardTitle>
+                                <div className="purchase-edit-grid">
+                                    <div className="purchase-edit-field min-w-0 flex-1">
+                                        <h1 className="text-zinc-100 text-xs">Category:</h1>
                                         <Select required value={itemCatagory} onValueChange={(value) => setItemCaragory(String(value))}>
-                                            <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
+                                            <SelectTrigger className="cursor-pointer w-full h-11 text-base">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent> {categories.filter((selectcategory) => selectcategory.enabled || selectcategory.categoryID === itemCatagory).map((selectcategory) => (<SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>))} </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="pl-2 pr-2 flex-1 mt-1">
+                                    <div className="purchase-edit-field min-w-0 flex-1">
                                         <Select required value={orderVendor} onValueChange={(value) => setOrderVendor(String(value))}>
                                             <h1 className="text-zinc-100 text-xs">Supplier:</h1>
-                                            <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
+                                            <SelectTrigger className="cursor-pointer w-full h-11 text-base">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -711,8 +713,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                         </Progress>
                                     </div>
                                 )}
-                                <div className="flex justify-end pt-3">
-                                    <h1 className={`text-2xl font-bold ${priceColor}`}>{displayPrice()}</h1>
+                                <div className="purchase-total-summary">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-sm text-muted-foreground">Total</span>
+                                        <span className="text-xl font-semibold text-foreground">${calculatePrice().toFixed(2)}</span>
+                                    </div>
+                                    {isKrakenMode && <KrakenMeter amount={calculatePrice() / KRAKEN_DIVISOR} />}
                                 </div>
                             </Card>
                             {(!editMode) && (
@@ -733,7 +739,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </ScrollArea>
                     </DrawerContent>
                 </Drawer>
-            </Card>
         </div>
     )
 }

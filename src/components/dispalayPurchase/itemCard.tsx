@@ -2,9 +2,9 @@
 
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trash2, Save, StickyNote, Globe } from "lucide-react"
+import { StickyNote, Globe } from "lucide-react"
 import { useState } from "react"
-import { Input } from "@base-ui/react/input"
+import { Input } from "@/components/ui/input"
 
 interface Item {
     id: string;
@@ -30,7 +30,7 @@ interface ItemData {
 const KRAKEN_DIVISOR = 217.99;
 
 export default function Item({ id, name, cost, quantity, link, defaultEdit, onUpdate, isKrakenMode = false }: Item) {
-    const [editMode, setEditMode] = useState(defaultEdit);
+    const editMode = defaultEdit;
     const [containsNote, setcontainsNote] = useState(false);
 
     const [nameValue, setNameValue] = useState(name);
@@ -39,65 +39,60 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
     const [linkValue, setLinkValue] = useState(String(link));
     const [notes, setNotes] = useState(String(""));
 
-    const saveItem = () => {
+    const updateField = (field: "name" | "quantity" | "cost" | "link" | "notes", value: string) => {
+        if (field === "name") setNameValue(value);
+        if (field === "quantity") setQuantityValue(value);
+        if (field === "cost") setcostValue(value);
+        if (field === "link") setLinkValue(value);
+        if (field === "notes") setNotes(value);
         onUpdate({
             id,
-            ItemName: nameValue,
-            ItemCost: Number(costValue),
-            ItemQuantity: Number(quantityValue),
-            ItemLink: linkValue,
-            comments: notes,
+            ItemName: field === "name" ? value : nameValue,
+            ItemCost: Number(field === "cost" ? value : costValue),
+            ItemQuantity: Number(field === "quantity" ? value : quantityValue),
+            ItemLink: field === "link" ? value : linkValue,
+            comments: field === "notes" ? value : notes,
         });
-    }
+    };
 
     const unitPriceText = () => {
         if (isKrakenMode) {
-            return `${(Number(costValue) / KRAKEN_DIVISOR).toFixed(2)} u/krkn`;
+            return `${(Number(costValue) / KRAKEN_DIVISOR).toFixed(2)} Krakens each`;
         }
         return `$${Number(costValue).toFixed(2)}`;
     }
 
-    if (editMode && !containsNote) {
+    if (editMode) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex">
-                    <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => { setNameValue(String(value)); onUpdate({ id, ItemName: String(value), ItemCost: Number(costValue), ItemQuantity: Number(quantityValue), ItemLink: linkValue, comments: notes }); }} /></CardTitle>
-                    <div className="flex ml-auto">
-                        <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setcontainsNote(true)}><StickyNote /></Button>
-                        <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive"><Trash2 /></Button>
-                    </div>
+            <div className="purchase-item-editor">
+                <label className="purchase-edit-field">
+                    <span>Item name</span>
+                    <Input value={nameValue} placeholder="Item name" onValueChange={(value) => updateField("name", String(value))} />
+                </label>
+                <div className="purchase-edit-grid">
+                    <label className="purchase-edit-field">
+                        <span>Quantity</span>
+                        <Input type="number" min="1" step="1" value={quantityValue} onValueChange={(value) => updateField("quantity", String(value))} />
+                    </label>
+                    <label className="purchase-edit-field">
+                        <span>Unit price ($)</span>
+                        <Input type="number" min="0" step="0.01" value={costValue} onValueChange={(value) => updateField("cost", String(value))} />
+                    </label>
                 </div>
-                <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" onValueChange={(value) => { setQuantityValue(String(value)); onUpdate({ id, ItemName: nameValue, ItemCost: Number(costValue), ItemQuantity: Number(value), ItemLink: linkValue, comments: notes }); }} /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" onValueChange={(value) => { setcostValue(String(value)); onUpdate({ id, ItemName: nameValue, ItemCost: Number(value), ItemQuantity: Number(quantityValue), ItemLink: linkValue, comments: notes }); }} /></CardDescription>
-                <div className="flex items-center gap-1 mt-1">
-                    <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                    <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => setLinkValue(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
-                </div>
-            </Card>
-        );
-    }
-
-    if (editMode && containsNote) {
-        return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
-                <div className="pl-2 pt-2">
-                    <div className="flex">
-                        <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => setNameValue(String(value))} /></CardTitle>
-                        <div className="flex ml-auto">
-                            <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setEditMode(false)}><Save /></Button>
-                            <Button type="submit" className="mr-1 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => { setcontainsNote(false); setNotes(""); }}><StickyNote /></Button>
-                            <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive"><Trash2 /></Button>
-                        </div>
-                    </div>
-                    <CardDescription className="text-sm text-zinc-300">x<Input className="bg-mist-800 rounded-md pl-2 w-12 [appearance:textfield] ml-1" value={quantityValue} type="number" /> at $<Input className="bg-mist-800 rounded-md pl-2 w-24 [appearance:textfield] ml-1" value={costValue} type="number" /></CardDescription>
-                    <div className="flex items-center gap-1 mt-1">
-                        <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                        <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => setLinkValue(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
-                    </div>
-                </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
-                    <Input type="text" placeholder="Notes" value={notes} onValueChange={(value) => setNotes(String(value))} className="bg-mist-800 rounded-md p-1 text-sm flex-1 text-zinc-100"></Input>
-                </Card>
-            </Card>
+                <label className="purchase-edit-field">
+                    <span>Item link</span>
+                    <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => updateField("link", String(value))} />
+                </label>
+                <Button type="button" variant="outline" className="h-11 w-fit" aria-expanded={containsNote} onClick={() => setcontainsNote(!containsNote)}>
+                    <StickyNote aria-hidden="true" /> {containsNote ? "Hide notes" : "Add notes"}
+                </Button>
+                {containsNote && (
+                    <label className="purchase-edit-field">
+                        <span>Notes</span>
+                        <Input value={notes} placeholder="Optional item notes" onValueChange={(value) => updateField("notes", String(value))} />
+                    </label>
+                )}
+            </div>
         );
     }
 
