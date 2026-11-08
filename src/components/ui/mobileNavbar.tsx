@@ -59,7 +59,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
 
     const STYLE = [
         "color: #ff2200ff",
-        "font-family: 'Source Code Pro', monospace",
+        "font-family: 'JetBrains Mono', monospace",
         "font-size: 12px",
         "font-weight: bold",
     ].join(";");
