@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from "next/headers";
+import { recalculateCategorySpent } from "@/lib/budget";
 import { escapeSlack, postSlackThreadReply, updateSlackMessage } from "@/lib/slack";
 
 export interface PurchaseDelete {
@@ -58,7 +59,7 @@ export async function DELETE(request: NextRequest) {
         .from("purchases")
         .delete()
         .eq("purchaseID", purchaseID)
-        .select("purchaseID");
+        .select("purchaseID, catagory");
 
     if (deleteError) {
         if (deleteError.code === "42501") {
@@ -69,6 +70,11 @@ export async function DELETE(request: NextRequest) {
 
     if (!deleted || deleted.length === 0) {
         return NextResponse.json({ error: "Auth Error - Access Denied" }, { status: 403 });
+    }
+
+    const budgetWarning = await recalculateCategorySpent(deleted.map((row) => row.catagory));
+    if (budgetWarning) {
+        console.error("Failed to update budget spent:", budgetWarning);
     }
 
     try {
@@ -137,5 +143,8 @@ export async function DELETE(request: NextRequest) {
         console.error("Slack notification failed:", err);
     }
 
-    return NextResponse.json({ message: "Success" }, { status: 200 });
+    return NextResponse.json(
+        { message: "Success", ...(budgetWarning ? { budgetWarning } : {}) },
+        { status: 200 }
+    );
 }

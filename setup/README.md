@@ -1,3 +1,18 @@
+## Database migrations
+
+Before deploying the updated budget helper, apply
+`setup/atomic_budget_recalculation.sql` to the existing Supabase database. It
+adds the service-role-only `recalculate_category_spent` function. The service role
+must retain read access to all purchases and update access to budget categories.
+Each call locks the category row before summing purchases and writing the total
+in the same transaction. At the default `READ COMMITTED` isolation level, a
+waiting call sums from a fresh snapshot after acquiring the lock, so an older
+recalculation cannot overwrite a newer total. Purchased, received (`recived`),
+and self-purchased orders count toward spending, with each cost rounded to cents.
+The application still returns budget warnings if recalculation fails after an
+order change; the order change and recalculation remain separate transactions.
+Deploy the database migration first, then deploy the application.
+
 ## Atomic purchase approvals
 
 Before deploying the updated API routes, apply

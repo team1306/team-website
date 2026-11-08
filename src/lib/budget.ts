@@ -1,7 +1,5 @@
 import { createServiceClient } from "../../utils/supabase/service";
 
-const SPENT_STATUSES = ["purchased", "recived", "selfPurchased"];
-
 export async function recalculateCategorySpent(
   categoryIDs: Array<string | null | undefined>
 ): Promise<string | null> {
@@ -12,28 +10,10 @@ export async function recalculateCategorySpent(
   const errors: string[] = [];
 
   for (const id of ids) {
-    const { data, error } = await service
-      .from("purchases")
-      .select("cost")
-      .eq("catagory", id)
-      .in("status", SPENT_STATUSES);
-
-    if (error) {
-      errors.push(error.message);
-      continue;
-    }
-
-    const cents = (data ?? []).reduce(
-      (sum, row) => sum + Math.round(Number(row.cost ?? 0) * 100),
-      0
-    );
-
-    const { error: updateError } = await service
-      .from("budget")
-      .update({ categorySpent: cents / 100 })
-      .eq("categoryID", id);
-
-    if (updateError) errors.push(updateError.message);
+    const { error } = await service.rpc("recalculate_category_spent", {
+      p_category_id: id,
+    });
+    if (error) errors.push(error.message);
   }
 
   return errors.length > 0 ? errors.join("; ") : null;
