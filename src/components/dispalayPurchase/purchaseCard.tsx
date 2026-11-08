@@ -96,7 +96,7 @@ interface UserData {
 const KRAKEN_DIVISOR = 217.99;
 
 export default function Purchase({ id, itemName, cost, requestor, catagory, requestedDate, status, items, vendor, user, onPurchaseEdited, approvers, reason, expidited, isKrakenMode, hasOtherApprovedVendorOrders }: request) {
-    async function updateStatus(id: string, newStatus: string) {
+    async function updateStatus(id: string, newStatus: string, reason?: string) {
         try {
             const res = await fetch('/api/order/setStatus', {
                 method: 'POST',
@@ -104,6 +104,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 body: JSON.stringify({
                     id: id,
                     status: newStatus,
+                    reason,
                 })
             });
 
@@ -533,7 +534,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
                                                 )}
                                                 {(status == "onHold") && (
-                                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={(e) => { setReason(""); updateStatus(id, "needsAproval", ""); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
                                                 )}
                                                 {(status == "needsAproval" || status == "approved") && (userRole == "studentLead" || userRole == "mentor" || userRole == "mentorLead" || userRole == "treasurer" || userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                     <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
@@ -579,7 +580,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <DialogTitle className="font-jetbrains text-xl font-bold">Reject Order</DialogTitle>
                                             <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
                                             <div className="flex">
-                                                <Button onClick={() => { setRejectOpen(false); editPurchase("rejected"); }} className="bg-destructive/50 text-zinc-100 hover::bg-red-600 w-fit p-2 ml-auto" variant="destructive">Reject</Button>
+                                                <Button onClick={() => { setRejectOpen(false); updateStatus(id, "rejected", statusReason); }} className="bg-destructive/50 text-zinc-100 hover::bg-red-600 w-fit p-2 ml-auto" variant="destructive">Reject</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -588,7 +589,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <DialogTitle className="font-jetbrains text-xl font-bold">Mark Order on Hold</DialogTitle>
                                             <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
                                             <div className="flex">
-                                                <Button onClick={() => { setOnHoldOpen(false); editPurchase("onHold"); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark On Hold</Button>
+                                                <Button onClick={() => { setOnHoldOpen(false); updateStatus(id, "onHold", statusReason); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark On Hold</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -600,7 +601,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 w-full"></Input>
                                             </div>
                                             <div className="flex">
-                                                <Button onClick={() => { setReceivedOpen(false); editPurchase("recived", false); }} className="bg-green-700 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark Received</Button>
+                                                <Button onClick={() => { setReceivedOpen(false); updateStatus(id, "recived", statusReason); }} className="bg-green-700 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark Received</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>

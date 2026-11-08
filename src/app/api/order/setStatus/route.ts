@@ -7,6 +7,7 @@ import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage, p
 export interface RequestInfo {
   id: string;
   status: string;
+  reason?: string;
 }
 
 interface ItemData {
@@ -23,12 +24,13 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(cookieStore);
 
     const body: RequestInfo = await request.json();
-    const { id, status } = body;
+    const { id, status, reason } = body;
 
     const { data, error } = await supabase
       .from('purchases')
       .update({
-        status: status
+        status: status,
+        ...(reason !== undefined ? { reason } : {}),
       })
       .eq('purchaseID', id)
       .select();
@@ -91,6 +93,33 @@ export async function POST(request: NextRequest) {
           blocks,
           `Purchase request: ${title} (${currency.format(cost)})`
         );
+
+        const statusActions: Record<string, string> = {
+          rejected: "rejected this order",
+          onHold: "put this order on hold",
+          recived: "marked this order as received",
+        };
+        const statusAction = statusActions[status];
+
+        if (statusAction) {
+          const { data: authData } = await supabase.auth.getUser();
+          const editorId = authData?.user?.id;
+          let editorMention = "Someone";
+          if (editorId) {
+            const { data: editor } = await supabase
+              .from('users')
+              .select('name, slack_userid')
+              .eq('user_id', editorId)
+              .maybeSingle();
+            const slackUserId = editor?.slack_userid?.trim();
+            editorMention = slackUserId ? `<@${slackUserId}>` : escapeSlack(editor?.name ?? "Someone");
+          }
+          const statusReason = purchase.reason;
+          await postSlackThreadReply(
+            `${editorMention} ${statusAction}${statusReason ? `: ${escapeSlack(String(statusReason))}` : "."}`,
+            threadTs
+          );
+        }
 
         if (status === "selfPurchased") {
           await postSlackThreadReply(
