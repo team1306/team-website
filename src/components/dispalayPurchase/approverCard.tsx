@@ -4,6 +4,7 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { canApproveCategory } from "@/lib/orderApproval";
 
 interface approvalInfo {
     approverName: string;
@@ -31,29 +32,7 @@ interface UserData {
 export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onApproved, onWithdrawn, itemID, disable, disableWithdraw, tierTwo }: approvalInfo) {
     const [withdrawing, setWithdrawing] = useState(false);
 
-    const userCanApprove = () => {
-        if (requiredRole == "mentor" && (user.role == "mentor" || user.role == "mentorLead" || user.role == "programDirector")) {
-            return (true);
-        }
-        if (requiredRole == "mentorLead" && (user.role == "mentorLead" || user.role == "programDirector")) {
-            return (true);
-        }
-        if (requiredRole == "studentLead" && (user.role == "studentLead" || user.role == "president") && !tierTwo) {
-            return (true);
-        }
-        if (requiredRole == "studentLead" && user.role == "studentLead" && tierTwo) {
-            return (true);
-        }
-        if (requiredRole == "president" && user.role == "president") {
-            return (true);
-        }
-        if (user.role == "teamAdministrator" && requiredRole != "nProgramDirector") {
-            return (true);
-        }
-        else {
-            return (false);
-        }
-    }
+    const userCanApprove = () => canApproveCategory(user.role, requiredRole, tierTwo);
 
     async function approve() {
         const res = await fetch('/api/order/approve', {
