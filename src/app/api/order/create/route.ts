@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid Input' }, { status: 400 });
   }
 
+  if (typeof vendor !== 'string' || !vendor.trim() || /^other(?:\s*-\s*)?$/i.test(vendor.trim())) {
+    return NextResponse.json({ error: 'Enter the vendor name' }, { status: 400 });
+  }
+
   const purchaseID = Math.floor(Date.now() / 1000);
   const totalCost = getCost(items);
 

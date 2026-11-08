@@ -117,13 +117,14 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     const [catagory, setCatagory] = useState(String(""));
     const [supplierPicker, setSupplierPicker] = useState(String(""));
     const [otherSupplier, setOtherSupplier] = useState(String(""));
+    const [vendorError, setVendorError] = useState("");
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
 
     function supplier() {
-        if (supplierPicker == "Other" && !otherSupplier) {
-            return ("Other - " + otherSupplier);
+        if (supplierPicker === "Other") {
+            return ("Other - " + otherSupplier.trim());
         }
         else {
             return (supplierPicker);
@@ -132,6 +133,11 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
 
     async function submitPurchase() {
         if (!currentUser || submissionInFlight.current) return;
+        if (supplierPicker === "Other" && !otherSupplier.trim()) {
+            setVendorError("Enter the vendor name");
+            return;
+        }
+        setVendorError("");
         submissionInFlight.current = true;
         setSubmitting(true);
         let created = false;
@@ -242,7 +248,7 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                             </Field>
                             <Field className="mt-2">
                                 <FieldLabel>Supplier:</FieldLabel>
-                                <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
+                                <Select value={supplierPicker} onValueChange={(value) => { setSupplierPicker(String(value)); setVendorError(""); }}>
                                     <SelectTrigger className="cursor-pointer w-full">
                                         <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                     </SelectTrigger>
@@ -257,7 +263,11 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                                     </SelectContent>
                                 </Select>
                                 {(supplierPicker == "Other") && (
-                                    <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                    <div>
+                                        <FieldLabel htmlFor="other-vendor-name">Vendor Name <span className="text-destructive">*</span></FieldLabel>
+                                        <Input required aria-invalid={!!vendorError} aria-describedby={vendorError ? "other-vendor-error" : undefined} value={otherSupplier} onValueChange={(value) => { setOtherSupplier(value); setVendorError(""); }} id="other-vendor-name" autoComplete="off" placeholder="Other Vendor Name" className={`bg-input/20 ${vendorError ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-sm p-1 w-full`} />
+                                        {vendorError && <p id="other-vendor-error" role="alert" className="text-sm text-red-200">{vendorError}</p>}
+                                    </div>
                                 )}
                             </Field>
                         </div>

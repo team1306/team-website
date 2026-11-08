@@ -371,7 +371,11 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                                 </SelectContent>
                                             </Select>
                                             {(supplierPicker == "Other") && (
-                                                <Input value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="value" autoComplete="off" placeholder="Other Vendor Name" className={`bg-input/20 ${errors.otherSupplier ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-sm p-1 w-full`} />
+                                                <div>
+                                                    <FieldLabel htmlFor="other-vendor-name">Vendor Name <span className="text-destructive">*</span></FieldLabel>
+                                                    <Input required aria-invalid={!!errors.otherSupplier} aria-describedby={errors.otherSupplier ? "other-vendor-error" : undefined} value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="other-vendor-name" autoComplete="off" placeholder="Other Vendor Name" className={`bg-input/20 ${errors.otherSupplier ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-sm p-1 w-full`} />
+                                                    {errors.otherSupplier && <p id="other-vendor-error" role="alert" className="text-sm text-red-200">{errors.otherSupplier}</p>}
+                                                </div>
                                             )}
                                         </Field>
                                     </div>
