@@ -1,3 +1,4 @@
+import { approvalErrorStatus } from "@/lib/approvalErrors";
 import { isAmazonVendor } from "@/lib/orderPolicy";
 import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
@@ -100,8 +101,16 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    const body: PurchaseApprove = await request.json();
-    const { itemID, approvalRole } = body;
+    let body: PurchaseApprove;
+    try {
+        body = await request.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    const { itemID, approvalRole } = body ?? {};
+    if (!itemID || typeof approvalRole !== "string" || !approvalRole.trim()) {
+        return NextResponse.json({ error: "Missing itemID or approvalRole" }, { status: 400 });
+    }
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     const approverUserId = authData?.user?.id;
@@ -110,56 +119,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { data: purchase, error: fetchError } = await supabase
-        .from("purchases")
-        .select('status, approvers, requestName, expidited, items, vendor, catagory, cost, requestor, "slack-thread-id"')
-        .eq("purchaseID", itemID)
-        .single();
-
-    if (fetchError || !purchase) {
-        return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
-    }
-
-    if (purchase.status !== "needsAproval") {
-        return NextResponse.json({ status: 400 });
-    }
-
-    const approvers = purchase.approvers as Approver[];
-
-    const pendingApproval = approvers.find(
-        (a) => a.requiredRole === approvalRole && !a.approved
-    );
-
-    if (!pendingApproval) {
-        return NextResponse.json({ error: `role not suitable"` }, { status: 400 });
-    }
-
-    const updatedApprovers = approvers.map((a) =>
-        a.requiredRole === approvalRole && !a.approved
-            ? { ...a, approved: true, approver: approverUserId }
-            : a
-    );
-
-    const allApproved = updatedApprovers.every((a) => a.approved);
-    const newStatus = allApproved ? "approved" : "needsAproval";
-
-    const { data: updated, error: updateError } = await supabase
-        .from("purchases")
-        .update({
-            approvers: updatedApprovers,
-            status: newStatus,
-        })
-        .eq("purchaseID", itemID)
-        .select()
-        .single();
+    const { data: updated, error: updateError } = await supabase.rpc("change_purchase_approval", {
+        p_item_id: String(itemID),
+        p_approval_role: approvalRole,
+        p_approved: true,
+    });
 
     if (updateError) {
-        return NextResponse.json({ error: "Failed to update purchase" }, { status: 500 });
+        const status = approvalErrorStatus(updateError.code);
+        return NextResponse.json({ error: updateError.message }, { status });
     }
+
+    const purchase = updated;
+    const newStatus = purchase.status;
+    const allApproved = newStatus === "approved";
 
     after(async () => {
         try {
-            const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
+            const threadTs: string | null = purchase["slack-thread-id"] ?? null;
 
             const { data: userRow, error: userError } = await supabase
                 .from("users")

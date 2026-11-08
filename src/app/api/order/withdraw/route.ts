@@ -1,3 +1,4 @@
+import { approvalErrorStatus } from "@/lib/approvalErrors";
 import { createClient } from '../../../../../utils/supabase/server'
 import { cookies } from 'next/headers'
 import { NextResponse } from "next/server";
@@ -28,65 +29,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { itemID, approvalRole } = body;
-    if (!itemID || !approvalRole) {
+    const { itemID, approvalRole } = body ?? {};
+    if (!itemID || typeof approvalRole !== "string" || !approvalRole.trim()) {
         return NextResponse.json({ error: "Missing itemID or approvalRole" }, { status: 400 });
     }
 
-    const { data: purchase, error: fetchError } = await supabase
-        .from("purchases")
-        .select("*")
-        .eq("purchaseID", itemID)
-        .maybeSingle();
-
-    if (fetchError) {
-        return NextResponse.json({ error: fetchError.message }, { status: 500 });
-    }
-    if (!purchase) {
-        return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
-    }
-
-    if (purchase.status !== "needsAproval" && purchase.status !== "needsApproval" && purchase.status !== "approved") {
-        return NextResponse.json({ error: "Approvals can't be withdrawn at this stage" }, { status: 409 });
-    }
-
-    const approvers: any[] = Array.isArray(purchase.approvers) ? purchase.approvers : [];
-    const index = approvers.findIndex((a) => a.requiredRole === approvalRole);
-
-    if (index === -1) {
-        return NextResponse.json({ error: "Approval slot not found" }, { status: 404 });
-    }
-
-    const slot = approvers[index];
-
-    if (!slot.approved) {
-        return NextResponse.json({ error: "Not currently approved" }, { status: 409 });
-    }
-    if (String(slot.approver ?? "").trim() !== authData.user.id) {
-        return NextResponse.json({ error: "Only the original approver can withdraw" }, { status: 403 });
-    }
-
-    const updatedApprovers = approvers.map((a, i) =>
-        i === index ? { ...a, approved: false, approver: "" } : a
-    );
-
-    const newStatus = purchase.status === "approved" ? "needsAproval" : purchase.status;
-
-    const { data: updated, error: updateError } = await supabase
-        .from("purchases")
-        .update({
-            approvers: updatedApprovers,
-            status: newStatus,
-        })
-        .eq("purchaseID", itemID)
-        .select();
+    const { data: purchase, error: updateError } = await supabase.rpc("change_purchase_approval", {
+        p_item_id: String(itemID),
+        p_approval_role: approvalRole,
+        p_approved: false,
+    });
 
     if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        return NextResponse.json(
+            { error: updateError.message },
+            { status: approvalErrorStatus(updateError.code) }
+        );
     }
-    if (!updated || updated.length === 0) {
-        return NextResponse.json({ error: "Purchase changed, try again" }, { status: 409 });
-    }
+    const newStatus = purchase.status;
 
     const budgetError = await recalculateCategorySpent([purchase.catagory]);
     if (budgetError) {

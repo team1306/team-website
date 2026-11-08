@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Atomic purchase approvals
+
+See [setup/README.md](setup/README.md) for the SQL setup script and test instructions.
+
 ## Getting Started
 
 First, run the development server:
