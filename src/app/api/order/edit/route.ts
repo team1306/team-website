@@ -254,7 +254,7 @@ export async function PATCH(request: NextRequest) {
 
       if (expiditeTransition === "requested") {
         const mention = await getEditorMention();
-        await postSlackThreadReply(`${mention} has requested this order to be expedited @Andrew.`, threadTs);
+        await postSlackThreadReply(`${mention} has requested this order to be expedited <@U07CRE78LKC>.`, threadTs);
       } else if (expiditeTransition === "approved") {
         const mention = await getEditorMention();
         await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);
