@@ -14,12 +14,10 @@ interface approvalInfo {
     approved: boolean;
     user: UserData;
     rejected?: boolean
-    onApproved?: () => void;
     onWithdrawn?: () => void;
     itemID: string;
     disable?: boolean;
     disableWithdraw?: boolean;
-    tierTwo?: boolean;
 }
 
 interface UserData {
@@ -29,23 +27,8 @@ interface UserData {
     profilePicture: string;
 }
 
-export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onApproved, onWithdrawn, itemID, disable, disableWithdraw, tierTwo }: approvalInfo) {
+export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onWithdrawn, itemID, disable, disableWithdraw }: approvalInfo) {
     const [withdrawing, setWithdrawing] = useState(false);
-
-    const userCanApprove = () => canApproveCategory(user.role, requiredRole, tierTwo);
-
-    async function approve() {
-        const res = await fetch('/api/order/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                itemID: itemID,
-                approvalRole: requiredRole,
-            })
-        });
-
-        if (res.ok && onApproved) { onApproved(); }
-    }
 
     async function withdraw() {
         if (withdrawing) { return; }
@@ -83,38 +66,10 @@ export default function Approver({ approverName, approverPicture, approverID, re
         }
     }
 
-    if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && !disable) {
+    if (!approved && !rejected) {
         return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && disable) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && !userCanApprove() && !rejected) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                </div>
+            <Card className="bg-yellow-900 h-fit gap-0 p-2 mb-2">
+                <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
             </Card>
         );
     }
@@ -129,7 +84,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
     }
     else {
         return (
-            <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+            <Card className="bg-green-900 h-fit gap-0 p-2 mb-2">
                 <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                 <div className="flex items-center justify-start">
                     <Avatar className="size-10">
@@ -137,10 +92,10 @@ export default function Approver({ approverName, approverPicture, approverID, re
                         <AvatarFallback>!</AvatarFallback>
                     </Avatar>
                     <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
-                        <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base ml-auto bg-red-700 text-zinc-100 hover:bg-red-800 p-3 mr-2">Withdraw</Button>
-                    )}
                 </div>
+                {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
+                    <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base w-full mt-2 bg-red-700 text-zinc-100 hover:bg-red-800 p-3">Withdraw</Button>
+                )}
             </Card>
         );
     }
