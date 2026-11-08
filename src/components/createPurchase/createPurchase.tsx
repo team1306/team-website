@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select"
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { Input } from "@base-ui/react"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Item, { validateItem } from "./itemCard";
 import { toast } from "@/components/ui/toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -73,6 +73,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     const [errors, setErrors] = useState<FormErrors>({});
     const [showItemErrors, setShowItemErrors] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const submissionInFlight = useRef(false);
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
 
@@ -138,11 +139,13 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     }
 
     function discard() {
+        if (submissionInFlight.current) return;
         resetForm();
         overrideOpen(false);
     }
 
     function handleOpenChange(next: boolean) {
+        if (submissionInFlight.current) return;
         overrideOpen(next);
         if (!next) {
             setErrors({});
@@ -229,7 +232,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     }
 
     async function submitPurchase() {
-        if (submitting) return;
+        if (submissionInFlight.current) return;
 
         const found = validate();
         setErrors(found);
@@ -239,6 +242,8 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
             return;
         }
 
+        // Lock synchronously so repeat clicks cannot race React's next render.
+        submissionInFlight.current = true;
         setSubmitting(true);
 
         try {
@@ -272,6 +277,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                 title: "Error",
             });
         } finally {
+            submissionInFlight.current = false;
             setSubmitting(false);
         }
     }
@@ -399,8 +405,8 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 <div className="flex">
                                     <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
                                     <div className="ml-auto flex gap-2">
-                                        <Button onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
-                                        <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
+                                        <Button disabled={submitting} onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
+                                        <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">{submitting ? "Creating…" : "Create"}</Button>
                                     </div>
                                 </div>
                             </Card>

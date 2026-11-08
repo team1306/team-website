@@ -1,6 +1,6 @@
 'use client'
 import Navbar from "@/components/ui/navbar"
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from 'next/navigation'
 import {
     Field,
@@ -48,6 +48,8 @@ type CreateProps = {
 export default function Create({ currentUser, onDiscard }: CreateProps) {
     const [userLoading, setUserLoading] = useState(true);
     const router = useRouter();
+    const [submitting, setSubmitting] = useState(false);
+    const submissionInFlight = useRef(false);
 
     interface UserData {
         id: string;
@@ -129,7 +131,12 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     }
 
     async function submitPurchase() {
-        if (currentUser) {
+        if (!currentUser || submissionInFlight.current) return;
+        submissionInFlight.current = true;
+        setSubmitting(true);
+        let created = false;
+
+        try {
             const res = await fetch('/api/order/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -142,9 +149,8 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 }),
             });
 
-            const data = await res.json();
-
             if (res.ok) {
+                created = true;
                 toast.add({
                     title: "Item Created",
                 });
@@ -153,6 +159,15 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 toast.add({
                     title: "Error",
                 });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.add({ title: "Error" });
+        } finally {
+            // Keep successful submissions locked until navigation completes.
+            if (!created) {
+                submissionInFlight.current = false;
+                setSubmitting(false);
             }
         }
     }
@@ -269,7 +284,7 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                         <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
                         <div className="flex ml-auto gap-3">
                             <Button onClick={() => { onDiscard(); }} className="cursor-pointer w-fit text-base bg-red-500 text-zinc-100 border-0 hover:bg-red-600">Discard</Button>
-                            <Button onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
+                            <Button disabled={submitting} onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">{submitting ? "Creating…" : "Create"}</Button>
                         </div>
                     </div>
                 </Card>
