@@ -1,4 +1,5 @@
 'use client'
+import { isAmazonVendor } from "@/lib/orderPolicy";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
@@ -658,10 +659,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                             {(status == 'needsAproval' || status == 'approved') && (
                                 <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
                                     {(status == 'approved' && expidited != "approved") && (
-                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">{isAmazonVendor(vendor) ? "Can be Ordered Now" : `Will be Ordered: ${getNextPurchaseDate()}`}</h1>
                                     )}
                                     {(status == 'needsAproval' && expidited != "approved") && (
-                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">{isAmazonVendor(vendor) ? "Can be Ordered Once Approved" : `Can be Ordered: ${getNextPurchaseDate()}`}</h1>
                                     )}
                                     {(expidited == "approved" && status == "needsAproval") && (
                                         <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
