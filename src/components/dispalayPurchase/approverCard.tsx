@@ -112,7 +112,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
                         <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                         <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
-                    <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
+                    <Button onClick={approve} aria-label={`Approve as ${cleanuser()}`} className="purchase-approve-button cursor-pointer ml-auto mr-2">Approve</Button>
                 </div>
             </Card>
         );
@@ -125,7 +125,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
                         <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
                         <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
                     </div>
-                    <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
+                    <Button disabled onClick={approve} aria-label={`Approve as ${cleanuser()}`} className="purchase-approve-button cursor-pointer ml-auto mr-2">Approve</Button>
                 </div>
             </Card>
         );

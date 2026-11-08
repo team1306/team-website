@@ -54,7 +54,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
         if (isKrakenMode) {
             return `${(Number(costValue) / KRAKEN_DIVISOR).toFixed(2)} u/krkn`;
         }
-        return `$${costValue}`;
+        return `$${Number(costValue).toFixed(2)}`;
     }
 
     if (editMode && !containsNote) {
@@ -121,12 +121,12 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
     }
 
     return (
-        <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-            <div className="flex">
-                <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
-                <div className="flex ml-auto">
-                    <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
-                </div>
+        <Card className="purchase-detail-item bg-mist-700 h-fit gap-0 mb-2">
+            <div className="flex min-w-0 items-center gap-3">
+                <CardTitle className="min-w-0 flex-1 break-words text-base text-zinc-100 font-bold">{nameValue}</CardTitle>
+                {linkValue && (
+                    <Button className="shrink-0 bg-zinc-100 text-black hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")} aria-label={`Open ${nameValue} link`}><Globe /></Button>
+                )}
             </div>
             <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
         </Card>

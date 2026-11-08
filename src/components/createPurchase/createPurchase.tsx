@@ -1,7 +1,9 @@
 'use client'
 import {
     Dialog,
+    DialogClose,
     DialogContent,
+    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
 import {
@@ -9,7 +11,7 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
-import { StickyNotePlus, Plus } from "lucide-react"
+import { StickyNotePlus, Plus, X } from "lucide-react"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
     Select,
@@ -100,7 +102,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
         { name: "Remains", value: Math.max(0, selectedCategoryBudget - selectedCategorySpent - orderTotal) },
         { name: "Order Cost", value: orderTotal },
     ];
-    const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
+    const COLORS = ["#a91f2c", "#d63c4b", "#f07782"];
 
     function clearError(key: keyof FormErrors) {
         setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -276,15 +278,6 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
         }
     }
 
-    function budgetHue(): number {
-        if (selectedCategoryBudget <= 0) return 205;
-        const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetRemainPercent(): number {
         if (selectedCategoryBudget <= 0) return 0;
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
@@ -294,16 +287,21 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
         <div>
             <Dialog open={isOpen} onOpenChange={handleOpenChange}>
                 <DialogTrigger render={<Button className="cursor-pointer text-base w-full p-3 md:w-fit"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
-                <DialogContent className="bg-red-900 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:w-[min(88rem,calc(100vw-2rem))] lg:max-w-none max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
-                    <h1 className="text-2xl text-zinc-100 font-bold">New Order</h1>
-                    <div className="flex flex-col lg:flex-row gap-2 items-stretch w-full min-w-0">
-                        <Card className="w-full min-w-0 lg:flex-[24_1_0%] gap-0 bg-mist-600 text-zinc-100 pt-0">
+                <DialogContent showCloseButton={false} className="purchase-create-dialog bg-mist-700 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:w-[min(88rem,calc(100vw-2rem))] lg:max-w-none max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
+                    <div className="purchase-dialog-heading">
+                        <DialogTitle className="text-2xl sm:text-3xl text-zinc-100 font-bold">New purchase request</DialogTitle>
+                        <DialogClose render={<Button type="button" variant="ghost" size="icon" className="purchase-dialog-close" aria-label="Close new purchase request" />}>
+                            <X aria-hidden="true" />
+                        </DialogClose>
+                    </div>
+                    <div className="purchase-create-layout grid grid-cols-1 lg:grid-cols-[minmax(210px,0.8fr)_minmax(270px,1.1fr)_minmax(280px,1fr)] gap-3 items-stretch w-full min-w-0">
+                        <Card className="w-full min-w-0 gap-0 bg-mist-600 text-zinc-100 pt-0">
                             <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                 <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                             </Card>
                             <div className="p-2 w-full">
-                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-4xl sm:text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
-                                <h2 className="text-lg mt-2">Remains in Robot ({budgetRemainPercent()}%)</h2>
+                                <h1 className="text-4xl sm:text-5xl font-bold mt-4 text-red-400">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                                <h2 className="text-lg mt-2">Remaining budget ({budgetRemainPercent()}%)</h2>
                                 <ResponsiveContainer width="100%" height={260}>
                                     <PieChart>
                                         <Pie
@@ -324,7 +322,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 </ResponsiveContainer>
                             </div>
                         </Card>
-                        <div className="w-full min-w-0 lg:flex-[32_1_0%]">
+                        <div className="purchase-info-column w-full min-w-0">
                             <Card className="w-full gap-0 bg-mist-600 text-zinc-100 pt-0">
                                 <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                     <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Info</CardTitle>
@@ -336,14 +334,14 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                     </Field>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <Field className="w-full min-w-0">
-                                            <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
+                                            <FieldLabel className="mt-2">Category: <span className="text-destructive">*</span></FieldLabel>
                                             <Select value={catagory} onValueChange={(value) => handleCategoryChange(String(value))}>
                                                 <SelectTrigger className={`cursor-pointer w-full ${errors.category ? "border-2 border-red-600" : ""}`}>
                                                     <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {categories.filter((selectcategory) => selectcategory.enabled).map((selectcategory) => (
-                                                        <SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                                        <SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
@@ -378,12 +376,12 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 <CardDescription className="ml-2 pb-5 text-zinc-100">Purchasing Guidelines</CardDescription>
                             </Card>
                         </div>
-                        <div className="flex flex-col gap-2 w-full min-w-0 lg:flex-[28_1_0%]">
+                        <div className="flex flex-col gap-3 w-full min-w-0">
                             <Card className="w-full gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
                                 <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
                                     <div className="flex m-1">
                                         <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                                        <Button className="cursor-pointer ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                                        <Button className="cursor-pointer ml-auto mr-2 bg-red-500 text-sm hover:bg-red-600" onClick={addItem}><Plus />Add</Button>
                                     </div>
                                 </Card>
                                 <div className="p-2 w-full flex-1 overflow-auto min-h-0">
@@ -397,7 +395,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                             <Card className="w-full gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
                                 <h2>Order Total:</h2>
                                 <div className="flex">
-                                    <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                                    <h1 className="text-2xl font-bold text-red-400">${orderTotal.toFixed(2)}</h1>
                                     <div className="ml-auto flex gap-2">
                                         <Button onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
                                         <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>

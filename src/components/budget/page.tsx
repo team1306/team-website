@@ -103,31 +103,19 @@ export default function Budget({ currentUser, categories, fetchCategories }: Bud
     const totalSpent = findTotalSpent();
     const canManage = canManageBudget(currentUser);
 
-    function budgetHue(): number {
-        if (totalBudget <= 0) return 220;
-        const percent = (totalSpent / totalBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
-    function budgetFill(): React.CSSProperties {
-        const percent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
-        const remaining = 100 - percent;
-        const hue = budgetHue();
-        const filledColor = `hsl(${hue}, 70%, 40%)`;
-        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
-        return {
-            background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
-        };
-    }
+    const seasonProgress = totalBudget > 0 ? Math.min(Math.max((totalSpent / totalBudget) * 100, 0), 100) : 0;
 
     return (
         <div>
+            <div className="page-heading">
+                <div>
+                    <h1>Budget</h1>
+                </div>
+            </div>
             <Card className="p-2 bg-mist-700 m-3 gap-0">
                 <CardDescription className="text-mist-200 text-2xl mb-0 font-bold">Total Season Spending:</CardDescription>
-                <div className="rounded-md mt-2 mb-2" style={budgetFill()}>
+                <div className="budget-meter mt-2 mb-2" role="progressbar" aria-label="Season budget spent" aria-valuenow={Math.round(seasonProgress)} aria-valuemin={0} aria-valuemax={100}>
+                    <span className="budget-meter-fill" style={{ width: `${seasonProgress}%` }} />
                     <h1 className="text-lg font-bold text-zinc-100 p-1">{formatMoney(totalSpent)}<span className="mx-2">/</span>{formatMoney(totalBudget)}</h1>
                 </div>
             </Card>
@@ -302,25 +290,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
         }
     }
 
-    function budgetHue(): number {
-        if (categoryBudget <= 0) return 220;
-        const percent = (categorySpent / categoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
-    function budgetFill(): React.CSSProperties {
-        const percent = categoryBudget > 0 ? Math.min((categorySpent / categoryBudget) * 100, 100) : 0;
-        const remaining = 100 - percent;
-        const hue = budgetHue();
-        const filledColor = `hsl(${hue}, 70%, 40%)`;
-        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
-        return {
-            background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
-        };
-    }
+    const spentPercent = categoryBudget > 0 ? Math.min(Math.max((categorySpent / categoryBudget) * 100, 0), 100) : 0;
 
     function handleNameChange(value: string) {
         setName(value);
@@ -400,7 +370,8 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                 <div className="gap-0">
                     <CardTitle className="text-zinc-100 text-xl m-0 font-bold">{categoryName}</CardTitle>
                 </div>
-                <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
+                <div className="budget-meter ml-4 p-2 rounded-md" role="progressbar" aria-label={`${categoryName} budget spent`} aria-valuenow={Math.round(spentPercent)} aria-valuemin={0} aria-valuemax={100}>
+                    <span className="budget-meter-fill" style={{ width: `${spentPercent}%` }} />
                     <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}<span className="mx-2">/</span>{formatMoney(categoryBudget)}</h1>
                 </div>
                 {canManageBudget(currentUser) && (

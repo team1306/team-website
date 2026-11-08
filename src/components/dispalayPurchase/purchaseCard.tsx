@@ -1,10 +1,9 @@
 'use client'
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
+import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil, X } from "lucide-react"
 import {
     Drawer,
-    DrawerClose,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
@@ -231,8 +230,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             case "Competition":
                 return (
                     <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-600">{itemCatagory}</h2>
+                        <Swords className="size-4 text-red-400" />
+                        <h2 className="text-base font-bold text-red-400">{itemCatagory}</h2>
                     </div>
                 )
             case "Tools":
@@ -270,31 +269,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         switch (status) {
             case "needsAproval":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
+                    <Badge className="status-badge status-needs-approval text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
                 )
             case "approved":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-sky-500 bg-transparent font-bold text-sky-500 ml-auto md:ml-0">Approved</Badge>
+                    <Badge className="status-badge status-approved text-sm w-fit h-fit font-bold ml-auto md:ml-0">Approved</Badge>
                 )
             case "purchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
+                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
                 )
             case "selfPurchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
+                    <Badge className="status-badge status-self-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
                 )
             case "recived":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
+                    <Badge className="status-badge status-received text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
                 )
             case "rejected":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
+                    <Badge className="status-badge status-rejected text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
                 )
             case "onHold":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
+                    <Badge className="status-badge status-on-hold text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
                 )
         }
     }
@@ -435,7 +434,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const needsScroll = itemsArray.length > MAX_VISIBLE_ITEMS;
 
     const itemList = (
-        <div className="p-2 pb-0 ">
+        <div className="purchase-detail-items">
             {itemsArray.map((item) => (
                 <Item
                     key={`${item.id}-${editMode}`}
@@ -454,7 +453,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     return (
         <div>
-            <Card className="p-2 bg-mist-700 h-fit cursor-pointer hover:bg-mist-800" onClick={() => setOpen(true)}>
+            <Card className="purchase-summary-card p-2 h-fit cursor-pointer bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -485,9 +484,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                     </div>
                 </div>
-                <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
-                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
-                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
+                <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"}>
+                    <DrawerContent className="purchase-detail-drawer [--drawer-inset:0px] w-full md:w-auto h-[90vh] md:h-full flex flex-col overflow-hidden">
+                        <Card className="purchase-detail-header p-0 mb-0 gap-0 shrink-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -502,26 +501,27 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     <Input type="url" placeholder="Request Title" value={name} onValueChange={(value) => setName(String(value))} className="bg-mist-700 rounded-md font-title text-2xl ml-2 text-zinc-100 p-0 m-2 pl-2 font-bold"></Input>
                                 )}
                                 {(!editMode) && (
-                                    <div className="flex items-center justify-start mt-1 pb-0">
-                                        <CardTitle className="ml-2 text-2xl p-2 font-title font-bold text-zinc-100">{name}</CardTitle>
-                                        <div className="ml-atuo mr-2">
+                                    <div className="purchase-detail-title-row">
+                                        <CardTitle className="purchase-detail-title">{name}</CardTitle>
+                                        <div className="shrink-0">
                                             {statusBadge()}
                                         </div>
+                                <Button type="button" onClick={(event) => { event.stopPropagation(); setOpen(false); }} variant="ghost" size="icon" aria-label="Close purchase details" className="purchase-detail-close"><X aria-hidden="true" /></Button>
                                     </div>
                                 )}
                             </div>
-                            <div className="flex">
-                                <CardDescription className="text-sm pl-4 text-zinc-100 mb-2">Requested By: {requestor}</CardDescription>
-                                <div className="ml-auto">
+                            <div className="purchase-detail-meta">
+                                <CardDescription className="purchase-detail-requestor">Requested By: {requestor}</CardDescription>
+                                <div className="shrink-0">
                                     <DropdownMenu>
-                                        <DropdownMenuTrigger render={<Button className="cursor-pointer bg-transparent hover:bg-transparent"><EllipsisVertical className="text-zinc-100 size-5 mb-1" /></Button>} />
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Purchase actions" className="purchase-detail-actions"><EllipsisVertical aria-hidden="true" /></Button>} />
                                         <DropdownMenuContent className="w-fit">
                                             <DropdownMenuGroup>
                                                 {(status == "purchased") && (
-                                                    <DropdownMenuItem className="text-green-500" onClick={() => setReceivedOpen(true)}>Mark as Received</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setReceivedOpen(true)}>Mark as Received</DropdownMenuItem>
                                                 )}
                                                 {(status == "approved" || status == "needsAproval") && (
-                                                    <DropdownMenuItem className="text-pink-800" onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => updateStatus(id, "selfPurchased")}>Mark as Self Purchased</DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuItem onClick={() => duplicate()}>Duplicate</DropdownMenuItem>
                                                 {(!editMode && (status == "needsAproval" || status == "approved")) && (
@@ -529,10 +529,10 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 )}
                                                 {(expidited == "NULL") && (<DropdownMenuItem onClick={() => updateExpidite(id, "requested")}>Request Expedite</DropdownMenuItem>)}
                                                 {(status == "needsAproval") && (
-                                                    <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} className="text-amber-500">On Hold</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={(e) => { setOnHoldOpen(true); }} >On Hold</DropdownMenuItem>
                                                 )}
                                                 {(status == "onHold") && (
-                                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} className="text-amber-500">Needs Approval</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={(e) => { setReason(""); editPurchase("needsAproval"); }} >Needs Approval</DropdownMenuItem>
                                                 )}
                                                 {(status == "needsAproval" || status == "approved") && (userRole == "studentLead" || userRole == "mentor" || userRole == "mentorLead" || userRole == "treasurer" || userRole == "president" || userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                     <DropdownMenuItem variant="destructive" onClick={(e) => { setRejectOpen(true); }}>Reject</DropdownMenuItem>
@@ -542,7 +542,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <div>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>
-                                                        <DropdownMenuLabel className="text-zinc-800 font-bold">Admin Actions</DropdownMenuLabel>
+                                                        <DropdownMenuLabel className="font-bold">Admin Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
@@ -565,7 +565,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <h1 className="text-zinc-100 mb-2">Current Status: {statusBadge()}</h1>
                                             <div className="grid grid-cols-3 gap-2">
                                                 <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "needsAproval"); }} className="text-xs p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer">Needs Approval</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "approved"); }} className="text-base p-3 font-bold text-zinc-100 bg-blue-500 hover:bg-blue-600 cursor-pointer">Approved</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "approved"); }} className="status-approved-action text-base p-3 font-bold cursor-pointer">Approved</Button>
                                                 <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer">Purchased</Button>
                                                 <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer">Received</Button>
                                                 <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "onHold"); }} className="text-base p-3 font-bold text-orange-100 bg-orange-500 hover:bg-orange-600 cursor-pointer">On Hold</Button>
@@ -631,7 +631,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <SelectTrigger className="cursor-pointer w-full mt-2 mb-2">
                                                 <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                             </SelectTrigger>
-                                            <SelectContent> {categories.filter((selectcategory) => selectcategory.enabled || selectcategory.categoryID === itemCatagory).map((selectcategory) => (<SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>))} </SelectContent>
+                                            <SelectContent> {categories.filter((selectcategory) => selectcategory.enabled || selectcategory.categoryID === itemCatagory).map((selectcategory) => (<SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>))} </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="pl-2 pr-2 flex-1 mt-1">
@@ -654,30 +654,30 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        <ScrollArea className="w-full rounded-md pr-3 flex-1 min-h-0">
+                        <ScrollArea className="purchase-detail-scroll w-full flex-1 min-h-0">
                             {(status == 'needsAproval' || status == 'approved') && (
-                                <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                                <Card className="purchase-detail-section gap-0">
                                     {(status == 'approved' && expidited != "approved") && (
-                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="purchase-timing-banner">Will be Ordered: {getNextPurchaseDate()}</h1>
                                     )}
                                     {(status == 'needsAproval' && expidited != "approved") && (
-                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="purchase-timing-banner">Can be Ordered: {getNextPurchaseDate()}</h1>
                                     )}
                                     {(expidited == "approved" && status == "needsAproval") && (
-                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
+                                        <h1 className="purchase-timing-banner">Expedited: Needs Approval(s)</h1>
                                     )}
                                     {(expidited == "approved" && status == "approved") && (
-                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Expidited: Can be Ordered Now</h1>
+                                        <h1 className="purchase-timing-banner">Expedited: Can be Ordered Now</h1>
                                     )}
                                 </Card>
                             )}
-                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
-                                <div className="flex p-2 pb-0">
+                            <Card className="purchase-detail-section gap-0">
+                                <div className="flex">
                                     {(!editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Items</CardTitle>
                                     )}
                                     {(editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Edit Items</CardTitle>
                                     )}
                                     <div className="flex ml-auto">
                                     </div>
@@ -699,7 +699,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                             <div className="flex w-full">
                                                 <ProgressLabel className="text-zinc-100 text-sm mr-auto">Remaining Budget</ProgressLabel>
                                                 {(calcPercent() > 10) && (
-                                                    <h1 className="ml-auto text-green-500 text-sm">{calcPercent()}% Remains</h1>
+                                                    <h1 className="ml-auto text-red-400 text-sm">{calcPercent()}% Remains</h1>
                                                 )}
                                                 {(calcPercent() < 10 && !(calcPercent() < 0)) && (
                                                     <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}% Remains</h1>
@@ -711,23 +711,21 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                         </Progress>
                                     </div>
                                 )}
-                                <div className="flex p-2">
+                                <div className="flex justify-end pt-3">
                                     <h1 className={`text-2xl font-bold ${priceColor}`}>{displayPrice()}</h1>
-                                    <div className="ml-auto">
-                                    </div>
                                 </div>
                             </Card>
                             {(!editMode) && (
-                                <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
-                                    <CardTitle className="text-lg ml-3 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
+                                <Card className="purchase-detail-section gap-0">
+                                    <CardTitle className="text-lg text-zinc-100 font-bold">Approvers</CardTitle>
                                     {hasOtherApprovedVendorOrders && (
-                                        <div className="p-2 pt-1 pb-0">
-                                            <Card className="w-full bg-amber-700 p-1">
-                                                <h1 className="font-bold text-zinc-100">This vendor has other approved orders</h1>
+                                        <div className="pt-2">
+                                            <Card className="purchase-vendor-warning w-full p-0">
+                                                <h1>This vendor has other approved orders</h1>
                                             </Card>
                                         </div>
                                     )}
-                                    <div className="p-2">
+                                    <div className="purchase-detail-approvers">
                                         {purchaseApprovers()}
                                     </div>
                                 </Card>

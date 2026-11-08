@@ -168,12 +168,14 @@ export default function App() {
     }
 
     return (
-        <div>
-            <Navbar user={user} setCurrentPage={switchPage} />
-            {currentPage === "/" && <Home onCreate={onCreate} currentUser={user} purchases={purchases} loadPurchases={loadPurchases} />}
-            {currentPage === "/budget" && <Budget categories={categories} fetchCategories={fetchCategories} currentUser={user} />}
-            {currentPage === "/admin" && <Admin currentUser={user} users={users ?? []} loadUsers={loadUsers} />}
-            {currentPage === "/create" && <Create onDiscard={onDiscard} currentUser={user} />}
+        <div className="app-frame">
+            <Navbar user={user} currentPage={currentPage} setCurrentPage={switchPage} />
+            <main className="app-main">
+                {currentPage === "/" && <Home onCreate={onCreate} currentUser={user} purchases={purchases} loadPurchases={loadPurchases} />}
+                {currentPage === "/budget" && <Budget categories={categories} fetchCategories={fetchCategories} currentUser={user} />}
+                {currentPage === "/admin" && <Admin currentUser={user} users={users ?? []} loadUsers={loadUsers} />}
+                {currentPage === "/create" && <Create onDiscard={onDiscard} currentUser={user} />}
+            </main>
         </div>
     )
 }

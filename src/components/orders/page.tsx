@@ -3,7 +3,7 @@ import Navbar from "../../components/ui/navbar";
 import Purchase from "../../components/dispalayPurchase/purchaseCard";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Search, ChevronDown, SlidersHorizontal, Menu, X } from "lucide-react";
+import { Search, ChevronDown, SlidersHorizontal, Menu, X, Package } from "lucide-react";
 import CreatePurchase from "../../components/createPurchase/createPurchase";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -366,7 +366,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
 
     return (
       <div ref={categoryDropdownRef} className="relative">
-        <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
+        <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Category</p>
         <Button
           onClick={() => setCategoryDropdownOpen((open) => !open)}
           className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
@@ -436,7 +436,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
           <DialogContent className="bg-mist-400 p-4 max-h-[85vh] overflow-y-auto">
             <DialogTitle className="font-jetbrains text-xl font-bold">Filters</DialogTitle>
             <div>
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Catagory:</h1>
+              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Category</p>
               <div className="max-h-48 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2">
                 <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
                   <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
@@ -456,11 +456,11 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
             </div>
             {renderSortSelect()}
             <div>
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
+              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
@@ -468,7 +468,7 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
               </ToggleGroup>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer">Clear All Filters</Button>
+              <Button onClick={clearFilters} className="filter-reset-button">Clear all filters</Button>
               <Button onClick={() => setFilterDialogOpen(false)} className="bg-green-700 text-base text-zinc-100 rounded-lg hover:bg-green-800 cursor-pointer ml-auto">Done</Button>
             </div>
           </DialogContent>
@@ -493,8 +493,13 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   if (!loading) {
     return (
       <div className="bg-background min-h-screen">
+        <div className="page-heading">
+          <div>
+            <h1>Purchases</h1>
+          </div>
+        </div>
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block overflow-visible">
-          <div className="flex justify-between items-start">
+          <div className="purchase-toolbar-top flex justify-between items-start">
             <div className="flex mb-2">
               <Field>
                 <div className="flex gap-2">
@@ -505,32 +510,41 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
                   </div>
                 </div>
               </Field>
-              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
+              <Button onClick={clearFilters} className="filter-reset-button ml-4">Clear all filters</Button>
             </div>
             <div className="ml-auto flex items-center gap-2 [&>div]:flex [&>div]:items-center">
               <Switch checked={krakenMode} onCheckedChange={setKrakenMode} size="md" logo={<img src="/kraken.png" alt="Kraken Mode" />} />
               {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
                 <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
               )}
-              <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases} isOpen={isOpen} overrideOpen={overrideOpen}></CreatePurchase>
+              <div className="purchase-create-box">
+                <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases} isOpen={isOpen && !isMobile} overrideOpen={overrideOpen}></CreatePurchase>
+              </div>
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="purchase-filter-row flex gap-4">
             {renderCategoryFilter()}
             {renderSortSelect()}
-            <div>
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
-              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
+            <div className="purchase-status-filter">
+              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
+              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-blue-700 hover:text-zinc-100 group aria-pressed:bg-blue-600 aria-pressed:text-zinc-100">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
                 <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-semibold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <Button onClick={() => { loadPurchases(); }} className="ml-auto mt-auto bg-mist-900 hover:bg-mist-800"><RotateCcw /></Button>
+            <Button
+              onClick={() => { loadPurchases(); }}
+              className="refresh-action-button ml-auto mt-auto"
+              aria-label="Refresh purchases"
+              title="Refresh purchases"
+            >
+              <RotateCcw aria-hidden="true" />
+            </Button>
           </div>
         </Card>
         <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 block md:hidden sticky top-0 z-10">
@@ -556,17 +570,24 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
               {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
                 <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
               )}
-              <CreatePurchase isOpen={isOpen} overrideOpen={overrideOpen} user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
+              <div className="purchase-create-box">
+                <CreatePurchase isOpen={isOpen && isMobile} overrideOpen={overrideOpen} user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
+              </div>
             </div>
           </div>
         </Card>
         {filteredPurchases.length === 0 ? (
-          <div className="w-full text-center mt-6">
-            <div className="w-fit bg-mist-800 p-3 rounded-lg mx-auto">
-              <h1 className="text-zinc-100 text-3xl bg-mist-600 p-3 rounded-md w-fit mx-auto">:(</h1>
-              <h1 className="text-zinc-100 text-2xl w-fit mx-aut p-2">No Items Found</h1>
-              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
-            </div>
+          <div className="purchase-empty-state" role="status">
+            <Package className="size-6" aria-hidden="true" />
+            <h2>{purchases.length > 0 ? "No matching requests" : "No purchase requests yet"}</h2>
+            <p>{purchases.length > 0
+              ? "Try changing your search or filters to see more requests."
+              : "New requests will appear here after they are submitted."}</p>
+            {purchases.length > 0 && (
+              <Button onClick={clearFilters} className="filter-reset-button">
+                Clear filters
+              </Button>
+            )}
           </div>
         ) : (
           filteredPurchases.map((purchase) => (
@@ -597,18 +618,18 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
                   </div>
                 </div>
               </Field>
-              <Button onClick={() => { clearFilters() }} className="bg-mist-500 text-base rounded-lg hover:bg-mist-400 cursor-pointer ml-4">Clear All Filters</Button>
+              <Button onClick={clearFilters} className="filter-reset-button ml-4">Clear all filters</Button>
             </div>
           </div>
           <div className="flex gap-4">
             {renderCategoryFilter()}
             {renderSortSelect()}
             <div className="">
-              <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Filter by Status:</h1>
+              <p className="font-jetbrains text-sm text-zinc-100 mb-1">Filter by Status</p>
               <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
                 <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
                 <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-semibold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="cursor-pointer border-blue-400 text-blue-400 border-3 text-sm font-semibold hover:bg-blue-500 hover:text-black group aria-pressed:bg-blue-400 aria-pressed:text-black">Approved</ToggleGroupItem>
+                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
                 <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-semibold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
                 <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-semibold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
                 <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-semibold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>

@@ -20,6 +20,11 @@ export default function Admin({ currentUser, users, loadUsers }: AdminPage) {
 
     return (
         <div>
+            <div className="page-heading">
+                <div>
+                    <h1>Team access</h1>
+                </div>
+            </div>
             <Card className="bg-mist-600 p-0 m-3">
                 <div className="bg-mist-800 p-2">
                     <CardTitle className="text-zinc-100 text-2xl font-bold">Manage My Team</CardTitle>

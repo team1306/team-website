@@ -120,12 +120,8 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
 
     function supplier() {
-        if (supplierPicker == "Other" && !otherSupplier) {
-            return ("Other - " + otherSupplier);
-        }
-        else {
-            return (supplierPicker);
-        }
+        if (supplierPicker === "Other") return otherSupplier.trim() || "Other";
+        return supplierPicker;
     }
 
     async function submitPurchase() {
@@ -176,15 +172,6 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     const selectedCategoryBudget = categories.find((c) => c.categoryID === catagory)?.categoryBudget ?? 0;
     const selectedCategorySpent = categories.find((c) => c.categoryID === catagory)?.categorySpent ?? 0;
 
-    function budgetHue(): number {
-        if (selectedCategoryBudget <= 0) return 220;
-        const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetRemainPercent(): number {
         if (selectedCategoryBudget <= 0) return 0;
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
@@ -198,8 +185,8 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                         <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                     </Card>
                     <div className="p-1 w-full">
-                        <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
-                        <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
+                        <h1 className="text-5xl font-bold mt-4 text-red-400">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                        <h2 className="text-lg mt-2">Remaining budget ({budgetRemainPercent()}%)</h2>
                     </div>
                 </Card>
                 <Card className="w-full gap-0 bg-mist-600 text-zinc-100 pt-0">
@@ -213,14 +200,14 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                         </Field>
                         <div className="grid grid-cols-2 gap-4">
                             <Field className="w-full">
-                                <FieldLabel className="mt-2">Catagory:<span className="text-destructive">*</span></FieldLabel>
+                                <FieldLabel className="mt-2">Category:<span className="text-destructive">*</span></FieldLabel>
                                 <Select value={catagory} onValueChange={(value) => setCatagory(String(value))}>
                                     <SelectTrigger className="cursor-pointer w-full">
                                         <SelectValue className="text-zinc-100" placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent className="w-fit ml-4">
                                         {categories.map((selectcategory) => (
-                                            <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryID}</SelectItem>
+                                            <SelectItem key={selectcategory.categoryID} disabled={selectcategory.enabled === false} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -237,7 +224,6 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                                         <SelectItem value="Digi-Key">Digi-Key</SelectItem>
                                         <SelectItem value="Mouser">Mouser</SelectItem>
                                         <SelectItem value="Amazon">Amazon</SelectItem>
-                                        <SelectItem value="Multiple">Multiple</SelectItem>
                                         <SelectItem value="Other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -252,12 +238,14 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                     <Card className="mb-0 p-0 bg-mist-800 rounded-t-md rounded-b-none">
                         <div className="flex m-1">
                             <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                            <Button className="cursor-pointer ml-auto mr-2 bg-emerald-500 text-sm hover:bg-emerald-600" onClick={addItem}><Plus />Add</Button>
+                            <Button className="cursor-pointer ml-auto mr-2 bg-red-500 text-sm hover:bg-red-600" onClick={addItem}><Plus />Add</Button>
                         </div>
                     </Card>
                     <div className="p-2 w-full flex-1 overflow-auto min-h-0">
                         <ScrollArea className="h-[310px] w-full rounded-md pr-4">
-                            {items.map((item) => (
+                            {items.length === 0 ? (
+                                <p className="empty-items-message">No items yet. Add an item to build this request.</p>
+                            ) : items.map((item) => (
                                 <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} />
                             ))}
                         </ScrollArea>
@@ -266,7 +254,7 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 <Card className="w-full mt-3 gap-0 bg-mist-600 text-zinc-100 p-2 rounded-md border-t border-zinc-700 sticky bottom-0 left-0 z-10">
                     <h2>Order Total:</h2>
                     <div className="flex items-center">
-                        <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                        <h1 className="text-2xl font-bold text-red-400">${orderTotal.toFixed(2)}</h1>
                         <div className="flex ml-auto gap-3">
                             <Button onClick={() => { onDiscard(); }} className="cursor-pointer w-fit text-base bg-red-500 text-zinc-100 border-0 hover:bg-red-600">Discard</Button>
                             <Button onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
