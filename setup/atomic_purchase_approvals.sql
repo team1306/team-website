@@ -13,6 +13,8 @@ declare
   v_id public.purchases."purchaseID"%type := p_item_id;
   v_purchase public.purchases%rowtype;
   v_user_id text := auth.uid()::text;
+  v_user_role text;
+  v_tier_two boolean;
   v_approvers jsonb;
   v_slot jsonb;
   v_index integer;
@@ -46,6 +48,26 @@ begin
     order by entry.ordinality limit 1;
   if not found then
     raise sqlstate 'PT404' using message = 'Approval slot not found';
+  end if;
+  if p_approved then
+    -- The supplied role identifies a slot, never the caller's authority.
+    -- Resolve the account through the verified JWT identity, including for
+    -- direct RPC callers that bypass the Next.js route.
+    select role into v_user_role from public.users
+      where user_id = auth.uid();
+    select coalesce(sum((item->>'ItemCost')::numeric * (item->>'ItemQuantity')::numeric), 0) > 250
+      into v_tier_two from jsonb_array_elements(coalesce(v_purchase.items::jsonb, '[]'::jsonb)) as item;
+
+    if not coalesce(case p_approval_role
+      when 'mentor' then v_user_role in ('mentor', 'mentorLead', 'programDirector', 'teamAdministrator')
+      when 'mentorLead' then v_user_role in ('mentorLead', 'programDirector', 'teamAdministrator')
+      when 'studentLead' then v_user_role in ('studentLead', 'teamAdministrator')
+        or (v_user_role = 'president' and not v_tier_two)
+      when 'president' then v_user_role in ('president', 'teamAdministrator')
+      else false
+    end, false) then
+      raise sqlstate 'PT403' using message = 'Your role cannot approve this slot';
+    end if;
   end if;
   if coalesce((v_slot->>'approved')::boolean, false) = p_approved then
     raise sqlstate 'PT409' using message = 'Approval changed; refresh and try again';

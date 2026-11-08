@@ -13,6 +13,7 @@ export interface Approver {
 
 export interface PurchaseApprove {
     itemID: string;
+    // Untrusted slot selector; the RPC checks the authenticated account's role.
     approvalRole: string;
 }
 

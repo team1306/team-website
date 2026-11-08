@@ -49,6 +49,10 @@ before(async () => {
       $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth to authenticated;
     grant execute on function auth.uid() to authenticated;
+    create table public.users (user_id uuid primary key, role text, name text, slack_userid text);
+    alter table public.users enable row level security;
+    create policy own_account on public.users for select to authenticated using (user_id = auth.uid());
+    grant select on public.users to authenticated;
     create table public.purchases (
       "purchaseID" bigint primary key, approvers jsonb, status text,
       "requestName" text, requestor uuid, catagory text, vendor text, reason text,
@@ -79,6 +83,9 @@ after(async () => {
 });
 
 beforeEach(async () => {
+  await admin.query('truncate public.users');
+  await admin.query('insert into public.users (user_id, role) values ($1, $2), ($3, $4)',
+    [alice, 'studentLead', bob, 'mentor']);
   await admin.query('truncate public.purchases');
   await admin.query(`insert into public.purchases
     ("purchaseID", approvers, status, items, expidited)
@@ -88,6 +95,62 @@ beforeEach(async () => {
 function change(client, role, approved = true) {
   return client.query('select public.change_purchase_approval($1, $2, $3) as purchase', ['1', role, approved]);
 }
+
+test('authenticated account roles enforce the approval matrix for both order tiers', async () => {
+  const permissions = {
+    student: [], treasurer: [], studentLead: ['studentLead'],
+    mentor: ['mentor'], mentorLead: ['mentor', 'mentorLead'],
+    programDirector: ['mentor', 'mentorLead'],
+    president: ['studentLead', 'president'],
+    teamAdministrator: ['studentLead', 'mentor', 'mentorLead', 'president'],
+    unknown: [],
+  };
+  for (const total of [250, 251]) {
+    for (const [role, allowed] of Object.entries(permissions)) {
+      await admin.query('update public.users set role = $1 where user_id = $2', [role, alice]);
+      for (const slot of ['studentLead', 'mentor', 'mentorLead', 'president', 'programDirector', 'nProgramDirector', 'unknown']) {
+        const approvers = [{ requiredRole: slot, approved: false, approver: '' }];
+        await admin.query(`update public.purchases set approvers = $1, status = 'needsAproval',
+          items = $2, cost = 0`, [JSON.stringify(approvers), JSON.stringify([{ ItemCost: total, ItemQuantity: 1 }])]);
+        const authorized = allowed.includes(slot) && !(role === 'president' && slot === 'studentLead' && total > 250);
+        const context = `${role} filling ${slot} at $${total}`;
+        if (authorized) {
+          const { rows: [result] } = await change(first, slot);
+          assert.equal(result.purchase.status, 'approved', context);
+          assert.equal(result.purchase.approvers[0].approver, alice, context);
+        } else {
+          await assert.rejects(change(first, slot), { code: 'PT403' }, context);
+          const { rows: [saved] } = await admin.query('select approvers, status from public.purchases');
+          assert.deepEqual(saved, { approvers, status: 'needsAproval' }, context);
+        }
+      }
+    }
+  }
+});
+
+test('missing and null account roles fail closed', async () => {
+  await admin.query('update public.users set role = null where user_id = $1', [alice]);
+  await assert.rejects(change(first, 'studentLead'), { code: 'PT403' });
+  await admin.query('delete from public.users where user_id = $1', [alice]);
+  await assert.rejects(change(first, 'studentLead'), { code: 'PT403' });
+  const { rows: [saved] } = await admin.query('select approvers, status from public.purchases');
+  assert.deepEqual(saved, { approvers: initialApprovers, status: 'needsAproval' });
+});
+
+test('approval API rejects forged roles and uses current account permissions', async () => {
+  const call = await orderRoutes(first, alice);
+  const forged = await call('approve', {
+    itemID: '1', approvalRole: 'mentor', role: 'teamAdministrator', user_id: bob,
+  });
+  assert.equal(forged.status, 403);
+  const { rows: [unchanged] } = await admin.query('select approvers, status from public.purchases');
+  assert.deepEqual(unchanged, { approvers: initialApprovers, status: 'needsAproval' });
+  await admin.query('update public.users set role = $1 where user_id = $2', ['mentor', alice]);
+  assert.equal((await call('approve', { itemID: '1', approvalRole: 'studentLead' })).status, 403);
+  const allowed = await call('approve', { itemID: '1', approvalRole: 'mentor' });
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.body.purchase.approvers[1].approver, alice);
+});
 
 // Force actual overlap: the first transaction keeps its row lock while the
 // second connection calls the function. Observe the wait instead of relying on
@@ -130,6 +193,7 @@ test('two simultaneous approvers retain both approvals and finish approved', asy
 });
 
 test('simultaneous approvals of the same slot return a conflict to the loser', async () => {
+  await admin.query('update public.users set role = $1 where user_id = $2', ['studentLead', bob]);
   const [, two] = await overlap(
     () => change(first, 'studentLead'), () => change(second, 'studentLead'),
   );
@@ -174,6 +238,7 @@ test('only the original approver may withdraw, and withdrawal reopens an approve
   await change(first, 'studentLead');
   await change(second, 'mentor');
   await assert.rejects(change(second, 'studentLead', false), { code: 'PT403' });
+  await admin.query('update public.users set role = $1 where user_id = $2', ['student', alice]);
   const { rows: [result] } = await change(first, 'studentLead', false);
   assert.equal(result.purchase.status, 'needsAproval');
   assert.equal(result.purchase.approvers[1].approver, bob);
@@ -205,6 +270,7 @@ for (const [unitCost, roles] of [
   [300, ['studentLead', 'mentorLead', 'president']],
 ]) {
   test(`order lifecycle with ${roles.length} approval sections preserves fees and ordered items`, async () => {
+    await admin.query('update public.users set role = $1 where user_id = $2', ['teamAdministrator', alice]);
     const call = await orderRoutes(first, alice);
     const items = [
       { id: 'part', ItemName: 'Part', ItemCost: unitCost, ItemQuantity: 1, ItemLink: 'https://example.com/part' },

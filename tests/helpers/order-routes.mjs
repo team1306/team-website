@@ -28,8 +28,13 @@ export async function orderRoutes(client, userId) {
     },
     from(table) {
       if (table === 'users') {
-        const user = async () => ({ data: { role: 'teamAdministrator', name: 'Test user', slack_userid: 'UTEST' } });
-        return { select: () => ({ eq: () => ({ single: user, maybeSingle: user }) }) };
+        return { select: () => ({ eq: (column, value) => {
+          const user = async () => {
+            const result = await query(`select * from public.users where ${identifier(column)} = $1`, [value]);
+            return { ...result, data: result.data?.[0] ?? null };
+          };
+          return { single: user, maybeSingle: user };
+        } }) };
       }
       if (table !== 'purchases') throw new Error(`Unexpected table: ${table}`);
       return {

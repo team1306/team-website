@@ -11,6 +11,16 @@ row, reads its current approvals, changes one slot, and saves the approvals and
 status in the same transaction. Identity comes from `auth.uid()` and functions
 run with the caller's permissions (`SECURITY INVOKER`). Duplicate actions and
 incompatible order states return HTTP `409` with a refresh-and-retry message.
+The approval function reads `public.users.role` for `auth.uid()`; the browser's
+`approvalRole` only selects a slot. Unauthorized or missing account roles return
+HTTP `403`, including for direct RPC calls. Mentor slots accept mentors, lead
+mentors, or program directors; lead mentor slots accept lead mentors or program
+directors. Student lead slots accept student leads, plus presidents for orders
+whose stored item total is at most $250. President slots accept presidents.
+Team administrators can fill any of these four slots. Unknown slots are denied.
+Withdrawal remains restricted to the original approver, even after a role change.
+The authenticated database role must be able to read its own `users` row through
+RLS; role updates must remain restricted to authorized administrators.
 Edits use `edit_purchase_if_unchanged` to reject stale approval, item, status, or
 expedite snapshots instead of overwriting a simultaneous approval.
 
