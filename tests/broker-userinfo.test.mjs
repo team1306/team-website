@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createPublicKey, randomBytes, randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
@@ -13,12 +13,13 @@ async function loadRoute(name, env, dependencies = {}) {
   }).outputText;
   const exports = {};
   vm.runInNewContext(compiled, {
-    exports, Buffer, TextEncoder,
+    exports, Buffer, TextEncoder, Response,
     process: { env },
     console: { log() {}, error() {} },
     require(name) {
       if (name === 'jose') return jose;
       if (name === 'crypto') return { randomUUID };
+      if (name === 'node:crypto') return { createPublicKey };
       if (name === 'next/server') return {
         NextResponse: { json: (body, init) => Response.json(body, init) },
       };
@@ -57,7 +58,22 @@ test('userinfo accepts tokens issued by the broker and rejects invalid tokens', 
     }),
   }));
   assert.equal(response.status, 200);
-  const { access_token } = await response.json();
+  const { access_token, id_token } = await response.json();
+  // The published public key must verify the ID token from this environment.
+  const jwksRoute = await loadRoute('jwks.json', {
+    ...env, BROKER_PRIVATE_KEY: env.BROKER_PRIVATE_KEY.replace(/\n/g, '\\n'),
+  });
+  const jwksResponse = await jwksRoute.GET();
+  assert.equal(jwksResponse.status, 200);
+  const jwks = await jwksResponse.json();
+  assert.equal(jwks.keys[0].kid, env.BROKER_KID);
+  assert.equal(jwks.keys[0].d, undefined);
+  const verified = await jose.jwtVerify(id_token, jose.createLocalJWKSet(jwks), {
+    issuer: `${env.NEXT_PUBLIC_SITE_URL}/api/broker`,
+    audience: env.BROKER_CLIENT_ID,
+    algorithms: ['RS256'],
+  });
+  assert.equal(verified.payload.sub, profile.sub);
   const { GET } = await loadRoute('userinfo', env);
   const request = token => new Request('https://broker-dev.example/api/broker/userinfo', {
     headers: { authorization: `Bearer ${token}` },
@@ -80,5 +96,14 @@ test('userinfo accepts tokens issued by the broker and rejects invalid tokens', 
     const rejected = await GET(request(invalid));
     assert.equal(rejected.status, 401);
     assert.equal(rejected.headers.get('www-authenticate'), 'Bearer error="invalid_token"');
+  }
+});
+
+test('JWKS fails closed when signing configuration is missing or invalid', async () => {
+  for (const env of [{}, { BROKER_PRIVATE_KEY: 'invalid-key', BROKER_KID: 'dev-key' }]) {
+    const { GET } = await loadRoute('jwks.json', env);
+    const response = await GET();
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'server_error' });
   }
 });
