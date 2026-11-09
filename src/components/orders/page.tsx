@@ -1,37 +1,24 @@
 'use client'
-import Navbar from "../../components/ui/navbar";
-import Purchase from "../../components/dispalayPurchase/purchaseCard";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Search, ChevronDown, SlidersHorizontal, Menu, X, Package } from "lucide-react";
-import CreatePurchase from "../../components/createPurchase/createPurchase";
-import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { Badge } from "@/components/ui/badge"
-import { Spinner } from "@/components/ui/spinner"
-import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@base-ui/react"
-import { useRouter } from 'next/navigation'
 import PurchaseItems from "@/components/purchaseItems";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { DropdownMenu,DropdownMenuCheckboxItem,DropdownMenuContent,DropdownMenuSeparator,DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+Select,
+SelectContent,
+SelectItem,
+SelectTrigger,
+SelectValue
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { RotateCcw } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { ToggleGroup,ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ChevronDown,Package,RotateCcw,Search,SlidersHorizontal } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { useEffect,useRef,useState } from "react";
+import CreatePurchase from "../../components/createPurchase/createPurchase";
+import Purchase from "../../components/dispalayPurchase/purchaseCard";
 
 interface UserData {
   id: string;
@@ -157,8 +144,6 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
 
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [catagoryFilter, setCatagoryFilter] = useState<string[]>([]);
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const categoryFilterTouched = useRef(false);
   const [statusFilter, setStatusFilter] = useState(['needsAproval', 'approved', 'purchased', 'recived', 'rejected', 'onHold'])
   const [nameFilter, setNameFilter] = useState("");
@@ -265,16 +250,6 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
   }
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
-        setCategoryDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
     const handle = setTimeout(() => {
       setNameFilter(searchBarValue);
     }, 200);
@@ -332,329 +307,48 @@ export default function Home({ currentUser, onCreate, purchases, loadPurchases }
     setCatagoryFilter((prev) => (prev.length === ALL_CATEGORY_IDS.length ? [] : ALL_CATEGORY_IDS));
   }
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mql.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-
   const [isOpen, setIsOpen] = useState(false);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  function overrideOpen(newValue: boolean) {
-    if ((isOpen == false) && (newValue == true) && (isMobile == true)) {
-      onCreate();
-    } else {
-      setIsOpen(newValue);
-    }
-  }
+  function overrideOpen(next: boolean) { setIsOpen(next); }
 
   function renderCategoryFilter() {
     const allSelected = ALL_CATEGORY_IDS.length > 0 && catagoryFilter.length === ALL_CATEGORY_IDS.length;
-    const label = catagoryFilter.length === 0
-      ? "No categories"
-      : allSelected
-        ? "All categories"
-        : `${catagoryFilter.length} of ${ALL_CATEGORY_IDS.length} selected`;
-
-
-    return (
-      <div ref={categoryDropdownRef} className="relative">
-        <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Category</p>
-        <Button
-          onClick={() => setCategoryDropdownOpen((open) => !open)}
-          className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between"
-        >
-          {label}
-          <ChevronDown className="size-4" />
-        </Button>
-        {categoryDropdownOpen && (
-          <div className="absolute z-50 mt-1 w-64 max-h-80 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2 shadow-lg">
-            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
-              <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
-              All
-            </label>
-            <div className="border-t border-mist-500 my-1" />
-            {visibleCategories.map((cat) => (
-              <label key={cat.categoryID} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer text-zinc-100 text-sm">
-                <Checkbox
-                  checked={catagoryFilter.includes(cat.categoryID)}
-                  onCheckedChange={() => toggleCategory(cat.categoryID)}
-                />
-                {cat.categoryID}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function renderSortSelect() {
-    return (
-      <div>
-        <h1 className="font-jetbrians text-sm text-zinc-100 mb-1">Sort by:</h1>
-        <Select value={sortBy} onValueChange={(value) => setSortBy((value as SortOption) ?? "none")}>
-          <SelectTrigger className="bg-mist-500 text-base/6 font-normal h-7 px-2 py-0.5 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer flex items-center gap-2 min-w-48 justify-between border-0 [&_svg[data-sort-chevron]]:size-4 [&_svg:not([data-sort-chevron])]:hidden">
-            <SelectValue className="text-zinc-100" placeholder="Sort by">
-              {(value: string) => SORT_OPTIONS.find((option) => option.value === value)?.label ?? "Sort by"}
-            </SelectValue>
-            <ChevronDown data-sort-chevron className="size-4" />
-          </SelectTrigger>
-          <SelectContent className="min-w-48 bg-mist-700 border border-mist-500 rounded-lg p-2 shadow-lg">
-            {SORT_OPTIONS.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="px-2 py-1.5 rounded text-zinc-100 text-sm cursor-pointer hover:bg-mist-500 focus:bg-mist-500 focus:text-zinc-100"
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  }
-
-  function renderFilterDialog() {
-    const allSelected = ALL_CATEGORY_IDS.length > 0 && catagoryFilter.length === ALL_CATEGORY_IDS.length;
-
-    return (
-      <>
-        <Button onClick={() => setFilterDialogOpen(true)} className="bg-mist-500 text-base text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer w-full">
-          <SlidersHorizontal className="size-4" />
-          Filters
-        </Button>
-        <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-          <DialogContent className="bg-mist-400 p-4 max-h-[85vh] overflow-y-auto">
-            <DialogTitle className="font-sans text-xl font-bold">Filters</DialogTitle>
-            <div>
-              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Category</p>
-              <div className="max-h-48 overflow-y-auto bg-mist-700 border border-mist-500 rounded-lg p-2">
-                <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer font-bold text-zinc-100 text-sm">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAllCategories} />
-                  All
-                </label>
-                <div className="border-t border-mist-500 my-1" />
-                {visibleCategories.map((cat) => (
-                  <label key={cat.categoryID} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-mist-500 cursor-pointer text-zinc-100 text-sm">
-                    <Checkbox
-                      checked={catagoryFilter.includes(cat.categoryID)}
-                      onCheckedChange={() => toggleCategory(cat.categoryID)}
-                    />
-                    {cat.categoryID}
-                  </label>
-                ))}
-              </div>
-            </div>
-            {renderSortSelect()}
-            <div>
-              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
-              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-semibold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={clearFilters} className="filter-reset-button">Clear all filters</Button>
-              <Button onClick={() => setFilterDialogOpen(false)} className="bg-green-700 text-base text-zinc-100 rounded-lg hover:bg-green-800 cursor-pointer ml-auto">Done</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
+    return <DropdownMenu><DropdownMenuTrigger render={<Button variant="outline" />}><SlidersHorizontal data-icon="inline-start" />{allSelected ? "All categories" : `${catagoryFilter.length} categories`}<ChevronDown data-icon="inline-end" /></DropdownMenuTrigger>
+      <DropdownMenuContent className="w-64">
+        <DropdownMenuCheckboxItem checked={allSelected} onCheckedChange={toggleAllCategories} closeOnClick={false}>All categories</DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        {visibleCategories.map(cat => <DropdownMenuCheckboxItem key={cat.categoryID} checked={catagoryFilter.includes(cat.categoryID)} onCheckedChange={() => toggleCategory(cat.categoryID)} closeOnClick={false}>{cat.categoryName} · {cat.categoryPhase}</DropdownMenuCheckboxItem>)}
+      </DropdownMenuContent></DropdownMenu>;
   }
 
   const filteredPurchases = filterPurchases();
-
-  if (!loading && categoryError) {
-    return (
-      <div className="p-4 text-zinc-100" role="alert">
-        <p>{categoryError}</p>
-        <Button className="mt-3" onClick={() => setCategoryLoadAttempt((attempt) => attempt + 1)}>
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  if (!loading) {
-    return (
-      <div className="bg-background min-h-screen">
-        <div className="page-heading">
-          <div>
-            <h1>Purchases</h1>
-          </div>
-        </div>
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block overflow-visible">
-          <div className="purchase-toolbar-top flex justify-between items-start">
-            <div className="purchase-search-group flex mb-2">
-              <Field>
-                <div className="flex items-center gap-2">
-                  <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <div className="relative flex min-w-0 flex-1 items-center">
-                    <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg purchase-search-input" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                  </div>
-                </div>
-              </Field>
-              <Button onClick={clearFilters} className="filter-reset-button ml-4">Clear all filters</Button>
-            </div>
-            <div className="ml-auto flex items-center gap-2 [&>div]:flex [&>div]:items-center">
-              <Switch checked={krakenMode} onCheckedChange={setKrakenMode} size="md" logo={<img src="/kraken.png" alt="Kraken Mode" />} />
-              {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
-                <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
-              )}
-              <div className="purchase-create-box">
-                <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases} isOpen={isOpen && !isMobile} overrideOpen={overrideOpen}></CreatePurchase>
-              </div>
-            </div>
-          </div>
-          <div className="purchase-filter-row flex gap-4">
-            {renderCategoryFilter()}
-            {renderSortSelect()}
-            <div className="purchase-status-filter">
-              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
-              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange} className="flex-wrap">
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-amber-700 hover:text-zinc-100 group aria-pressed:bg-amber-600 aria-pressed:text-zinc-100">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-pink-700 hover:text-zinc-100 group aria-pressed:bg-pink-600 aria-pressed:text-zinc-100">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-green-700 hover:text-zinc-100 group aria-pressed:bg-green-600 aria-pressed:text-zinc-100">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-600 text-zinc-100 border-3 text-sm font-semibold hover:bg-red-700 hover:text-zinc-100 group aria-pressed:bg-red-600 aria-pressed:text-zinc-100">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-600 text-zinc-100 border-3 text-sm font-semibold hover:border-orange-600 hover:bg-orange-700 hover:text-zinc-100 group aria-pressed:bg-orange-600 aria-pressed:text-zinc-100">On Hold</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            <Button
-              onClick={() => { loadPurchases(); }}
-              className="refresh-action-button ml-auto mt-auto"
-              aria-label="Refresh purchases"
-              title="Refresh purchases"
-            >
-              <RotateCcw aria-hidden="true" />
-            </Button>
-          </div>
-        </Card>
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 block md:hidden sticky top-0 z-10">
-          <div className="justify-between items-start">
-            <div className="flex mb-2 w-full">
-              <Field className="w-full">
-                <div className="relative flex items-center w-full">
-                  <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                  <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
-                </div>
-              </Field>
-              <Button
-                onClick={() => setMobileMenuOpen((open) => !open)}
-                aria-label="Toggle menu"
-                aria-expanded={mobileMenuOpen}
-                className="ml-2 shrink-0 bg-mist-500 text-zinc-100 rounded-lg hover:bg-mist-400 cursor-pointer"
-              >
-                {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-              </Button>
-            </div>
-            <div className={`flex-col gap-2 mt-2 ${mobileMenuOpen ? "flex" : "hidden"}`}>
-              {renderFilterDialog()}
-              {(currentUser.role == "programDirector" || currentUser.role == "teamAdministrator") && (
-                <PurchaseItems orders={purchases} onPurchased={loadPurchases} />
-              )}
-              <div className="purchase-create-box">
-                <CreatePurchase isOpen={isOpen && isMobile} overrideOpen={overrideOpen} user={currentUser} onPurchaseCreated={loadPurchases}></CreatePurchase>
-              </div>
-            </div>
-          </div>
-        </Card>
-        {filteredPurchases.length === 0 ? (
-          <div className="purchase-empty-state" role="status">
-            <Package className="size-6" aria-hidden="true" />
-            <h2>{purchases.length > 0 ? "No matching requests" : "No purchase requests yet"}</h2>
-            <p>{purchases.length > 0
-              ? "Try changing your search or filters to see more requests."
-              : "New requests will appear here after they are submitted."}</p>
-            {purchases.length > 0 && (
-              <Button onClick={clearFilters} className="filter-reset-button">
-                Clear filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          filteredPurchases.map((purchase) => (
-            <div key={purchase.id} className="m-3 mt-4">
-              <Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} isKrakenMode={krakenMode} hasOtherApprovedVendorOrders={purchases.some((other) =>
-                other.id !== purchase.id &&
-                other.status === "approved" &&
-                other.vendor.trim().toLowerCase() === purchase.vendor.trim().toLowerCase()
-              )} />
-            </div>
-          ))
-        )}
-      </div>
-    );
-  }
-  if (loading || !currentUser) {
-    return (
-      <div className="bg-background min-h-screen flex flex-col">
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 hidden md:block w-full overflow-visible">
-          <div className="flex justify-between items-start">
-            <div className="purchase-search-group flex mb-2">
-              <Field>
-                <div className="flex items-center gap-2">
-                  <FieldLabel className="text-base text-zinc-100" htmlFor="searchBar">Search: </FieldLabel>
-                  <div className="relative flex min-w-0 flex-1 items-center">
-                    <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                    <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg purchase-search-input" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" placeholder="Type to search..." />
-                  </div>
-                </div>
-              </Field>
-              <Button onClick={clearFilters} className="filter-reset-button ml-4">Clear all filters</Button>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            {renderCategoryFilter()}
-            {renderSortSelect()}
-            <div className="">
-              <p className="font-sans text-sm text-zinc-100 mb-1">Filter by Status</p>
-              <ToggleGroup multiple value={statusToggleValue} onValueChange={handleStatusFilterChange}>
-                <ToggleGroupItem value="all" className="cursor-pointer border-zinc-400 text-zinc-400 border-3 text-sm font-semibold hover:border-zinc-400 hover:bg-zinc-500 hover:text-black group aria-pressed:bg-zinc-400 aria-pressed:text-black">All</ToggleGroupItem>
-                <ToggleGroupItem value="needsAproval" className="cursor-pointer border-amber-400 text-amber-400 border-3 text-sm font-semibold hover:bg-amber-500 hover:text-black group aria-pressed:bg-amber-400 aria-pressed:text-black">Needs Approval</ToggleGroupItem>
-                <ToggleGroupItem value="approved" className="status-filter-approved cursor-pointer border-3 text-sm font-semibold">Approved</ToggleGroupItem>
-                <ToggleGroupItem value="purchased" className="cursor-pointer border-pink-400 text-pink-400 border-3 text-sm font-semibold hover:bg-pink-500 hover:text-black group aria-pressed:bg-pink-400 aria-pressed:text-black">Purchased</ToggleGroupItem>
-                <ToggleGroupItem value="recived" className="cursor-pointer border-green-400 text-green-400 border-3 text-sm font-semibold hover:bg-green-500 hover:text-black group aria-pressed:bg-green-400 aria-pressed:text-black">Received</ToggleGroupItem>
-                <ToggleGroupItem value="rejected" className="cursor-pointer border-red-400 text-red-400 border-3 text-sm font-semibold hover:bg-red-500 hover:text-black group aria-pressed:bg-red-400 aria-pressed:text-black">Rejected</ToggleGroupItem>
-                <ToggleGroupItem value="onHold" className="cursor-pointer border-orange-400 text-orange-400 border-3 text-sm font-semibold hover:border-orange-400 hover:bg-orange-500 hover:text-black group aria-pressed:bg-orange-400 aria-pressed:text-black">On Hold</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          </div>
-        </Card>
-        <Card className="m-3 mt-4 p-2 bg-mist-700 h-fit gap-0 block md:hidden sticky top-0 z-10">
-          <div className="justify-between items-start">
-            <div className="flex mb-2 w-full">
-              <Field className="w-full">
-                <div className="relative flex items-center w-full">
-                  <Search className="absolute left-2 size-4 text-zinc-400 pointer-events-none" />
-                  <Input className="bg-mist-500 text-base text-zinc-100 pl-9 w-full min-w-0 h-11 rounded-lg" value={searchBarValue} onValueChange={(value) => setSearchBarValue(String(value))} type="text" id="searchBar" aria-label="Search" placeholder="Type to search..." />
-                </div>
-              </Field>
-            </div>
-          </div>
-        </Card>
-
-        <div className="flex-1 flex items-center justify-center">
-          <Spinner className="text-zinc-100 size-8" />
+  const statuses = [{value:"all",label:"All"},{value:"needsAproval",label:"Needs approval"},{value:"approved",label:"Approved"},{value:"purchased",label:"Purchased"},{value:"recived",label:"Received"},{value:"onHold",label:"On hold"},{value:"rejected",label:"Rejected"}];
+  return (
+    <div className="space-y-6">
+      <div className="page-heading">
+        <div><h1>Purchases</h1></div>
+        <div className="flex flex-wrap items-center gap-2">
+          {["programDirector","teamAdministrator"].includes(currentUser.role) && <PurchaseItems orders={purchases} onPurchased={loadPurchases} />}
+          <CreatePurchase user={currentUser} onPurchaseCreated={loadPurchases} isOpen={isOpen} overrideOpen={overrideOpen} />
         </div>
       </div>
-    );
-  }
+      <Card className="gap-4 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-48 flex-1"><Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input aria-label="Search purchases" placeholder="Search purchases…" value={searchBarValue} onValueChange={v=>setSearchBarValue(String(v))} className="pl-9" /></div>
+          {renderCategoryFilter()}
+          <Select value={sortBy} onValueChange={v=>setSortBy((v as SortOption) ?? "none")}><SelectTrigger aria-label="Sort purchases" className="w-44"><SelectValue>{(value:string)=>SORT_OPTIONS.find(o=>o.value===value)?.label ?? "Sort purchases"}</SelectValue></SelectTrigger><SelectContent>{SORT_OPTIONS.map(o=><SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select>
+          <Button variant="outline" size="icon" aria-label="Refresh purchases" onClick={()=>loadPurchases()}><RotateCcw /></Button>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+          <ToggleGroup multiple variant="outline" spacing={2} value={statusToggleValue} onValueChange={handleStatusFilterChange} aria-label="Filter by status" className="flex-wrap justify-start">{statuses.map(s=><ToggleGroupItem key={s.value} value={s.value}>{s.label}</ToggleGroupItem>)}</ToggleGroup>
+          <div className="flex items-center gap-4"><label className="flex items-center gap-2 text-sm"><Switch checked={krakenMode} onCheckedChange={setKrakenMode} />Kraken mode</label><Button variant="ghost" size="sm" onClick={clearFilters}>Reset filters</Button></div>
+        </div>
+      </Card>
+      {categoryError && <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">{categoryError}<Button variant="outline" className="ml-3" onClick={()=>setCategoryLoadAttempt(n=>n+1)}>Retry</Button></div>}
+      {loading ? <div className="flex justify-center py-20"><Spinner className="size-6" /></div> : <>
+        <p className="text-sm text-muted-foreground">{filteredPurchases.length} {filteredPurchases.length===1 ? "request" : "requests"}</p>
+        {filteredPurchases.length===0 ? <div className="purchase-empty-state" role="status"><Package className="size-8" /><h2>{purchases.length ? "No matching requests" : "No purchase requests yet"}</h2><p>{purchases.length ? "Try another search or reset your filters." : "Create a request to get started."}</p>{!!purchases.length && <Button variant="outline" onClick={clearFilters}>Reset filters</Button>}</div> : <div className="space-y-3">{filteredPurchases.map(purchase=><Purchase key={purchase.id} id={purchase.id} itemName={purchase.title} cost={purchase.cost} requestor={purchase.requestor} catagory={purchase.catagory} requestedDate={formatDate(purchase.requestedDate)} status={purchase.status} items={purchase.items} vendor={purchase.vendor} user={currentUser} onPurchaseEdited={loadPurchases} approvers={purchase.approvers} reason={purchase.reason} expidited={purchase.expidited} isKrakenMode={krakenMode} hasOtherApprovedVendorOrders={purchases.some(other=>other.id!==purchase.id && other.status==="approved" && other.vendor.trim().toLowerCase()===purchase.vendor.trim().toLowerCase())} />)}</div>}
+      </>}
+    </div>
+  );
 }

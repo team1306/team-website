@@ -1,9 +1,11 @@
 'use client'
 
+import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard,LogOut,ShieldCheck,WalletCards } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, LogOut, ShieldCheck, WalletCards } from "lucide-react";
 import { createClient } from "../../../utils/supabase/client";
 
 interface UserData {
@@ -53,45 +55,22 @@ export default function Navbar({ user, currentPage, setCurrentPage }: NavbarProp
         : "TB";
 
     return (
-        <header className="app-topbar simple-topbar">
-            <div className="topnav-brand">
-                <Image src="/badgerbots.svg" alt="Badgerbots" width={46} height={46} />
-                <div>
-                    <strong>Purchasing</strong>
-                    <span>Team 1306</span>
+        <header className="border-b bg-card/50">
+            <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-6 px-4 py-4 md:px-8">
+                <div className="flex shrink-0 items-center gap-3">
+                    <Image src="/badgerbots.svg" alt="Badgerbots" width={48} height={48} />
+                    <div className="font-mono text-sm font-semibold leading-relaxed text-muted-foreground">Purchasing app</div>
                 </div>
-            </div>
-
-            <nav className="topnav-links" aria-label="Main navigation">
-                <button className={`topnav-link ${currentPage === "/" || currentPage === "/create" ? "is-active" : ""}`} onClick={() => navigate("/")}>
-                    <LayoutDashboard size={16} />
-                    Purchases
-                </button>
-                <button className={`topnav-link ${currentPage === "/budget" ? "is-active" : ""}`} onClick={() => navigate("/budget")}>
-                    <WalletCards size={16} />
-                    Budget
-                </button>
-                {canManageTeam && (
-                    <button className={`topnav-link ${currentPage === "/admin" ? "is-active" : ""}`} onClick={() => navigate("/admin")}>
-                        <ShieldCheck size={16} />
-                        Team access
-                    </button>
-                )}
-            </nav>
-
-            <div className="topnav-user">
-                <div className="topnav-user-info">
-                    <strong>{user.name || "Test user"}</strong>
-                    <span>{roleLabels[user.role] || "Team member"}</span>
+                <nav className="order-3 flex w-full flex-wrap gap-1 md:order-none md:w-auto" aria-label="Main navigation">
+                    {[{path:"/",label:"Purchases",Icon:LayoutDashboard},{path:"/budget",label:"Budget",Icon:WalletCards},...(canManageTeam ? [{path:"/admin",label:"Team access",Icon:ShieldCheck}] : [])].map(({path,label,Icon}) => (
+                        <Button key={path} variant={currentPage === path ? "secondary" : "ghost"} aria-current={currentPage === path ? "page" : undefined} onClick={() => navigate(path)}><Icon data-icon="inline-start" />{label}</Button>
+                    ))}
+                </nav>
+                <div className="ml-auto flex min-w-0 items-center gap-3">
+                    <div className="hidden text-right text-sm lg:block"><p className="font-medium">{user.name || "Loading account…"}</p><p className="text-xs text-muted-foreground">{roleLabels[user.role] || ""}</p></div>
+                    <span className="flex size-9 items-center justify-center rounded-full bg-muted text-xs font-medium" aria-hidden="true">{initials}</span>
+                    <Button variant="ghost" size="icon" onClick={signOut} disabled={signingOut} aria-busy={signingOut} aria-label="Sign out">{signingOut ? <Spinner aria-hidden="true" /> : <LogOut />}</Button>
                 </div>
-                {user.profilePicture ? (
-                    <Image className="topnav-avatar" src={user.profilePicture} alt="" width={34} height={34} />
-                ) : (
-                    <span className="topnav-avatar topnav-initials" aria-hidden="true">{initials}</span>
-                )}
-                <button className="topnav-signout" onClick={signOut} disabled={signingOut} aria-label="Sign out" title="Sign out">
-                    <LogOut size={16} />
-                </button>
             </div>
         </header>
     );

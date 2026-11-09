@@ -1,10 +1,9 @@
 'use client'
 
-import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { StickyNote, Globe } from "lucide-react"
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
+import { Globe,StickyNote } from "lucide-react"
+import { useState } from "react"
 
 interface Item {
     id: string;
@@ -12,6 +11,7 @@ interface Item {
     cost: number;
     quantity: number;
     link: string;
+    comments?: string;
     onUpdate: (updatedItem: ItemData) => void;
     defaultEdit?: boolean;
     isKrakenMode?: boolean;
@@ -29,7 +29,7 @@ interface ItemData {
 
 const KRAKEN_DIVISOR = 217.99;
 
-export default function Item({ id, name, cost, quantity, link, defaultEdit, onUpdate, isKrakenMode = false }: Item) {
+export default function Item({ id, name, cost, quantity, link, comments = "", defaultEdit, onUpdate, isKrakenMode = false }: Item) {
     const editMode = defaultEdit;
     const [containsNote, setcontainsNote] = useState(false);
 
@@ -37,7 +37,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
     const [quantityValue, setQuantityValue] = useState(String(quantity));
     const [costValue, setcostValue] = useState(String(cost));
     const [linkValue, setLinkValue] = useState(String(link));
-    const [notes, setNotes] = useState(String(""));
+    const [notes, setNotes] = useState(comments);
 
     const updateField = (field: "name" | "quantity" | "cost" | "link" | "notes", value: string) => {
         if (field === "name") setNameValue(value);
@@ -83,8 +83,8 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     <span>Item link</span>
                     <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => updateField("link", String(value))} />
                 </label>
-                <Button type="button" variant="outline" className="h-11 w-fit" aria-expanded={containsNote} onClick={() => setcontainsNote(!containsNote)}>
-                    <StickyNote aria-hidden="true" /> {containsNote ? "Hide notes" : "Add notes"}
+                <Button type="button" variant="outline" size="sm" className="w-fit" aria-expanded={containsNote} onClick={() => setcontainsNote(!containsNote)}>
+                    <StickyNote data-icon="inline-start" aria-hidden="true" /> {containsNote ? "Hide notes" : "Add notes"}
                 </Button>
                 {containsNote && (
                     <label className="purchase-edit-field">
@@ -96,34 +96,5 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
         );
     }
 
-    if (containsNote && !editMode) {
-        return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
-                <div className="pl-2 pt-2">
-                    <div className="flex">
-                        <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
-                        <div className="flex ml-auto">
-                            <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
-                        </div>
-                    </div>
-                    <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
-                </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
-                    <h1 className="text-sm font-jetbrains text-zinc-100">{notes}</h1>
-                </Card>
-            </Card>
-        );
-    }
-
-    return (
-        <Card className="purchase-detail-item bg-mist-700 h-fit gap-0 mb-2">
-            <div className="flex min-w-0 items-center gap-3">
-                <CardTitle className="min-w-0 flex-1 break-words text-base text-zinc-100 font-bold">{nameValue}</CardTitle>
-                {linkValue && (
-                    <Button className="shrink-0 bg-zinc-100 text-black hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")} aria-label={`Open ${nameValue} link`}><Globe /></Button>
-                )}
-            </div>
-            <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
-        </Card>
-    );
+    return <div className="purchase-detail-item space-y-2"><div className="flex items-start justify-between gap-4"><div><h3 className="text-sm font-medium">{name}</h3><p className="mt-1 text-sm text-muted-foreground">{quantity} × {isKrakenMode ? unitPriceText() : cost.toLocaleString("en-US",{style:"currency",currency:"USD"})}</p></div>{link && <Button variant="ghost" size="icon" aria-label={`Open product page for ${name}`} onClick={()=>window.open(link,"_blank","noopener,noreferrer")}><Globe /></Button>}</div>{comments && <p className="text-sm text-muted-foreground">{comments}</p>}</div>;
 }

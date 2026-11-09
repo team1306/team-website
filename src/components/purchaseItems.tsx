@@ -1,13 +1,12 @@
-import { useState } from "react"
+import { Spinner } from "@/components/ui/spinner";
+import { Input } from "@/components/ui/input";
+import { Globe,X } from "lucide-react";
+import { useEffect,useState } from "react";
+import { ItemData,PurchaseData } from "./orders/page";
 import { Button } from "./ui/button";
-import { Drawer, DrawerContent, DrawerTitle } from "./ui/drawer";
-import { useEffect } from "react";
-import { Card, CardTitle, CardDescription } from "./ui/card";
-import { Input } from "@base-ui/react";
-import { Field, FieldLabel } from "./ui/field";
-import { Globe } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ItemData, PurchaseData } from "./orders/page";
+import { Card,CardDescription,CardTitle } from "./ui/card";
+import { Drawer,DrawerClose,DrawerContent,DrawerTitle } from "./ui/drawer";
+import { Field,FieldLabel } from "./ui/field";
 
 
 interface PurchaseItemsProps {
@@ -184,7 +183,6 @@ export default function PurchaseItems({ orders, onPurchased }: PurchaseItemsProp
             setError("Failed to save purchases");
         } finally {
             setSubmitting(false);
-            setOpen(false);
         }
     }
 
@@ -197,37 +195,16 @@ export default function PurchaseItems({ orders, onPurchased }: PurchaseItemsProp
         return () => mql.removeEventListener("change", handler);
     }, []);
 
-    return (
-        <div>
-            <Button onClick={() => setOpen(true)} className="cursor-pointer text-base w-full p-3 bg-red-600 hover:bg-red-700 md:w-fit">Purchase Items</Button>
-            <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
-                <DrawerContent className="bg-mist-800 border-0 p-0 m-0 rounded-none rounded-tl-lg rounded-bl-lg w-full md:w-1/3">
-                    <div className="bg-mist-700 w-full h-fit flex">
-                        <DrawerTitle className="text-zinc-100 text-2xl m-1 ml-2">Items to Purchase</DrawerTitle>
-                    </div>
-                    <div className="">
-                        <ScrollArea className="h-screen w-full p-2 pr-3">
-                            {vendors.map(vendorName => (
-                                <Vendor
-                                    key={vendorName}
-                                    vendorName={vendorName}
-                                    items={getItemsForVendor(vendorName)}
-                                    orderedIds={orderedIds}
-                                    fees={feesByVendor[vendorName] ?? EMPTY_FEES}
-                                    toggleItemPurchased={toggleItemPurchased}
-                                    onFeeChange={(field, value) => updateFee(vendorName, field, value)}
-                                />
-                            ))}
-                            <Card className="bg-mist-700 pb-0 p-0 mb-10 p-2">
-                                <CardTitle className="text-zinc-100 text-2xl font-bold">Total Spending: ${calculateTotalCost().toFixed(2)}</CardTitle>
-                                <Button onClick={() => submitPurchases()} disabled={submitting || partialOrders.length > 0} className="">Purchase Items</Button>
-                            </Card>
-                        </ScrollArea>
-                    </div>
-                </DrawerContent>
-            </Drawer>
-        </div>
-    )
+    return <div>
+      <Button variant="outline" onClick={()=>setOpen(true)}>Purchase items</Button>
+      <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"}>
+        <DrawerContent className="purchase-detail-drawer">
+          <div className="flex items-center justify-between border-b p-6"><DrawerTitle>Purchase items</DrawerTitle><DrawerClose render={<Button variant="ghost" size="icon" aria-label="Close purchase items"/>}><X /></DrawerClose></div>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">{vendors.length ? vendors.map(vendorName=><Vendor key={vendorName} vendorName={vendorName} items={getItemsForVendor(vendorName)} orderedIds={orderedIds} fees={feesByVendor[vendorName] ?? EMPTY_FEES} toggleItemPurchased={toggleItemPurchased} onFeeChange={(field,value)=>updateFee(vendorName,field,value)}/>) : <p className="text-sm text-muted-foreground">No approved items are ready to purchase.</p>}</div>
+          <div className="space-y-3 border-t p-6">{error && <p role="alert" className="text-sm text-destructive">{error}</p>}{partialOrders.length>0 && <p className="text-sm text-muted-foreground">Select every item in a request to mark it purchased.</p>}<div className="flex flex-wrap items-center justify-between gap-4"><p className="font-semibold">Total: {calculateTotalCost().toLocaleString("en-US",{style:"currency",currency:"USD"})}</p><Button onClick={submitPurchases} disabled={submitting || partialOrders.length>0 || vendors.length===0} aria-busy={submitting}>{submitting && <Spinner data-icon="inline-start" aria-hidden="true" />}{submitting ? "Saving…" : "Purchase selected items"}</Button></div></div>
+        </DrawerContent>
+      </Drawer>
+    </div>;
 }
 
 interface VendorProps {
@@ -245,8 +222,8 @@ function Vendor({ items, vendorName, orderedIds, fees, toggleItemPurchased, onFe
     }
 
     return (
-        <Card className="bg-mist-700 pb-0 p-0 mb-3">
-            <CardTitle className={`text-zinc-100 text-base p-1 bg-mist-500 ${complete() ? "bg-emerald-600" : "bg-mist-500"}`}>{vendorName}</CardTitle>
+        <Card className="gap-4 p-4">
+            <CardTitle className="text-base">{vendorName}</CardTitle>
             <div className="p-1 pt-0">
                 <div className="flex flex-col gap-1">
                     {items.map(item => (
@@ -254,24 +231,24 @@ function Vendor({ items, vendorName, orderedIds, fees, toggleItemPurchased, onFe
                     ))}
                 </div>
             </div>
-            <div className="bg-mist-600 w-full p-1 flex gap-4">
-                <Field className="w-1/4 h-fit">
-                    <FieldLabel className="text-sm text-zinc-100">Tax<span className="text-destructive">*</span>: </FieldLabel>
+            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <Field >
+                    <FieldLabel className="text-sm text-foreground">Tax<span className="text-destructive">*</span>: </FieldLabel>
                     <div className="relative mt-1 mr-2 w-full">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-zinc-400 pointer-events-none">$</span>
-                        <Input type="text" inputMode="decimal" placeholder="0.00" value={fees.tax} onValueChange={(value) => onFeeChange("tax", value)} className="bg-mist-800 rounded-md pl-5 text-sm text-zinc-100 w-full"></Input>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">$</span>
+                        <Input aria-label="Tax" type="text" inputMode="decimal" placeholder="0.00" value={fees.tax} onValueChange={(value) => onFeeChange("tax", value)} className="bg-background rounded-md pl-5 text-sm text-foreground w-full"></Input>
                     </div>
                 </Field>
-                <Field className="w-1/4 h-fit">
-                    <FieldLabel className="text-sm text-zinc-100">Shipping<span className="text-destructive">*</span>: </FieldLabel>
+                <Field >
+                    <FieldLabel className="text-sm text-foreground">Shipping<span className="text-destructive">*</span>: </FieldLabel>
                     <div className="relative mt-1 mr-2 w-full">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-zinc-400 pointer-events-none">$</span>
-                        <Input type="text" inputMode="decimal" placeholder="0.00" value={fees.shipping} onValueChange={(value) => onFeeChange("shipping", value)} className="bg-mist-800 rounded-md pl-5 text-sm text-zinc-100 w-full"></Input>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">$</span>
+                        <Input aria-label="Shipping" type="text" inputMode="decimal" placeholder="0.00" value={fees.shipping} onValueChange={(value) => onFeeChange("shipping", value)} className="bg-background rounded-md pl-5 text-sm text-foreground w-full"></Input>
                     </div>
                 </Field>
-                <Field className="w-1/2 h-fit">
-                    <FieldLabel className="text-sm text-zinc-100">Order Number: </FieldLabel>
-                    <Input type="text" placeholder="" value={fees.orderNumber} onValueChange={(value) => onFeeChange("orderNumber", value)} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 w-full"></Input>
+                <Field className="col-span-2">
+                    <FieldLabel className="text-sm text-foreground">Order Number: </FieldLabel>
+                    <Input aria-label="Order number" type="text" placeholder="" value={fees.orderNumber} onValueChange={(value) => onFeeChange("orderNumber", value)} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1 w-full"></Input>
                 </Field>
             </div>
         </Card>
@@ -295,12 +272,12 @@ interface item {
 function Item({ id, ItemName, orderName, ItemCost, ItemQuantity, ItemLink, toggleItemPurchased, ordered }: item) {
 
     return (
-        <Card onClick={() => toggleItemPurchased(id)} className={`p-1 gap-0 cursor-pointer ${ordered ? "bg-emerald-600" : "bg-mist-500"}`}>
+        <Card role="checkbox" aria-checked={ordered} tabIndex={0} onKeyDown={e=>{if(e.target===e.currentTarget && (e.key==="Enter" || e.key===" ")){e.preventDefault();toggleItemPurchased(id);}}} onClick={() => toggleItemPurchased(id)} className={`p-3 gap-2 cursor-pointer focus-visible:ring-3 focus-visible:ring-ring ${ordered ? "border-primary bg-primary/10" : "hover:bg-muted"}`}>
             <div className="flex">
-                <CardTitle className="text-zinc-100">{ItemName}~{orderName}</CardTitle>
-                <Button className="bg-zinc-100 text-black text-lg hover:bg-zinc-300 ml-auto" onClick={(e) => { e.stopPropagation(); window.open(ItemLink, "_blank") }}><Globe /></Button>
+                <CardTitle className="text-foreground">{ItemName}<span className="block text-xs font-normal text-muted-foreground">{orderName}</span></CardTitle>
+                <Button variant="ghost" size="icon" aria-label={`Open ${ItemName} product page`} className="ml-auto" onClick={(e) => { e.stopPropagation(); window.open(ItemLink, "_blank") }}><Globe /></Button>
             </div>
-            <CardDescription className="text-zinc-200">x{ItemQuantity} at ${ItemCost.toFixed(2)}</CardDescription>
+            <CardDescription className="text-foreground">x{ItemQuantity} at ${ItemCost.toFixed(2)}</CardDescription>
         </Card>
     )
 }

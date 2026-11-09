@@ -1,10 +1,8 @@
 'use client'
 
-import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trash2, Pencil, Save, Globe, StickyNote } from "lucide-react"
-import { useState } from "react"
-import { Input } from "@base-ui/react/input"
+import { Input } from "@/components/ui/input"
+import { Trash2 } from "lucide-react"
 
 export interface ItemErrors {
     name?: string;
@@ -57,92 +55,17 @@ function sanitizeWholeNumber(value: string): string {
 }
 
 interface Item {
-    id: string;
-    name: string;
-    cost: number;
-    quantity: number;
-    link: string;
-    onDelete: (id: string) => void;
-    onUpdate: (id: string, updates: Partial<{ name: string; cost: number; quantity: number; link: string }>) => void;
-    defaultEdit?: boolean;
-    showErrors?: boolean;
+ id: string; name: string; cost: number; quantity: number; link: string; comments?: string;
+ onDelete: (id:string)=>void;
+ onUpdate: (id:string, updates:Partial<{name:string;cost:number;quantity:number;link:string;comments:string}>)=>void;
+ defaultEdit?:boolean; showErrors?:boolean;
 }
-
-export default function Item({ id, name, cost, quantity, link, onDelete, onUpdate, defaultEdit, showErrors }: Item) {
-    const [editMode, setEditMode] = useState(defaultEdit);
-    const [containsNote, setcontainsNote] = useState(false);
-    const [nameValue, setNameValue] = useState(name);
-    const [quantityValue, setQuantityValue] = useState(String(quantity));
-    const [costValue, setcostValue] = useState(String(cost));
-    const [linkValue, setLinkValue] = useState(String(link));
-    const [notes, setNotes] = useState(String(""));
-
-    const errors: ItemErrors = showErrors ? validateItem(name, cost, quantity, link) : {};
-
-    const handleQuantityChange = (value: string) => {
-        const cleaned = sanitizeWholeNumber(value);
-        setQuantityValue(cleaned);
-        onUpdate(id, { quantity: Number(cleaned) || 0 });
-    };
-
-    const handleCostChange = (value: string) => {
-        const cleaned = sanitizeNumber(value);
-        setcostValue(cleaned);
-        onUpdate(id, { cost: Number(cleaned) || 0 });
-    };
-
-    const handleNameChange = (value: string) => {
-        setNameValue(value);
-        onUpdate(id, { name: value });
-    };
-
-    const handleLinkChange = (value: string) => {
-        setLinkValue(value);
-        onUpdate(id, { link: value });
-    };
-
-    if (editMode && !containsNote) {
-        return (
-            <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex">
-                    <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className={`bg-mist-800 rounded-md pl-2 ${errors.name ? "border-2 border-red-600" : ""}`} type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
-                    <div className="flex ml-auto">
-                        <Button type="submit" className="mr-1 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => setcontainsNote(true)}><StickyNote /></Button>
-                        <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
-                    </div>
-                </div>
-                <CardDescription className="text-sm text-zinc-300">x<Input className={`bg-mist-800 rounded-md pl-2 w-12 ml-1 ${errors.quantity ? "border-2 border-red-600" : ""}`} value={quantityValue} type="text" inputMode="numeric" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className={`bg-mist-800 rounded-md pl-2 w-24 ml-1 ${errors.cost ? "border-2 border-red-600" : ""}`} value={costValue} type="text" inputMode="decimal" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
-                <div className="flex items-center gap-1 mt-1">
-                    <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                    <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className={`bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 ${errors.link ? "border-2 border-red-600" : ""}`}></Input>
-                </div>
-            </Card>
-        );
-    }
-
-    if (editMode && containsNote) {
-        return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
-                <div className="pl-2 pt-2">
-                    <div className="flex">
-                        <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className={`bg-mist-800 rounded-md pl-2 ${errors.name ? "border-2 border-red-600" : ""}`} type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
-                        <div className="flex ml-auto">
-                            <Button type="submit" className="mr-1 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => { setcontainsNote(false); setNotes(""); }}><StickyNote /></Button>
-                            <Button className="mr-2 bg-red-900/60 text-red-400 text-lg hover:bg-red-700/45" variant="destructive" onClick={() => onDelete(id)}><Trash2 /></Button>
-                        </div>
-                    </div>
-                    <CardDescription className="text-sm text-zinc-300">x<Input className={`bg-mist-800 rounded-md pl-2 w-12 ml-1 ${errors.quantity ? "border-2 border-red-600" : ""}`} value={quantityValue} type="text" inputMode="numeric" onValueChange={(value) => handleQuantityChange(String(value))} /> at $<Input className={`bg-mist-800 rounded-md pl-2 w-24 ml-1 ${errors.cost ? "border-2 border-red-600" : ""}`} value={costValue} type="text" inputMode="decimal" onValueChange={(value) => handleCostChange(String(value))} /></CardDescription>
-                    <div className="flex items-center gap-1 mt-1">
-                        <h1 className="shrink-0 text-sm text-zinc-100 mt-1">Link:</h1>
-                        <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className={`bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 ${errors.link ? "border-2 border-red-600" : ""}`}></Input>
-                    </div>
-                </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
-                    <Input type="text" placeholder="Notes" value={notes} onValueChange={(value) => setNotes(String(value))} className="bg-mist-800 rounded-md p-1 text-sm flex-1 text-zinc-100"></Input>
-                </Card>
-            </Card>
-        );
-    }
-
-    return null;
+export default function Item({id,name,cost,quantity,link,comments="",onDelete,onUpdate,showErrors}:Item) {
+ const errors = showErrors ? validateItem(name,cost,quantity,link) : {};
+ return <div className="space-y-4 rounded-lg border p-4">
+   <div className="flex items-start gap-3"><label className="purchase-edit-field flex-1"><span>Item name</span><Input value={name} onValueChange={v=>onUpdate(id,{name:String(v)})} aria-invalid={!!errors.name} aria-describedby={errors.name ? `${id}-name-error` : undefined} placeholder="e.g. Kraken X60 motor" />{errors.name && <span id={`${id}-name-error`} className="text-xs text-destructive">Enter an item name.</span>}</label><Button type="button" variant="ghost" size="icon" className="mt-6" aria-label="Remove item" onClick={()=>onDelete(id)}><Trash2 /></Button></div>
+   <div className="purchase-edit-grid"><label className="purchase-edit-field"><span>Quantity</span><Input type="number" min="1" step="1" value={quantity || ""} onValueChange={v=>onUpdate(id,{quantity:Number(v)})} aria-invalid={!!errors.quantity}/>{errors.quantity && <span className="text-xs text-destructive">Enter a whole number above zero.</span>}</label><label className="purchase-edit-field"><span>Unit price ($)</span><Input type="number" min="0.01" step="0.01" value={cost || ""} onValueChange={v=>onUpdate(id,{cost:Number(v)})} aria-invalid={!!errors.cost}/>{errors.cost && <span className="text-xs text-destructive">Enter a price above zero.</span>}</label></div>
+   <label className="purchase-edit-field"><span>Product link</span><Input type="url" value={link} onValueChange={v=>onUpdate(id,{link:String(v)})} placeholder="https://" aria-invalid={!!errors.link}/>{errors.link && <span className="text-xs text-destructive">Enter a complete product URL.</span>}</label>
+   <label className="purchase-edit-field"><span>Notes <span className="font-normal text-muted-foreground">(optional)</span></span><Input value={comments} onValueChange={v=>onUpdate(id,{comments:String(v)})} placeholder="Size, color, or other specifications" /></label>
+ </div>;
 }

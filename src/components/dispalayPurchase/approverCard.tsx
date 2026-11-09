@@ -1,11 +1,11 @@
 'use client'
 
-import { Card, CardTitle, CardDescription } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+import { Card,CardDescription,CardTitle } from "@/components/ui/card";
+import { useRef,useState } from "react";
+import { Avatar,AvatarFallback,AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
-import { useRef, useState } from "react";
 
 interface approvalInfo {
     approverName: string;
@@ -94,7 +94,10 @@ export default function Approver({ approverName, approverPicture, approverID, re
                 })
             });
 
-            if (res.ok && onWithdrawn) { onWithdrawn(); }
+            if (!res.ok) throw new Error("Could not withdraw approval.");
+            onWithdrawn?.();
+        } catch {
+            setApprovalError("Could not withdraw approval. Please try again.");
         } finally {
             setWithdrawing(false);
         }
@@ -123,7 +126,7 @@ export default function Approver({ approverName, approverPicture, approverID, re
         <Card className="h-fit gap-3">
             <div className="flex items-center justify-between gap-3">
                 <CardTitle className="min-w-0 text-base font-bold text-foreground">{cleanuser()}</CardTitle>
-                <Badge variant="outline" className="ml-auto w-36 shrink-0 justify-center whitespace-normal text-center text-foreground">
+                <Badge variant="outline" className="shrink-0">
                     {rejected ? "Rejected" : approved ? "Approved" : "Awaiting approval"}
                 </Badge>
             </div>
@@ -136,8 +139,8 @@ export default function Approver({ approverName, approverPicture, approverID, re
                         <Button disabled={disable || approving} onClick={approve}
                             aria-busy={approving}
                             aria-label={approving ? `Approving as ${cleanuser()}` : `Approve as ${cleanuser()}`}
-                            className="purchase-approve-button ml-auto shrink-0">
-                            {approving && <Spinner aria-hidden="true" />}
+                            size="lg" className="ml-auto">
+                            {approving && <Spinner data-icon="inline-start" aria-hidden="true" />}
                             <span aria-live="polite">{approving ? "Approving…" : "Approve"}</span>
                         </Button>
                     )}
@@ -152,7 +155,8 @@ export default function Approver({ approverName, approverPicture, approverID, re
                     </Avatar>
                     <CardDescription className="min-w-0 flex-1 text-foreground">{approverName}</CardDescription>
                     {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
-                        <Button disabled={withdrawing} onClick={withdraw} variant="outline" className="ml-auto">
+                        <Button disabled={withdrawing} aria-busy={withdrawing} onClick={withdraw} variant="outline" className="ml-auto">
+                            {withdrawing && <Spinner data-icon="inline-start" aria-hidden="true" />}
                             {withdrawing ? "Withdrawing…" : "Withdraw"}
                         </Button>
                     )}

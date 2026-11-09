@@ -157,3 +157,11 @@ Acceptance: finish the coverage gaps listed above; document screenshots for each
 2. Use quieter neutral status-filter buttons while retaining colored tags — proposed for review.
 3. Keep Kraken motors one-to-one, but make very large displays expandable — proposed for review.
 4. Confirm the intended JetBrains Mono exceptions beyond the brand before removing remaining explicit monospace classes.
+
+## Vega implementation update
+
+The approved direction is now **Vega**, replacing Mira. Shared primitives use official Vega definitions; the app theme and major screens have been rebuilt around those defaults. See [UI conventions and verification](./ui-design-system.md).
+
+Implemented in this pass: shared responsive navigation; one new-request form instance; readable status badges; consistent field/button sizes; mobile cost/action visibility; form labels and visible validation; new/edit notes propagation; existing-purchase save/cancel handling; truthful export feedback; bulk-purchase error retention; accessible purchase-card triggers and named purchase drawers; consistent currency/category presentation; budget summaries/empty states; responsive category drawers; standardized management menus.
+
+The original findings above describe the pre-migration audit, not the current appearance. Remaining items include manager-account visual coverage, production authentication, broader failure-path/keyboard review, URL navigation, and deciding whether very large Kraken displays should collapse.

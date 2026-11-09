@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from "react";
+import { Spinner } from "@/components/ui/spinner";
 import { getUserInfo } from "./auth/getUserInfo/getUserInfo";
 import { useRouter } from 'next/navigation'
 import Navbar from "@/components/ui/navbar";
@@ -171,9 +172,10 @@ export default function App() {
         <div className="app-frame">
             <Navbar user={user} currentPage={currentPage} setCurrentPage={switchPage} />
             <main className="app-main">
-                {currentPage === "/" && <Home onCreate={onCreate} currentUser={user} purchases={purchases} loadPurchases={loadPurchases} />}
-                {currentPage === "/budget" && <Budget categories={categories} fetchCategories={fetchCategories} currentUser={user} />}
-                {currentPage === "/admin" && <Admin currentUser={user} users={users ?? []} loadUsers={loadUsers} />}
+                {userLoading ? <div className="flex justify-center py-24"><Spinner className="size-6" /></div> : null}
+                {!userLoading && currentPage === "/" && <Home onCreate={onCreate} currentUser={user} purchases={purchases} loadPurchases={loadPurchases} />}
+                {!userLoading && currentPage === "/budget" && <Budget categories={categories} fetchCategories={fetchCategories} currentUser={user} />}
+                {!userLoading && currentPage === "/admin" && <Admin currentUser={user} users={users ?? []} loadUsers={loadUsers} />}
                 {currentPage === "/create" && <Create onDiscard={onDiscard} currentUser={user} />}
             </main>
         </div>

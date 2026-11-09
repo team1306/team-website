@@ -1,52 +1,42 @@
 'use client'
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil, X } from "lucide-react"
+import { Card,CardDescription,CardTitle } from "@/components/ui/card"
 import {
-    Drawer,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
+Dialog,
+DialogContent,
+DialogDescription,
+DialogTitle
+} from "@/components/ui/dialog"
+import {
+Drawer,
+DrawerContent,
+DrawerTitle
 } from "@/components/ui/drawer"
 import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuLabel,
+DropdownMenu,
+DropdownMenuContent,
+DropdownMenuGroup,
+DropdownMenuItem,
+DropdownMenuLabel,
+DropdownMenuSeparator,
+DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+Select,
+SelectContent,
+SelectItem,
+SelectTrigger,
+SelectValue
+} from "@/components/ui/select"
+import { EllipsisVertical,X } from "lucide-react"
+import { useEffect,useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
+import { Button } from "../ui/button"
 import Approver from "./approverCard"
 import { KrakenMeter } from "./krakenMeter"
-import { Button } from "../ui/button"
-import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useEffect } from "react"
 
 type request = {
     id: string;
@@ -106,11 +96,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 })
             });
 
-            const data = await res.json();
+            if (!res.ok) throw new Error("Could not complete the action. Please try again.");
             onPurchaseEdited();
 
         } catch (err) {
-            console.error('error:', err);
+            setSaveError(err instanceof Error ? err.message : "Could not complete the action.");
         }
     }
 
@@ -168,24 +158,26 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: name,
-                    requestor: "Example User",
+                    requestor: user.id,
                     category: itemCatagory,
                     items: itemsArray,
                     vendor: orderVendor,
                 })
             });
 
-            const data = await res.json();
+            if (!res.ok) throw new Error("Could not complete the action. Please try again.");
             onPurchaseEdited();
 
         } catch (err) {
-            console.error('error:', err);
+            setSaveError(err instanceof Error ? err.message : "Could not complete the action.");
         }
     }
 
     const [open, setOpen] = useState(false);
     const [itemsArray, setItems] = useState(items)
     const [editMode, setEditMode] = useState(false);
+    const [saving,setSaving] = useState(false);
+    const [saveError,setSaveError] = useState("");
     const userRole = user?.role;
 
     const [overideStatusOpen, setOverideStatusOpen] = useState(false);
@@ -206,97 +198,25 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         if (isKrakenMode) {
             return `${(total / KRAKEN_DIVISOR).toFixed(2)} Krakens`;
         }
-        return `$${total.toFixed(2)}`;
+        return total.toLocaleString("en-US", {style:"currency",currency:"USD"});
     }
 
-    const priceColor = isKrakenMode ? "text-blue-500" : "text-zinc-100";
 
     const [name, setName] = useState(itemName);
     const [itemCatagory, setItemCaragory] = useState(catagory);
     const [orderVendor, setOrderVendor] = useState(vendor);
+    const standardSuppliers = ["WCP", "CTRE", "Digi-Key", "AndyMark", "Mouser", "Amazon"];
+    const isOtherSupplier = !standardSuppliers.includes(orderVendor);
+    const otherSupplierName = orderVendor === "Other" ? "" : orderVendor.replace(/^Other - /, "");
     const [statusReason, setReason] = useState(reason || "");
 
     const selectedCategoryData = categories.find((c) => c.categoryID === itemCatagory);
     const categoryMax = selectedCategoryData?.categoryBudget ?? 4000;
 
-    const CategoryTitle = () => {
-        switch (itemCatagory) {
-            case "Robot":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Cog className="size-4 text-yellow-600" />
-                        <h2 className="text-base font-bold text-yellow-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Competition":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-red-400" />
-                        <h2 className="text-base font-bold text-red-400">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Tools":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Wrench className="size-4 text-rose-600" />
-                        <h2 className="text-base font-bold text-rose-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Field":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Volleyball className="size-4 text-lime-600" />
-                        <h2 className="text-base font-bold text-lime-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Outreach":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Handshake className="size-4 text-cyan-600" />
-                        <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
-                    </div>
-                )
-
-        }
-    }
-
     const statusBadge = () => {
-        switch (status) {
-            case "needsAproval":
-                return (
-                    <Badge className="status-badge status-needs-approval text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ">Needs Approval</Badge>
-                )
-            case "approved":
-                return (
-                    <Badge className="status-badge status-approved text-sm w-fit h-fit font-bold">Approved</Badge>
-                )
-            case "purchased":
-                return (
-                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ">Purchased</Badge>
-                )
-            case "selfPurchased":
-                return (
-                    <Badge className="status-badge status-self-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ">Self Purchased</Badge>
-                )
-            case "recived":
-                return (
-                    <Badge className="status-badge status-received text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ">Received</Badge>
-                )
-            case "rejected":
-                return (
-                    <Badge className="status-badge status-rejected text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ">Rejected</Badge>
-                )
-            case "onHold":
-                return (
-                    <Badge className="status-badge status-on-hold text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ">On Hold</Badge>
-                )
-        }
+        const labels:Record<string,[string,string]> = {needsAproval:["Needs approval","needs-approval"],approved:["Approved","approved"],purchased:["Purchased","purchased"],selfPurchased:["Self purchased","self-purchased"],recived:["Received","received"],rejected:["Rejected","rejected"],onHold:["On hold","on-hold"]};
+        const [label,tone] = labels[status] ?? [status,"on-hold"];
+        return <Badge variant="outline" className={`status-badge status-${tone}`}>{label}</Badge>;
     }
 
     const isTierTwo = () => {
@@ -306,10 +226,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         else {
             return (false);
         }
-    }
-
-    const calcPercent = () => {
-        return (Math.round(((categoryMax - calculatePrice()) / categoryMax) * 100))
     }
 
     const purchaseApprovers = () => {
@@ -376,11 +292,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 })
             });
 
-            const data = await res.json();
+            if (!res.ok) throw new Error("Could not complete the action. Please try again.");
             onPurchaseEdited();
 
         } catch (err) {
-            console.error('error:', err);
+            setSaveError(err instanceof Error ? err.message : "Could not complete the action.");
         }
     }
 
@@ -403,25 +319,22 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return `${mm}/${dd}/${yy}`;
     }
 
-    async function editPurchase(overrideStatus?: string, clearApprovers?: boolean,) {
-        const updatedData = {
-            id: id,
-            title: name,
-            category: itemCatagory,
-            vendor: orderVendor,
-            items: itemsArray,
-            reason: statusReason,
-            status: overrideStatus,
-            clearApprovers: clearApprovers,
-        };
-
-        await fetch('/api/order/edit', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedData),
-        });
-
-        onPurchaseEdited();
+    function cancelEdit() {
+        setName(itemName); setItems(items); setItemCaragory(catagory); setOrderVendor(vendor); setReason(reason || ""); setEditMode(false); setSaveError("");
+    }
+    async function editPurchase(overrideStatus?:string,clearApprovers?:boolean) {
+        if(saving) return;
+        if (editMode && isOtherSupplier && !otherSupplierName.trim()) {
+            setSaveError("Enter a supplier name before saving.");
+            return;
+        }
+        setSaving(true);setSaveError("");
+        try {
+            const res=await fetch('/api/order/edit',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,title:name,category:itemCatagory,vendor:orderVendor,items:itemsArray,reason:statusReason,status:overrideStatus,clearApprovers})});
+            if(!res.ok) throw new Error("Could not save changes. Please try again.");
+            await onPurchaseEdited();setEditMode(false);
+        } catch(err) { setSaveError(err instanceof Error ? err.message : "Could not save changes."); }
+        finally {setSaving(false);}
     }
 
     const MAX_VISIBLE_ITEMS = 4;
@@ -444,6 +357,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     cost={item.ItemCost}
                     quantity={item.ItemQuantity}
                     link={item.ItemLink}
+                    comments={item.comments}
                     defaultEdit={editMode}
                     onUpdate={updateItem}
                     isKrakenMode={isKrakenMode}
@@ -454,47 +368,32 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     return (
         <div>
-            <Card className="purchase-summary-card p-2 h-fit cursor-pointer bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground" onClick={() => setOpen(true)}>
+            <Card className="purchase-summary-card cursor-pointer" role="button" tabIndex={0} aria-label={`View ${itemName}`} onClick={()=>setOpen(true)} onKeyDown={e=>{if(e.key==="Enter" || e.key===" "){e.preventDefault();setOpen(true);}}}>
                 <div className="purchase-summary-row">
                     <div className="min-w-0">
-                        <CardTitle className="text-2xl font-title font-bold text-zinc-100 truncate">{name || "Untitled Request"}</CardTitle>
-                        <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
+                        <CardTitle className="truncate text-sm font-medium">{itemName || "Untitled request"}</CardTitle>
+                        <CardDescription className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                            <span className="break-words">{selectedCategoryData?.categoryName ?? catagory}{selectedCategoryData?.categoryPhase && ` · ${selectedCategoryData.categoryPhase}`}</span>
+                            <span aria-hidden="true">/</span>
+                            <span>{requestor} · {requestedDate}</span>
+                        </CardDescription>
                     </div>
-                    <div className="purchase-summary-tags">
-                            {statusBadge()}
-                            {(expidited == "requested") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-violet-500 bg-transparent font-bold text-violet-500">Expedited Requested</Badge>
-                            )}
-                            {(expidited == "approved") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500">Expedited</Badge>
-                            )}
-                            {(expidited == "rejected") && (
-                                <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500">Expedited Rejected</Badge>
-                            )}
-                    </div>
-                    <div className="purchase-summary-facts hidden md:grid grid-cols-2 gap-3">
-                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28 flex items-center">
-                            <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
-                        </div>
-                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
-                            <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
-                            <div className="flex items-center gap-2">
-                                {CategoryTitle()}
-                            </div>
-                        </div>
+                    <div className="purchase-summary-status-and-cost">
+                    <div className="purchase-summary-tags">{statusBadge()}{expidited==="requested" && <Badge variant="outline">Expedite requested</Badge>}{expidited==="approved" && <Badge variant="outline">Expedited</Badge>}</div>
+                    <div className="purchase-summary-facts"><p className="text-sm font-medium">{displayPrice()}</p></div>
                     </div>
                 </div>
-                {isKrakenMode && <KrakenMeter amount={calculatePrice() / KRAKEN_DIVISOR} />}
+                {isKrakenMode && <KrakenMeter amount={calculatePrice()/KRAKEN_DIVISOR} />}
             </Card>
-                <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"}>
-                    <DrawerContent className="purchase-detail-drawer [--drawer-inset:0px] w-full md:w-auto h-[90vh] md:h-full flex flex-col overflow-hidden">
-                        <Card className="purchase-detail-header p-0 mb-0 gap-0 shrink-0">
+                <Drawer open={open} onOpenChange={next=>{setOpen(next);if(!next)cancelEdit();}} swipeDirection={isMobile ? "down" : "right"}>
+                    <DrawerContent className="purchase-detail-drawer overflow-hidden">
+                        <div className="purchase-detail-header shrink-0">
                             {(editMode) && (
                                 <div className="purchase-edit-toolbar">
-                                    <h1 className="text-lg font-semibold">Edit purchase</h1>
+                                    <DrawerTitle>Edit purchase</DrawerTitle>
                                     <div className="flex ml-auto">
-                                        <Button className="h-11 px-4" onClick={() => { setEditMode(false); editPurchase("needsAproval", true); }}>Save</Button>
-                                        <Button variant="outline" className="ml-2 h-11 w-11" aria-label="Exit edit mode" onClick={() => { setEditMode(false) }}><X aria-hidden="true" /></Button>
+                                        <Button disabled={saving} aria-busy={saving} onClick={() => { editPurchase("needsAproval", true); }}>{saving && <Spinner data-icon="inline-start" aria-hidden="true" />}{saving ? "Saving…" : "Save changes"}</Button>
+                                        <Button variant="outline" size="icon" className="ml-2" disabled={saving} aria-label="Cancel edits" onClick={cancelEdit}><X aria-hidden="true" /></Button>
                                     </div>
                                 </div>
                             )}
@@ -504,11 +403,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 )}
                                 {(!editMode) && (
                                     <div className="purchase-detail-title-row">
-                                        <CardTitle className="purchase-detail-title">{name}</CardTitle>
+                                        <DrawerTitle className="purchase-detail-title">{name}</DrawerTitle>
                                         <div className="shrink-0">
                                             {statusBadge()}
                                         </div>
-                                <Button type="button" onClick={(event) => { event.stopPropagation(); setOpen(false); }} variant="ghost" size="icon" aria-label="Close purchase details" className="purchase-detail-close"><X aria-hidden="true" /></Button>
+                                <Button type="button" onClick={(event) => { event.stopPropagation(); setOpen(false); cancelEdit(); }} variant="ghost" size="icon" aria-label="Close purchase details" className="purchase-detail-close"><X aria-hidden="true" /></Button>
                                     </div>
                                 )}
                             </div>
@@ -545,7 +444,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuGroup>
                                                         <DropdownMenuLabel className="font-bold">Admin Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Overide Status</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setOverideStatusOpen(true)}>Override status</DropdownMenuItem>
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateExpidite(id, "approved") }}>Expedite</DropdownMenuItem>
                                                         )}
@@ -555,92 +454,103 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                         {(userRole == "programDirector" || userRole == "teamAdministrator") && (
                                                             <DropdownMenuItem onClick={() => { updateStatus(id, "purchased"); }}>Mark as Ordered</DropdownMenuItem>
                                                         )}
-                                                        <DropdownMenuItem onClick={() => { deletePurchase(); }} variant="destructive">Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => { deletePurchase().catch(err=>setSaveError(err.message)); }} variant="destructive">Delete</DropdownMenuItem>
                                                     </DropdownMenuGroup>
                                                 </div>
                                             )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                     <Dialog open={overideStatusOpen} onOpenChange={setOverideStatusOpen}>
-                                        <DialogContent className="bg-mist-400 p-4">
-                                            <DialogTitle className="font-jetbrains text-xl font-bold">Change Status</DialogTitle>
-                                            <h1 className="text-zinc-100 mb-2">Current Status: {statusBadge()}</h1>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "needsAproval"); }} className="text-xs p-3 font-bold text-zinc-100 bg-amber-500 hover:bg-amber-600 cursor-pointer">Needs Approval</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "approved"); }} className="status-approved-action text-base p-3 font-bold cursor-pointer">Approved</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "purchased"); }} className="text-base p-3 font-bold text-zinc-100 bg-pink-500 hover:bg-pink-600 cursor-pointer">Purchased</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "recived"); }} className="text-base p-3 font-bold text-zinc-100 bg-green-500 hover:bg-green-600 cursor-pointer">Received</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "onHold"); }} className="text-base p-3 font-bold text-orange-100 bg-orange-500 hover:bg-orange-600 cursor-pointer">On Hold</Button>
-                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "rejected"); }} className="text-base p-3 font-bold text-zinc-100 bg-red-500 hover:bg-red-600 cursor-pointer">Rejected</Button>
+                                        <DialogContent >
+                                            <DialogTitle className="text-lg font-semibold">Change Status</DialogTitle>
+                                            <h1 className="text-foreground mb-2">Current Status: {statusBadge()}</h1>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "needsAproval"); }} variant="outline">Needs Approval</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "approved"); }} variant="outline">Approved</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "purchased"); }} variant="outline">Purchased</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "recived"); }} variant="outline">Received</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "onHold"); }} variant="outline">On Hold</Button>
+                                                <Button onClick={() => { setOverideStatusOpen(false); updateStatus(id, "rejected"); }} variant="outline">Rejected</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
                                     <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-                                        <DialogContent className="bg-mist-400 p-4">
-                                            <DialogTitle className="font-jetbrains text-xl font-bold">Reject Order</DialogTitle>
-                                            <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                                        <DialogContent >
+                                            <DialogTitle className="text-lg font-semibold">Reject Order</DialogTitle>
+                                            <Input aria-label="Reason" type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1"></Input>
                                             <div className="flex">
-                                                <Button onClick={() => { setRejectOpen(false); editPurchase("rejected"); }} className="bg-destructive/50 text-zinc-100 hover::bg-red-600 w-fit p-2 ml-auto" variant="destructive">Reject</Button>
+                                                <Button onClick={() => { setRejectOpen(false); editPurchase("rejected"); }} className="ml-auto" variant="destructive">Reject</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
                                     <Dialog open={onHoldOpen} onOpenChange={setOnHoldOpen}>
-                                        <DialogContent className="bg-mist-400 p-4">
-                                            <DialogTitle className="font-jetbrains text-xl font-bold">Mark Order on Hold</DialogTitle>
-                                            <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                                        <DialogContent >
+                                            <DialogTitle className="text-lg font-semibold">Mark Order on Hold</DialogTitle>
+                                            <Input aria-label="Reason" type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1"></Input>
                                             <div className="flex">
-                                                <Button onClick={() => { setOnHoldOpen(false); editPurchase("onHold"); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark On Hold</Button>
+                                                <Button onClick={() => { setOnHoldOpen(false); editPurchase("onHold"); }} className="ml-auto">Mark On Hold</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
                                     <Dialog open={receivedOpen} onOpenChange={setReceivedOpen}>
-                                        <DialogContent className="bg-mist-400 p-4">
-                                            <DialogTitle className="font-jetbrains text-xl font-bold">Mark Order as Received</DialogTitle>
+                                        <DialogContent >
+                                            <DialogTitle className="text-lg font-semibold">Mark Order as Received</DialogTitle>
                                             <div className="gap-0 w-full p-0">
-                                                <DialogDescription className="text-zinc-600 text-sm p-0 mt-1">What happened to the item?</DialogDescription>
-                                                <Input type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 w-full"></Input>
+                                                <DialogDescription className="text-muted-foreground text-sm p-0 mt-1">What happened to the item?</DialogDescription>
+                                                <Input aria-label="Reason" type="text" value={statusReason} onValueChange={(value) => setReason(String(value))} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1 w-full"></Input>
                                             </div>
                                             <div className="flex">
-                                                <Button onClick={() => { setReceivedOpen(false); editPurchase("recived", false); }} className="bg-green-700 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Mark Received</Button>
+                                                <Button onClick={() => { setReceivedOpen(false); editPurchase("recived", false); }} className="ml-auto">Mark Received</Button>
                                             </div>
                                         </DialogContent>
                                     </Dialog>
                                 </div>
                             </div>
                             {(reason && status === "rejected") && (
-                                <div className="bg-red-600 flex rounded-bl-sm">
-                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1 mb-1">Rejected: {reason}</h1>
+                                <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                                    <h1 className="text-sm">Rejected: {reason}</h1>
                                 </div>
                             )}
                             {(reason && status === "onHold") && (
-                                <div className="bg-orange-600 flex rounded-bl-sm">
-                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1 mb-1">On Hold: {reason}</h1>
+                                <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
+                                    <h1 className="text-sm">On Hold: {reason}</h1>
                                 </div>
                             )}
                             {(reason && status === "recived") && (
-                                <div className="bg-green-600 flex rounded-bl-sm">
-                                    <h1 className="text-zinc-100 text-lg ml-2 mt-1 mb-1">Received: {reason}</h1>
+                                <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
+                                    <h1 className="text-sm">Received: {reason}</h1>
                                 </div>
                             )}
-                        </Card>
+                        </div>
+                        {saveError && <p role="alert" className="px-6 py-3 text-sm text-destructive">{saveError}</p>}
+                        <ScrollArea className="purchase-detail-scroll w-full flex-1 min-h-0">
+                            {!editMode && (
+                                <section className="purchase-detail-section">
+                                    <dl className="grid gap-4 sm:grid-cols-2 text-sm">
+                                        <div className="min-w-0"><dt className="text-muted-foreground">Budget category</dt><dd className="mt-1 font-medium break-words">{(selectedCategoryData?.categoryName ?? itemCatagory) || "Uncategorized"}</dd>{selectedCategoryData?.categoryPhase && <dd className="mt-1 text-muted-foreground">{selectedCategoryData.categoryPhase}</dd>}</div>
+                                        <div className="min-w-0"><dt className="text-muted-foreground">Supplier</dt><dd className="mt-1 font-medium break-words">{orderVendor || "Not specified"}</dd></div>
+                                    </dl>
+                                </section>
+                            )}
+
                         {(editMode) && (
-                            <Card className="purchase-edit-info gap-3 shrink-0">
+                            <div className="purchase-edit-info space-y-4 border-b p-6">
                                 <CardTitle className="text-base text-foreground font-semibold">Request details</CardTitle>
                                 <div className="purchase-edit-grid">
                                     <div className="purchase-edit-field min-w-0 flex-1">
-                                        <h1 className="text-zinc-100 text-xs">Category:</h1>
+                                        <span id={`category-label-${id}`}>Category</span>
                                         <Select required value={itemCatagory} onValueChange={(value) => setItemCaragory(String(value))}>
-                                            <SelectTrigger className="cursor-pointer w-full h-11 text-base">
-                                                <SelectValue className="text-zinc-100" placeholder="Select a category" />
+                                            <SelectTrigger aria-labelledby={`category-label-${id}`} className="w-full">
+                                                <SelectValue className="text-foreground" placeholder="Select a category" />
                                             </SelectTrigger>
                                             <SelectContent> {categories.filter((selectcategory) => selectcategory.enabled || selectcategory.categoryID === itemCatagory).map((selectcategory) => (<SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>))} </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="purchase-edit-field min-w-0 flex-1">
-                                        <Select required value={orderVendor} onValueChange={(value) => setOrderVendor(String(value))}>
-                                            <h1 className="text-zinc-100 text-xs">Supplier:</h1>
-                                            <SelectTrigger className="cursor-pointer w-full h-11 text-base">
-                                                <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
+                                        <Select required value={isOtherSupplier ? "Other" : orderVendor} onValueChange={(value) => setOrderVendor(String(value ?? ""))}>
+                                            <span id={`supplier-label-${id}`}>Supplier</span>
+                                            <SelectTrigger aria-labelledby={`supplier-label-${id}`} className="w-full">
+                                                <SelectValue className="text-foreground" placeholder="Select a supplier" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="WCP">WCP</SelectItem>
@@ -652,13 +562,20 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                                 <SelectItem value="Other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        {isOtherSupplier && (
+                                            <label className="purchase-edit-field">
+                                                <span>Supplier name</span>
+                                                <Input required value={otherSupplierName} placeholder="Enter supplier name"
+                                                    onValueChange={(value) => { setOrderVendor("Other - " + value); setSaveError(""); }} />
+                                            </label>
+                                        )}
                                     </div>
                                 </div>
-                            </Card>
+                            </div>
                         )}
-                        <ScrollArea className="purchase-detail-scroll w-full flex-1 min-h-0">
+
                             {(status == 'needsAproval' || status == 'approved') && (
-                                <Card className="purchase-detail-section gap-0">
+                                <section className="purchase-detail-section">
                                     {(status == 'approved' && expidited != "approved") && (
                                         <h1 className="purchase-timing-banner">Will be Ordered: {getNextPurchaseDate()}</h1>
                                     )}
@@ -671,70 +588,49 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     {(expidited == "approved" && status == "approved") && (
                                         <h1 className="purchase-timing-banner">Expedited: Can be Ordered Now</h1>
                                     )}
-                                </Card>
+                                </section>
                             )}
-                            <Card className="purchase-detail-section gap-0">
+                            <section className="purchase-detail-section">
                                 <div className="flex">
                                     {(!editMode) && (
-                                        <CardTitle className="text-lg text-zinc-100 font-bold">Items</CardTitle>
+                                        <CardTitle className="text-lg text-foreground font-bold">Items</CardTitle>
                                     )}
                                     {(editMode) && (
-                                        <CardTitle className="text-lg text-zinc-100 font-bold">Edit Items</CardTitle>
+                                        <CardTitle className="text-lg text-foreground font-bold">Edit Items</CardTitle>
                                     )}
                                     <div className="flex ml-auto">
                                     </div>
                                 </div>
-                                {needsScroll ? (
+                                {needsScroll && !editMode ? (
                                     <ScrollArea style={{ height: `${MAX_VISIBLE_ITEMS * ITEM_HEIGHT}px` }} className="w-full rounded-md pr-3">
                                         {itemList}
                                     </ScrollArea>
                                 ) : (
                                     itemList
                                 )}
-                                {(editMode) && (
-                                    <div className="p-2 bg-mist-700 m-2 rounded-md mt-3">
-                                        <Progress
-                                            className=""
-                                            max={categoryMax}
-                                            value={calculatePrice()}
-                                        >
-                                            <div className="flex w-full">
-                                                <ProgressLabel className="text-zinc-100 text-sm mr-auto">Remaining Budget</ProgressLabel>
-                                                {(calcPercent() > 10) && (
-                                                    <h1 className="ml-auto text-red-400 text-sm">{calcPercent()}% Remains</h1>
-                                                )}
-                                                {(calcPercent() < 10 && !(calcPercent() < 0)) && (
-                                                    <h1 className="ml-auto text-orange-500 text-sm">{calcPercent()}% Remains</h1>
-                                                )}
-                                                {(calcPercent() < 0) && (
-                                                    <h1 className="ml-auto text-red-500 text-sm">{calcPercent()}% Remains</h1>
-                                                )}
-                                            </div>
-                                        </Progress>
-                                    </div>
-                                )}
+                                {editMode && selectedCategoryData && <div className="mt-4 rounded-lg border p-4 text-sm"><p className="text-muted-foreground">Category budget remaining after this request</p><p className="mt-1 font-medium">{(categoryMax-selectedCategoryData.categorySpent-calculatePrice()).toLocaleString("en-US",{style:"currency",currency:"USD"})}</p></div>}
                                 <div className="purchase-total-summary">
                                     <div className="flex items-center justify-between gap-4">
                                         <span className="text-sm text-muted-foreground">Total</span>
-                                        <span className="text-xl font-semibold text-foreground">${calculatePrice().toFixed(2)}</span>
+                                        <span className="text-xl font-semibold text-foreground">{calculatePrice().toLocaleString("en-US",{style:"currency",currency:"USD"})}</span>
                                     </div>
                                     {isKrakenMode && <KrakenMeter amount={calculatePrice() / KRAKEN_DIVISOR} />}
                                 </div>
-                            </Card>
+                            </section>
                             {(!editMode) && (
-                                <Card className="purchase-detail-section gap-0">
-                                    <CardTitle className="text-lg text-zinc-100 font-bold">Approvers</CardTitle>
+                                <section className="purchase-detail-section">
+                                    <CardTitle className="text-lg text-foreground font-bold">Approvers</CardTitle>
                                     {hasOtherApprovedVendorOrders && (
                                         <div className="pt-2">
-                                            <Card className="purchase-vendor-warning w-full p-0">
-                                                <h1>This vendor has other approved orders</h1>
-                                            </Card>
+                                            <div className="purchase-vendor-warning">
+                                                <p>This supplier has other approved orders.</p>
+                                            </div>
                                         </div>
                                     )}
                                     <div className="purchase-detail-approvers">
                                         {purchaseApprovers()}
                                     </div>
-                                </Card>
+                                </section>
                             )}
                         </ScrollArea>
                     </DrawerContent>

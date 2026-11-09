@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/ui/spinner";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { toast } from "./ui/toast";
@@ -13,6 +14,7 @@ export function ExportPurchases({
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = async () => {
+    if (loading) return;
     setLoading(true);
     setError(null);
 
@@ -25,11 +27,6 @@ export function ExportPurchases({
           const body = await response.json();
           message = body.error ?? message;
         } catch {}
-        toast.add({
-            type: "error",
-            title: "Error Generating Spending Report",
-            description: "Could not export data",
-          })
         throw new Error(message);
       }
 
@@ -43,6 +40,7 @@ export function ExportPurchases({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      toast.add({type:"success",title:"Spending report downloaded"});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");
       toast.add({
@@ -51,16 +49,13 @@ export function ExportPurchases({
       })
     } finally {
       setLoading(false);
-      toast.add({
-        type: "success",
-        title: "Generated Spending Report",
-      })
+
     }
   };
 
   return (
     <div>
-      <Button className="cursor-pointer text-base w-fit p-3" onClick={handleExport}>Generate Spending Report</Button>
+      <Button variant="outline" disabled={loading} aria-busy={loading} onClick={handleExport}>{loading && <Spinner data-icon="inline-start" aria-hidden="true" />}{loading ? "Exporting…" : "Export spending"}</Button>{error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
     </div>
   );
 }

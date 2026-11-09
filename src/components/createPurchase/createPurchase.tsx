@@ -1,31 +1,25 @@
 'use client'
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-    Field,
-    FieldLabel,
-} from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button"
-import { StickyNotePlus, Plus, X } from "lucide-react"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+Dialog,
+DialogClose,
+DialogContent,
+DialogTitle,
+DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import {
+Select,
+SelectContent,
+SelectItem,
+SelectTrigger,
+SelectValue,
 } from "@/components/ui/select"
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
-import { Input } from "@base-ui/react"
-import { useState, useEffect } from "react";
-import Item, { validateItem } from "./itemCard";
 import { toast } from "@/components/ui/toast"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Plus,X } from "lucide-react"
+import { useEffect,useState } from "react"
+import Item,{ validateItem } from "./itemCard"
 
 interface UserData {
     id: string;
@@ -48,6 +42,7 @@ interface ItemData {
     ItemCost: number;
     ItemQuantity: number;
     ItemLink: string;
+    comments?: string;
 }
 
 interface CategoryData {
@@ -96,13 +91,6 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     const orderTotal = items.reduce((sum, item) => sum + item.ItemCost * item.ItemQuantity, 0);
     const selectedCategoryBudget = categories.find((c) => c.categoryID === catagory)?.categoryBudget ?? 0;
     const selectedCategorySpent = categories.find((c) => c.categoryID === catagory)?.categorySpent ?? 0;
-
-    const data = [
-        { name: "Spent", value: selectedCategorySpent },
-        { name: "Remains", value: Math.max(0, selectedCategoryBudget - selectedCategorySpent - orderTotal) },
-        { name: "Order Cost", value: orderTotal },
-    ];
-    const COLORS = ["#a91f2c", "#d63c4b", "#f07782"];
 
     function clearError(key: keyof FormErrors) {
         setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -157,9 +145,9 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
             ...prev,
             {
                 id: crypto.randomUUID(),
-                ItemName: "New Item",
+                ItemName: "",
                 ItemCost: 0,
-                ItemQuantity: 0,
+                ItemQuantity: 1,
                 ItemLink: "",
             },
         ]);
@@ -173,7 +161,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
 
     const updateItem = (
         id: string,
-        updates: Partial<{ name: string; cost: number; quantity: number; link: string }>
+        updates: Partial<{ name: string; cost: number; quantity: number; link: string; comments: string }>
     ) => {
         setItems((prev) =>
             prev.map((item) =>
@@ -184,6 +172,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                         ...(updates.cost !== undefined && { ItemCost: updates.cost }),
                         ...(updates.name !== undefined && { ItemName: updates.name }),
                         ...(updates.link !== undefined && { ItemLink: updates.link }),
+                        ...(updates.comments !== undefined && { comments: updates.comments }),
                     }
                     : item
             )
@@ -258,154 +247,47 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
 
             if (res.ok) {
                 toast.add({
-                    title: "Item Created",
+                    title: "Request created",
                 });
                 onPurchaseCreated?.();
                 resetForm();
                 overrideOpen(false);
             } else {
                 toast.add({
-                    title: "Error",
+                    type: "error", title: "Could not create request", description: "Your draft is saved here. Please try again.",
                 });
             }
         } catch (err) {
             console.error(err);
             toast.add({
-                title: "Error",
+                type: "error", title: "Could not create request", description: "Your draft is saved here. Please try again.",
             });
         } finally {
             setSubmitting(false);
         }
     }
 
-    function budgetRemainPercent(): number {
-        if (selectedCategoryBudget <= 0) return 0;
-        return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
-    }
-
     return (
-        <div>
-            <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-                <DialogTrigger render={<Button className="cursor-pointer text-base w-full p-3 md:w-fit"><StickyNotePlus className="mr-1" />New Request</Button>}></DialogTrigger>
-                <DialogContent showCloseButton={false} className="purchase-create-dialog bg-mist-700 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl lg:w-[min(88rem,calc(100vw-2rem))] lg:max-w-none max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden p-3 sm:p-4">
-                    <div className="purchase-dialog-heading">
-                        <DialogTitle className="text-2xl sm:text-3xl text-zinc-100 font-bold">New purchase request</DialogTitle>
-                        <DialogClose render={<Button type="button" variant="ghost" size="icon" className="purchase-dialog-close" aria-label="Close new purchase request" />}>
-                            <X aria-hidden="true" />
-                        </DialogClose>
-                    </div>
-                    <div className="purchase-create-layout grid grid-cols-1 lg:grid-cols-[minmax(210px,0.8fr)_minmax(270px,1.1fr)_minmax(280px,1fr)] gap-3 items-stretch w-full min-w-0">
-                        <Card className="w-full min-w-0 gap-0 bg-mist-600 text-zinc-100 pt-0">
-                            <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
-                            </Card>
-                            <div className="p-2 w-full">
-                                <h1 className="text-4xl sm:text-5xl font-bold mt-4 text-red-400">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
-                                <h2 className="text-lg mt-2">Remaining budget ({budgetRemainPercent()}%)</h2>
-                                <ResponsiveContainer width="100%" height={260}>
-                                    <PieChart>
-                                        <Pie
-                                            data={data}
-                                            dataKey="value"
-                                            nameKey="name"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={90}
-                                            isAnimationActive={true}
-                                        >
-                                            {data.map((entry, index) => (
-                                                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Card>
-                        <div className="purchase-info-column w-full min-w-0">
-                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 pt-0">
-                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Info</CardTitle>
-                                </Card>
-                                <div className="p-2 w-full">
-                                    <Field>
-                                        <FieldLabel>Request Name: <span className="text-destructive">*</span></FieldLabel>
-                                        <Input value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="ex: CTRE Restock" className={`font-title bg-input/20 ${errors.name ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-xs p-1 w-full`} />
-                                    </Field>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <Field className="w-full min-w-0">
-                                            <FieldLabel className="mt-2">Category: <span className="text-destructive">*</span></FieldLabel>
-                                            <Select value={catagory} onValueChange={(value) => handleCategoryChange(String(value))}>
-                                                <SelectTrigger className={`cursor-pointer w-full ${errors.category ? "border-2 border-red-600" : ""}`}>
-                                                    <SelectValue className="text-zinc-100" placeholder="Select a category" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {categories.filter((selectcategory) => selectcategory.enabled).map((selectcategory) => (
-                                                        <SelectItem key={selectcategory.categoryID} value={selectcategory.categoryID}>{selectcategory.categoryName}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </Field>
-                                        <Field className="mt-2 min-w-0">
-                                            <FieldLabel>Supplier: <span className="text-destructive">*</span></FieldLabel>
-                                            <Select value={supplierPicker} onValueChange={(value) => handleSupplierChange(String(value))}>
-                                                <SelectTrigger className={`cursor-pointer w-full ${errors.supplier ? "border-2 border-red-600" : ""}`}>
-                                                    <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="WCP">WCP</SelectItem>
-                                                    <SelectItem value="CTRE">CTRE</SelectItem>
-                                                    <SelectItem value="Digi-Key">Digi-Key</SelectItem>
-                                                    <SelectItem value="Mouser">Mouser</SelectItem>
-                                                    <SelectItem value="Amazon">Amazon</SelectItem>
-                                                    <SelectItem value="Multiple">Multiple</SelectItem>
-                                                    <SelectItem value="Other">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {(supplierPicker == "Other") && (
-                                                <Input value={otherSupplier} onValueChange={(value) => handleOtherSupplierChange(value)} id="value" autoComplete="off" placeholder="Other Vendor Name" className={`bg-input/20 ${errors.otherSupplier ? "border-2 border-red-600" : "border-1 border-zinc-100"} rounded-md mt-1 text-sm p-1 w-full`} />
-                                            )}
-                                        </Field>
-                                    </div>
-                                </div>
-                            </Card>
-                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 mt-2 pb-0 pt-0">
-                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                    <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Best Practices</CardTitle>
-                                </Card>
-                                <CardDescription className="ml-2 pb-5 text-zinc-100">Purchasing Guidelines</CardDescription>
-                            </Card>
-                        </div>
-                        <div className="flex flex-col gap-3 w-full min-w-0">
-                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 flex-1 flex flex-col min-h-0 pt-0">
-                                <Card className="p-1 mb-0 bg-mist-800 rounded-t-md rounded-b-none">
-                                    <div className="flex m-1">
-                                        <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Items</CardTitle>
-                                        <Button className="cursor-pointer ml-auto mr-2 bg-red-500 text-sm hover:bg-red-600" onClick={addItem}><Plus />Add</Button>
-                                    </div>
-                                </Card>
-                                <div className="p-2 w-full flex-1 overflow-auto min-h-0">
-                                    <ScrollArea className="h-[240px] sm:h-[310px] w-full rounded-md pr-4">
-                                        {items.map((item) => (
-                                            <Item id={item.id} key={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} onDelete={deleteItem} onUpdate={updateItem} defaultEdit={true} showErrors={showItemErrors} />
-                                        ))}
-                                    </ScrollArea>
-                                </div>
-                            </Card>
-                            <Card className="w-full gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
-                                <h2>Order Total:</h2>
-                                <div className="flex">
-                                    <h1 className="text-2xl font-bold text-red-400">${orderTotal.toFixed(2)}</h1>
-                                    <div className="ml-auto flex gap-2">
-                                        <Button onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
-                                        <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
-                                    </div>
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        </div>
-    )
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogTrigger render={<Button />}><Plus data-icon="inline-start" />New request</DialogTrigger>
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl" showCloseButton={false}>
+          <div className="flex items-start justify-between gap-4 border-b p-6"><div className="space-y-1"><DialogTitle>New purchase request</DialogTitle><p className="text-sm text-muted-foreground">Add the details your approvers need.</p></div><DialogClose render={<Button variant="ghost" size="icon" aria-label="Close new request" />}><X /></DialogClose></div>
+          <div className="min-h-0 space-y-6 overflow-y-auto p-6">
+            <label className="purchase-edit-field"><span>Request name</span><Input value={name} onValueChange={handleNameChange} placeholder="e.g. Drivetrain parts" aria-invalid={!!errors.name}/>{errors.name && <span className="text-xs text-destructive">{errors.name}</span>}</label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="purchase-edit-field"><span id="request-category-label">Budget category</span><Select value={catagory} onValueChange={v=>handleCategoryChange(String(v ?? ""))}><SelectTrigger aria-labelledby="request-category-label" aria-invalid={!!errors.category} className="w-full"><SelectValue placeholder="Select a category" /></SelectTrigger><SelectContent>{categories.filter(c=>c.enabled).map(c=><SelectItem key={c.categoryID} value={c.categoryID}>{c.categoryName} · {c.categoryPhase}</SelectItem>)}</SelectContent></Select>{errors.category && <span className="text-xs text-destructive">{errors.category}</span>}</div>
+              <div className="purchase-edit-field"><span id="request-vendor-label">Supplier</span><Select value={supplierPicker} onValueChange={v=>handleSupplierChange(String(v ?? ""))}><SelectTrigger aria-labelledby="request-vendor-label" aria-invalid={!!errors.supplier} className="w-full"><SelectValue placeholder="Select a supplier" /></SelectTrigger><SelectContent>{["WCP","CTRE","Digi-Key","AndyMark","Mouser","Amazon","Other"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select>{errors.supplier && <span className="text-xs text-destructive">{errors.supplier}</span>}</div>
+            </div>
+            {supplierPicker==="Other" && <label className="purchase-edit-field"><span>Supplier name</span><Input required placeholder="Enter supplier name" value={otherSupplier} onValueChange={handleOtherSupplierChange} aria-invalid={!!errors.otherSupplier}/>{errors.otherSupplier && <span className="text-xs text-destructive">{errors.otherSupplier}</span>}</label>}
+            <section className="space-y-4 border-t pt-6"><div className="flex items-center justify-between"><h3 className="font-semibold">Items</h3><Button variant="outline" size="sm" onClick={addItem}><Plus data-icon="inline-start" />Add item</Button></div>
+              {items.length===0 && <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Add a product, its quantity, and a link to the supplier.</div>}
+              {items.map(item=><Item key={item.id} id={item.id} name={item.ItemName} cost={item.ItemCost} quantity={item.ItemQuantity} link={item.ItemLink} comments={item.comments} onDelete={deleteItem} onUpdate={updateItem} defaultEdit showErrors={showItemErrors} />)}
+              {errors.items && <p role="alert" className="text-sm text-destructive">{errors.items}</p>}
+            </section>
+            {catagory && <div className="rounded-lg bg-muted p-4 text-sm"><div className="flex justify-between gap-4"><span className="text-muted-foreground">Budget remaining after this request</span><span className="font-medium tabular-nums">{(selectedCategoryBudget-selectedCategorySpent-orderTotal).toLocaleString("en-US",{style:"currency",currency:"USD"})}</span></div></div>}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t bg-muted/30 p-6"><div><p className="text-xs text-muted-foreground">Request total</p><p className="text-xl font-semibold tabular-nums">{orderTotal.toLocaleString("en-US",{style:"currency",currency:"USD"})}</p></div><div className="flex gap-2"><Button variant="outline" onClick={discard} disabled={submitting}>Discard</Button><Button onClick={submitPurchase} disabled={submitting} aria-busy={submitting}>{submitting && <Spinner data-icon="inline-start" aria-hidden="true" />}{submitting ? "Submitting…" : "Submit request"}</Button></div></div>
+        </DialogContent>
+      </Dialog>
+    );
 }

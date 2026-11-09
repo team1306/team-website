@@ -1,35 +1,25 @@
-import { Card, CardTitle } from "@/components/ui/card";
+import { Avatar,AvatarFallback,AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuPortal,
-    DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { EllipsisVertical } from "lucide-react";
-import { toast } from "@/components/ui/toast";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { useState } from "react";
-import { Input } from "@base-ui/react";
 import { Button } from "@/components/ui/button";
+import { Card,CardTitle } from "@/components/ui/card";
+import {
+Dialog,
+DialogContent,
+DialogTitle
+} from "@/components/ui/dialog";
+import {
+DropdownMenu,
+DropdownMenuContent,
+DropdownMenuGroup,
+DropdownMenuItem,
+DropdownMenuLabel,
+DropdownMenuSeparator,
+DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
+import { EllipsisVertical } from "lucide-react";
+import { useState } from "react";
 
 interface UserData {
     id: string;
@@ -40,42 +30,42 @@ interface UserData {
 }
 
 export default function User({ id, name, role, profilePicture, onRoleGranted }: UserData) {
-    const [newName, setNewName] = useState("");
+    const [newName, setNewName] = useState(name);
     const [open, setOpen] = useState(false);
 
     const roleBadge = () => {
         switch (role) {
             case "student":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-red-600">Student</Badge>
+                    <Badge variant="secondary">Student</Badge>
                 )
             case "mentor":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Mentor</Badge>
+                    <Badge variant="secondary">Mentor</Badge>
                 )
             case "mentorLead":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Lead Mentor</Badge>
+                    <Badge variant="secondary">Lead Mentor</Badge>
                 )
             case "treasurer":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Treasurer</Badge>
+                    <Badge variant="secondary">Treasurer</Badge>
                 )
             case "studentLead":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-emerald-600">Student Lead</Badge>
+                    <Badge variant="secondary">Student Lead</Badge>
                 )
             case "president":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">President</Badge>
+                    <Badge variant="secondary">President</Badge>
                 )
             case "programDirector":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">Program Director</Badge>
+                    <Badge variant="secondary">Program Director</Badge>
                 )
             case "teamAdministrator":
                 return (
-                    <Badge className="rounded-md text-base leading-none h-5 py-0 bg-violet-600">Team Adminstrator</Badge>
+                    <Badge variant="secondary">Team administrator</Badge>
                 )
         }
     }
@@ -157,18 +147,18 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
       }
 
     return (
-        <Card className="bg-mist-800 p-2">
+        <Card className="p-5">
             <div className="flex items-center">
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-3">
                     <Avatar className="w-10 h-10">
                         <AvatarImage src={profilePicture} />
-                        <AvatarFallback className="bg-red-400 text-zinc-100 items-center">EU</AvatarFallback>
+                        <AvatarFallback >{name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <CardTitle className="text-zinc-100 text-xl leading-none font-semibold">{name}</CardTitle>
+                    <CardTitle className="text-sm font-medium">{name}</CardTitle>
                     {roleBadge()}
                 </div>
                 <DropdownMenu>
-                    <DropdownMenuTrigger className="ml-auto" nativeButton={false} render={<EllipsisVertical className="text-zinc-200 hover:text-zinc-400 size-5 cursor-pointer" />} />
+                    <DropdownMenuTrigger className="ml-auto" render={<Button variant="ghost" size="icon" aria-label={`Manage ${name}`}><EllipsisVertical /></Button>} />
                     <DropdownMenuContent className="w-fit">
                         <DropdownMenuGroup>
                             <DropdownMenuLabel>Assign User Role</DropdownMenuLabel>
@@ -190,11 +180,11 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
                 </DropdownMenu>
             </div>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="bg-mist-400 p-4">
-                    <DialogTitle className="font-jetbrains text-xl font-bold">Change {name}'s name</DialogTitle>
-                    <Input type="text" value={newName} onValueChange={(value) => setNewName(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
+                <DialogContent >
+                    <DialogTitle >Change {name}'s name</DialogTitle>
+                    <Input aria-label="Name" type="text" value={newName} onValueChange={(value) => setNewName(String(value))} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1"></Input>
                     <div className="flex items-center">
-                        <Button onClick={() => { setOpen(false); updateUserName(); }} className="bg-amber-500 text-zinc-100 hover::bg-amber-600 w-fit p-2 ml-auto">Save</Button>
+                        <Button onClick={() => { setOpen(false); updateUserName(); }} className="ml-auto">Save</Button>
                     </div>
                 </DialogContent>
             </Dialog>
