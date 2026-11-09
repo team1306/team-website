@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         process.env.BROKER_TOKEN_SECRET!
       ),
       {
-        issuer: process.env.NEXT_PUBLIC_SITE_URL!,
+        issuer: `${process.env.NEXT_PUBLIC_SITE_URL}/api/broker`,
         audience: "broker-userinfo",
         algorithms: ["HS256"],
       }
