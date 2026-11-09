@@ -145,12 +145,17 @@ export default function App() {
     }
 
     useEffect(() => {
+        // Startup loaders synchronize state with the authenticated user and APIs.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadUser();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchCategories();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadPurchases();
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadUsers();
     }, [currentUser]);
 

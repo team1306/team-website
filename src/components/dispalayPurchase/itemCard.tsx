@@ -1,8 +1,9 @@
 'use client'
 
+import { ProductLink } from "@/components/productLink";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Globe,StickyNote } from "lucide-react"
+import { StickyNote } from "lucide-react"
 import { useState } from "react"
 
 interface Item {
@@ -31,7 +32,7 @@ const KRAKEN_DIVISOR = 217.99;
 
 export default function Item({ id, name, cost, quantity, link, comments = "", defaultEdit, onUpdate, isKrakenMode = false }: Item) {
     const editMode = defaultEdit;
-    const [containsNote, setcontainsNote] = useState(false);
+    const [containsNote, setcontainsNote] = useState(Boolean(comments));
 
     const [nameValue, setNameValue] = useState(name);
     const [quantityValue, setQuantityValue] = useState(String(quantity));
@@ -96,5 +97,5 @@ export default function Item({ id, name, cost, quantity, link, comments = "", de
         );
     }
 
-    return <div className="purchase-detail-item space-y-2"><div className="flex items-start justify-between gap-4"><div><h3 className="text-sm font-medium">{name}</h3><p className="mt-1 text-sm text-muted-foreground">{quantity} × {isKrakenMode ? unitPriceText() : cost.toLocaleString("en-US",{style:"currency",currency:"USD"})}</p></div>{link && <Button variant="ghost" size="icon" aria-label={`Open product page for ${name}`} onClick={()=>window.open(link,"_blank","noopener,noreferrer")}><Globe /></Button>}</div>{comments && <p className="text-sm text-muted-foreground">{comments}</p>}</div>;
+    return <div className="purchase-detail-item space-y-2"><div className="flex flex-wrap items-start justify-between gap-4"><div><h3 className="text-sm font-medium">{name}</h3><p className="mt-1 text-sm text-muted-foreground">{quantity} × {isKrakenMode ? unitPriceText() : cost.toLocaleString("en-US",{style:"currency",currency:"USD"})}</p></div><ProductLink href={link} name={name} /></div>{comments && <p className="text-sm text-muted-foreground">{comments}</p>}</div>;
 }

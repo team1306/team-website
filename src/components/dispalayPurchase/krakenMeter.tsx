@@ -6,10 +6,11 @@ import { useId } from "react";
 export function KrakenMeter({ amount }: { amount: number }) {
     const id = useId();
     const value = Number.isFinite(amount) ? Math.max(0, amount) : 0;
-    const motorCount = Math.max(1, Math.ceil(value));
+    const motorCount = Math.min(60, Math.max(1, Math.ceil(value)));
+    const overflow = Math.max(0, value - motorCount);
 
     return (
-        <div className="kraken-meter" role="img" aria-label={`${value.toFixed(2)} Krakens. Each motor represents one Kraken.`}>
+        <div className="kraken-meter" role="img" aria-label={`${value.toFixed(2)} Krakens. Showing up to 60 motors, each representing one Kraken.`}>
             <div className="kraken-meter-motors" aria-hidden="true">
                 {Array.from({ length: motorCount }, (_, index) => {
                     const fill = Math.min(1, Math.max(0, value - index));
@@ -31,7 +32,7 @@ export function KrakenMeter({ amount }: { amount: number }) {
                 })}
             </div>
             <span aria-hidden="true" className="text-xs text-muted-foreground">
-                {value.toFixed(2)} Krakens
+                {value.toFixed(2)} Krakens{overflow > 0 && ` (+${overflow.toFixed(2)} beyond the motors shown)`}
             </span>
         </div>
     );

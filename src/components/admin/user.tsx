@@ -181,7 +181,7 @@ export default function User({ id, name, role, profilePicture, onRoleGranted }: 
             </div>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent >
-                    <DialogTitle >Change {name}'s name</DialogTitle>
+                    <DialogTitle >Change {name}&apos;s name</DialogTitle>
                     <Input aria-label="Name" type="text" value={newName} onValueChange={(value) => setNewName(String(value))} className="bg-background rounded-md pl-2 text-sm flex-1 mr-2 text-foreground mt-1"></Input>
                     <div className="flex items-center">
                         <Button onClick={() => { setOpen(false); updateUserName(); }} className="ml-auto">Save</Button>

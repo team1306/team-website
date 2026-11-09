@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
 
     after(async () => {
         try {
-            const threadTs: string | null = (purchase as any)["slack-thread-id"] ?? null;
+            const threadTs: string | null = (purchase as Record<string, unknown>)["slack-thread-id"] as string | null | undefined ?? null;
 
             const { data: userRow, error: userError } = await supabase
                 .from("users")

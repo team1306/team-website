@@ -16,17 +16,25 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Temporary local test login
+## Sign-in and local development
 
-The current working copy temporarily uses `supabase.auth.signInAnonymously()`
-in `src/app/login/page.tsx` so the app can be tested without Slack OAuth.
-Before pushing or deploying, remove the `TEMPORARY LOCAL TEST LOGIN` block,
-restore the Slack OAuth handler, restore the Slack login button, and disable
-Supabase Anonymous sign-ins.
+Production uses Slack OAuth. Configure its callback as `/auth/callback` on the deployed origin.
+The “Continue as test user” option is available only with `npm run dev`. Anonymous sessions
+are rejected outside development, and new anonymous profiles are stored as students;
+the development UI grants the temporary student-lead role only in memory.
+Do not use a production database for local test accounts or sample purchases.
+
+## Checks before merging
+
+- `npx tsc --noEmit --incremental false`
+- `npm run build`
+- `npm run lint`
+
+See [merge review](docs/merge-review.md) for results and remaining limitations.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The UI uses Open Sans, with JetBrains Mono for branding, and shadcn base-vega components.
 
 ## Learn More
 

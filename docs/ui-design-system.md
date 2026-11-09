@@ -51,4 +51,4 @@ Use `Button` variants for primary, outline, secondary, ghost and destructive act
 
 ## Remaining review
 
-Manager-only budget forms, team access, bulk purchase and status override were migrated in source, but have not been visually exercised with an authorized manager/admin account. Production sign-in remains the existing local-test flow. Failure paths were reviewed in code; no live failing write requests were induced. The earlier audit remains a backlog, including URL-based navigation, further keyboard/assistive-technology review and the large-value Kraken display policy.
+Manager-only budget forms, team access, bulk purchase and status override were migrated in source, but have not been visually exercised with an authorized manager/admin account. Production sign-in uses Slack OAuth; anonymous test sign-in is development-only. Failure paths were reviewed in code; no live failing write requests were induced. The earlier audit remains a backlog, including URL-based navigation, further keyboard/assistive-technology review and the large-value Kraken display policy (now capped at 60 rendered motors with the full value retained).

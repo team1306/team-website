@@ -222,7 +222,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   after(async () => {
-    const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
+    const threadTs: string | null = (existing as Record<string, unknown>)["slack-thread-id"] as string | null | undefined ?? null;
 
     try {
       let cachedEditorMention: string | null = null;

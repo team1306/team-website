@@ -8,6 +8,8 @@ export interface SlackItemData {
 
 export const MAX_ITEM_ROWS = 38;
 
+export type SlackBlock = { type: string; [key: string]: unknown };
+
 export const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 export function escapeSlack(text: string): string {
@@ -107,7 +109,7 @@ export function buildSlackBlocks(params: {
     const hiddenCount = items.length - shownItems.length;
 
     const itemBlocks = shownItems.map((item, index) => {
-        const block: any = {
+        const block: SlackBlock = {
             type: "section",
             fields: [
                 { type: "mrkdwn", text: `*${escapeSlack(item.ItemName)}* ×${item.ItemQuantity}` },
@@ -130,7 +132,7 @@ export function buildSlackBlocks(params: {
         itemBlocks.push({
             type: "context",
             elements: [{ type: "mrkdwn", text: `+${hiddenCount} more item${hiddenCount === 1 ? "" : "s"} not shown` }],
-        } as any);
+        });
     }
 
     return [
@@ -160,7 +162,7 @@ export function buildSlackBlocks(params: {
     ];
 }
 
-export async function postSlackMessage(blocks: any[], fallbackText: string): Promise<string | null> {
+export async function postSlackMessage(blocks: SlackBlock[], fallbackText: string): Promise<string | null> {
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_CHANNEL_ID;
 
@@ -196,7 +198,7 @@ export async function postSlackMessage(blocks: any[], fallbackText: string): Pro
     }
 }
 
-export async function updateSlackMessage(ts: string, blocks: any[], fallbackText: string): Promise<boolean> {
+export async function updateSlackMessage(ts: string, blocks: SlackBlock[], fallbackText: string): Promise<boolean> {
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_CHANNEL_ID;
 

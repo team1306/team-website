@@ -15,7 +15,7 @@ export async function getUserInfo(): Promise<UserData> {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Not authenticated");
+    if (!user || (user.is_anonymous && process.env.NODE_ENV !== "development")) throw new Error("Not authenticated");
     // Local anonymous sessions can exercise approval controls without elevating
     // anonymous users outside the development environment.
     const localAnonymousRole = user.is_anonymous && process.env.NODE_ENV === "development"
@@ -36,7 +36,7 @@ export async function getUserInfo(): Promise<UserData> {
             .insert({
                 user_id: user.id,
                 name: user.user_metadata?.name,
-                role: localAnonymousRole ?? "student",
+                role: "student",
                 picture: user.user_metadata?.picture,
                 slack_userid: user.user_metadata?.sub,
             })
@@ -74,7 +74,7 @@ export async function getUserInfo(): Promise<UserData> {
                 .insert({
                     user_id: user.id,
                     name: `${baseName} ${user.id.slice(0, 6)}`,
-                    role: localAnonymousRole ?? "student",
+                    role: "student",
                     picture: user.user_metadata?.picture,
                     slack_userid: user.user_metadata?.sub,
                 })

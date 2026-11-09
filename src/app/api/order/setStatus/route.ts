@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       console.error('Failed to update budget spent:', budgetError);
     }
 
-    const purchase = data[0] as Record<string, any>;
-    const threadTs: string | null = purchase["slack-thread-id"] ?? null;
+    const purchase = data[0] as Record<string, unknown>;
+    const threadTs = typeof purchase["slack-thread-id"] === "string" ? purchase["slack-thread-id"] : null;
 
     if (threadTs) {
       try {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         const { data: userRow } = await supabase
           .from('users')
           .select('name, slack_userid')
-          .eq('user_id', purchase.requestor)
+          .eq('user_id', String(purchase.requestor ?? ""))
           .maybeSingle();
 
         const requesterMention = userRow?.slack_userid

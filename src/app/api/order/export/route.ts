@@ -2,6 +2,16 @@ import { createClient } from '../../../../../utils/supabase/server'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+interface ExportRow {
+    purchaseID: string;
+    requestName: string;
+    catagory: string;
+    status: string;
+    items: ItemData[] | null;
+    vendor: string;
+    cost: number;
+}
+
 interface ItemData {
     ItemName?: string
     ItemCost?: number
@@ -43,7 +53,7 @@ export async function GET() {
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
 
-    const rows: any[] = []
+    const rows: ExportRow[] = []
     let from = 0
 
     while (true) {
@@ -57,7 +67,7 @@ export async function GET() {
             return NextResponse.json({ error: error.message }, { status: 500 })
         }
 
-        rows.push(...(data ?? []))
+        rows.push(...((data ?? []) as unknown as ExportRow[]))
         if (!data || data.length < PAGE_SIZE) break
         from += PAGE_SIZE
     }

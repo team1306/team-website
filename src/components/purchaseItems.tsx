@@ -1,6 +1,7 @@
+import { ProductLink } from "@/components/productLink";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
-import { Globe,X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect,useState } from "react";
 import { ItemData,PurchaseData } from "./orders/page";
 import { Button } from "./ui/button";
@@ -188,6 +189,8 @@ export default function PurchaseItems({ orders, onPurchased }: PurchaseItemsProp
 
     useEffect(() => {
         const mql = window.matchMedia("(max-width: 767px)");
+        // Initialize the responsive drawer direction from the current viewport.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMobile(mql.matches);
 
         const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
@@ -273,9 +276,9 @@ function Item({ id, ItemName, orderName, ItemCost, ItemQuantity, ItemLink, toggl
 
     return (
         <Card role="checkbox" aria-checked={ordered} tabIndex={0} onKeyDown={e=>{if(e.target===e.currentTarget && (e.key==="Enter" || e.key===" ")){e.preventDefault();toggleItemPurchased(id);}}} onClick={() => toggleItemPurchased(id)} className={`p-3 gap-2 cursor-pointer focus-visible:ring-3 focus-visible:ring-ring ${ordered ? "border-primary bg-primary/10" : "hover:bg-muted"}`}>
-            <div className="flex">
+            <div className="flex flex-wrap items-start gap-3">
                 <CardTitle className="text-foreground">{ItemName}<span className="block text-xs font-normal text-muted-foreground">{orderName}</span></CardTitle>
-                <Button variant="ghost" size="icon" aria-label={`Open ${ItemName} product page`} className="ml-auto" onClick={(e) => { e.stopPropagation(); window.open(ItemLink, "_blank") }}><Globe /></Button>
+                <ProductLink href={ItemLink} name={ItemName} className="ml-auto" />
             </div>
             <CardDescription className="text-foreground">x{ItemQuantity} at ${ItemCost.toFixed(2)}</CardDescription>
         </Card>

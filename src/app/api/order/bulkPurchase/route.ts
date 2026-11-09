@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers';
 import { recalculateCategorySpent } from "@/lib/budget";
+import { type SlackBlock } from "@/lib/slack";
 
 interface ItemData {
     id: string;
@@ -28,7 +29,7 @@ function escapeSlack(text: string): string {
 }
 
 function buildPurchasedBlocks(purchaserMention: string, orderName: string, orderNumber?: string) {
-    const blocks: any[] = [
+    const blocks: SlackBlock[] = [
         {
             type: "section",
             text: { type: "mrkdwn", text: `${purchaserMention} has marked ${orderName} as purchased.` },
@@ -45,7 +46,7 @@ function buildPurchasedBlocks(purchaserMention: string, orderName: string, order
     return blocks;
 }
 
-async function postSlackThreadReply(blocks: any[], fallbackText: string, threadTs: string | null): Promise<void> {
+async function postSlackThreadReply(blocks: SlackBlock[], fallbackText: string, threadTs: string | null): Promise<void> {
     const token = process.env.SLACK_BOT_TOKEN;
     const channel = process.env.SLACK_CHANNEL_ID;
 
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
 
         if (allOrdered && existing.status !== 'purchased') {
             newlyPurchased.push({
-                threadTs: (existing as any)["slack-thread-id"] ?? null,
+                threadTs: (existing as Record<string, unknown>)["slack-thread-id"] as string | null | undefined ?? null,
                 orderName: existing.requestName ?? "order",
                 orderNumber: update.orderNumber,
             });

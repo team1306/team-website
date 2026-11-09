@@ -85,6 +85,8 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
     }
 
     useEffect(() => {
+        // Load the server-backed category list when the request form mounts.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchCategories();
     }, []);
 

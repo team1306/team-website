@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   if (
-    !user &&
+    (!user || (user.is_anonymous && process.env.NODE_ENV !== "development")) &&
     !isPublicBrokerRoute &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth")

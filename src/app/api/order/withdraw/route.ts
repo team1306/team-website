@@ -4,6 +4,13 @@ import { NextResponse } from "next/server";
 import { recalculateCategorySpent } from "@/lib/budget";
 import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage, postSlackThreadReply } from "@/lib/slack";
 
+interface ApproverData {
+    approved: boolean;
+    approver?: string;
+    requiredRole: string;
+    [key: string]: unknown;
+}
+
 interface ItemData {
     id: string;
     ItemName: string;
@@ -50,7 +57,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Approvals can't be withdrawn at this stage" }, { status: 409 });
     }
 
-    const approvers: any[] = Array.isArray(purchase.approvers) ? purchase.approvers : [];
+    const approvers = (Array.isArray(purchase.approvers) ? purchase.approvers : []) as ApproverData[];
     const index = approvers.findIndex((a) => a.requiredRole === approvalRole);
 
     if (index === -1) {

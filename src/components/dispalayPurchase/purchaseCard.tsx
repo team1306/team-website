@@ -148,6 +148,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchCategories();
     }, []);
 
@@ -186,6 +187,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const [receivedOpen, setReceivedOpen] = useState(false);
 
     useEffect(() => {
+        // Refresh the local edit draft when the parent receives updated purchase data.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setItems(items);
     }, [items]);
 
@@ -266,7 +269,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     const updateItem = (updatedItem: ItemData) => {
         setItems((prev) =>
-            prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+            prev.map((item) => (item.id === updatedItem.id ? { ...item, ...updatedItem } : item))
         );
     };
 
@@ -274,6 +277,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     useEffect(() => {
         const mql = window.matchMedia("(max-width: 767px)");
+        // Initialize the responsive drawer direction from the current viewport.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMobile(mql.matches);
 
         const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
@@ -326,6 +331,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         if(saving) return;
         if (editMode && isOtherSupplier && !otherSupplierName.trim()) {
             setSaveError("Enter a supplier name before saving.");
+            return;
+        }
+        if (editMode && (!name.trim() || !itemCatagory || itemsArray.some(item =>
+            !item.ItemName.trim() || !Number.isFinite(item.ItemCost) || item.ItemCost < 0 ||
+            !Number.isInteger(item.ItemQuantity) || item.ItemQuantity < 1))) {
+            setSaveError("Enter a request name, category, and valid item names, prices, and quantities.");
             return;
         }
         setSaving(true);setSaveError("");
