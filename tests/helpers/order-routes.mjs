@@ -49,14 +49,20 @@ export async function orderRoutes(client, userId) {
             where ${identifier(column)}::text = any($1::text[])`, [ids.map(String)]) };
         },
         update(fields) {
-          return { eq(column, value) {
+          const filters = [];
+          const execute = () => {
             const keys = Object.keys(fields);
-            const result = query(`update public.purchases set
+            return query(`update public.purchases set
               ${keys.map((key, i) => `${identifier(key)} = $${i + 1}`).join(', ')}
-              where ${identifier(column)}::text = $${keys.length + 1} returning *`,
-            [...keys.map(key => typeof fields[key] === 'object' ? JSON.stringify(fields[key]) : fields[key]), String(value)]);
-            return { then: result.then.bind(result), select: () => result };
-          } };
+              where ${filters.map(([column], i) => `${identifier(column)}::text = $${keys.length + i + 1}`).join(' and ')} returning *`,
+            [...keys.map(key => typeof fields[key] === 'object' ? JSON.stringify(fields[key]) : fields[key]), ...filters.map(([, value]) => String(value))]);
+          };
+          const builder = {
+            eq(column, value) { filters.push([column, value]); return builder; },
+            select: execute,
+            then(resolve, reject) { return execute().then(resolve, reject); },
+          };
+          return builder;
         },
       };
     },

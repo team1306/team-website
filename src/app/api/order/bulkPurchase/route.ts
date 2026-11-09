@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers';
+import { buildSlackBlocks, updateSlackMessage } from "@/lib/slack";
 import { recalculateCategorySpent } from "@/lib/budget";
 
 interface ItemData {
@@ -101,12 +102,6 @@ export async function POST(request: NextRequest) {
     }
 
     const existingById = new Map((existingOrders ?? []).map((order) => [order.purchaseID, order]));
-    const missing = ids.filter((id) => !existingById.has(id));
-
-    if (missing.length > 0) {
-        return NextResponse.json({ error: `Orders not found: ${missing.join(', ')}` }, { status: 404 });
-    }
-
     let purchaserMention = "Someone";
     try {
         const { data: authData } = await supabase.auth.getUser();
@@ -132,7 +127,11 @@ export async function POST(request: NextRequest) {
     const newlyPurchased: { threadTs: string | null; orderName: string; orderNumber?: string }[] = [];
 
     for (const update of updates) {
-        const existing = existingById.get(update.id)!;
+        const existing = existingById.get(update.id);
+        if (!existing || existing.status !== 'approved') {
+            errors.push({ id: update.id, error: existing ? 'Order must be approved before purchasing' : 'Order not found' });
+            continue;
+        }
         const orderedSet = new Set(update.orderedItemIds);
 
         const items: ItemData[] = (existing.items ?? []).map((item: ItemData) => ({
@@ -157,14 +156,43 @@ export async function POST(request: NextRequest) {
             updateObj.vendorOrderNumber = update.orderNumber;
         }
 
-        const { error } = await supabase
+        const { data: changed, error } = await supabase
             .from('purchases')
             .update(updateObj)
-            .eq('purchaseID', update.id);
+            .eq('purchaseID', update.id)
+            .eq('status', 'approved')
+            .select();
 
         if (error) {
             errors.push({ id: update.id, error: error.code === '42501' ? 'Auth Error - Acess Denied' : error.message });
             continue;
+        }
+
+        if (!changed || changed.length !== 1) {
+            errors.push({ id: update.id, error: 'Order was not updated. It may no longer be approved or you may not have access.' });
+            continue;
+        }
+
+        const purchase = changed[0];
+        const threadTs = purchase["slack-thread-id"];
+        if (threadTs) {
+            try {
+                const { data: requester } = await supabase.from('users')
+                    .select('name, slack_userid').eq('user_id', purchase.requestor).maybeSingle();
+                await updateSlackMessage(threadTs, buildSlackBlocks({
+                    title: purchase.requestName ?? 'Purchase Request',
+                    requesterMention: requester?.slack_userid ? `<@${requester.slack_userid.trim()}>` : escapeSlack(requester?.name ?? 'Unknown user'),
+                    requestedDate: new Date(Number(update.id) * 1000).toLocaleDateString('en-US', { timeZone: 'America/Chicago' }),
+                    items: purchase.items,
+                    totalCost: Number(purchase.cost),
+                    vendor: purchase.vendor ?? '',
+                    category: purchase.catagory ?? '',
+                    status: purchase.status,
+                    expidited: purchase.expidited ?? 'NULL',
+                }), `Purchase request: ${purchase.requestName} (${purchase.status})`);
+            } catch (error) {
+                console.error('Failed to refresh purchased order Slack card:', error);
+            }
         }
 
         touchedCategories.push(existing.catagory ?? null);
@@ -192,10 +220,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
         {
+            results: updates.map(update => {
+                const failure = errors.find(result => result.id === update.id);
+                return failure ? { ...failure, success: false } : { ...results.find(result => result.id === update.id), success: true };
+            }),
             updated: results,
             ...(errors.length > 0 ? { errors } : {}),
             ...(budgetWarning ? { budgetWarning } : {}),
         },
-        { status: errors.length > 0 && results.length === 0 ? 500 : 200 }
+        { status: errors.length > 0 ? 409 : 200 }
     );
 }

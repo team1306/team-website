@@ -265,8 +265,8 @@ test('the function respects RLS and does not accept an unauthenticated identity'
   }
 });
 
-for (const requestor of ['Example User', bob]) {
-  test(`create assigns the authenticated requestor despite client value ${requestor}`, async () => {
+for (const requestor of [undefined, 'Example User', bob]) {
+  test(`create assigns the authenticated requestor with client value ${requestor}`, async () => {
     const call = await orderRoutes(first, alice);
     const response = await call('create', {
       title: 'Duplicated order', requestor, category: 'parts', vendor: 'Test vendor',
