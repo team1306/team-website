@@ -305,9 +305,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
-    const approvalDisabled = status === "onHold" || status === "rejected";
-    const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
-    const canWithdraw = !withdrawDisabled && approvers.some((approver) =>
+    const approvalEnabled = status !== "onHold" && status !== "rejected";
+    const withdrawEnabled = approvalEnabled && (status === "needsAproval" || status === "approved");
+    const canWithdraw = withdrawEnabled && approvers.some((approver) =>
         approver.requiredRole !== "programDirector" && approver.approved &&
         !!approver.approverID && approver.approverID === user.id
     );
@@ -327,18 +327,18 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         user={user}
                         onWithdrawn={onPurchaseEdited}
                         itemID={id}
-                        disable={approvalDisabled}
-                        disableWithdraw={withdrawDisabled}
+                        disable={!approvalEnabled}
+                        disableWithdraw={!withdrawEnabled}
                     />
                 ))}
                 {(expidited == "approved") && (
-                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={!approvalEnabled} />
                 )}
                 {(expidited == "requested") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={!approvalEnabled} />
                 )}
                 {(expidited == "rejected") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={!approvalEnabled} />
                 )}
             </div>
         )
