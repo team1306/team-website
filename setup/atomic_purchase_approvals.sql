@@ -100,7 +100,7 @@ begin
   if not found then
     raise sqlstate 'PT404' using message = 'Purchase not found';
   end if;
-  if p_expected is null or not (p_expected ?& array['approvers', 'status', 'items', 'expidited'])
+  if p_expected is null or not (p_expected ?& array['approvers', 'status', 'items', 'expidited', 'requestName', 'catagory', 'reason'])
     or not (to_jsonb(v_purchase) @> p_expected)
     -- Array containment ignores order and duplicates; equality is required here.
     or to_jsonb(v_purchase)->'approvers' is distinct from p_expected->'approvers'

@@ -11,8 +11,11 @@ row, reads its current approvals, changes one slot, and saves the approvals and
 status in the same transaction. Identity comes from `auth.uid()` and functions
 run with the caller's permissions (`SECURITY INVOKER`). Duplicate actions and
 incompatible order states return HTTP `409` with a refresh-and-retry message.
-Edits use `edit_purchase_if_unchanged` to reject stale approval, item, status, or
-expedite snapshots instead of overwriting a simultaneous approval.
+Edits use `edit_purchase_if_unchanged` to reject stale approval, item, status,
+expedite, request name, category, or reason snapshots. These snapshots are read
+by the API during saving; they do not detect edits made before that API read.
+When upgrading an existing installation, deploy the updated edit API before
+reapplying this SQL script: the expanded required snapshot rejects older callers.
 
 Run `npm test` for the integration suite in `tests/`. It starts an isolated temporary
 PostgreSQL server, applies the real migration to a fixture schema, and verifies

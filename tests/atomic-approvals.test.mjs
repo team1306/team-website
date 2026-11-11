@@ -147,7 +147,7 @@ test('withdrawal concurrent with another approval preserves both changes', async
 });
 
 test('a stale expedite edit cannot overwrite an approval', async () => {
-  const { rows: [expected] } = await admin.query('select approvers, status, items, expidited from public.purchases');
+  const { rows: [expected] } = await admin.query('select approvers, status, items, expidited, "requestName", catagory, reason from public.purchases');
   const [, two] = await overlap(
     () => change(first, 'studentLead'),
     () => second.query('select public.edit_purchase_if_unchanged($1, $2, $3)', [
@@ -158,13 +158,40 @@ test('a stale expedite edit cannot overwrite an approval', async () => {
 });
 
 test('a current edit succeeds and leaves unrelated fields intact', async () => {
-  const { rows: [expected] } = await admin.query('select approvers, status, items, expidited from public.purchases');
+  const { rows: [expected] } = await admin.query('select approvers, status, items, expidited, "requestName", catagory, reason from public.purchases');
   const { rows: [result] } = await first.query('select public.edit_purchase_if_unchanged($1, $2, $3) as purchase', [
     '1', expected, { requestName: 'Updated order' },
   ]);
   assert.equal(result.purchase.requestName, 'Updated order');
   assert.deepEqual(result.purchase.approvers, initialApprovers);
 });
+
+for (const field of ['requestName', 'catagory', 'reason']) {
+  test(`a concurrent ${field} change rejects a stale edit`, async () => {
+    const { rows: [expected] } = await admin.query(
+      'select approvers, status, items, expidited, "requestName", catagory, reason from public.purchases',
+    );
+    const [, two] = await overlap(
+      () => first.query(`update public.purchases set "${field}" = $1 where "purchaseID" = 1`, ['New value']),
+      () => second.query('select public.edit_purchase_if_unchanged($1, $2, $3)', [
+        '1', expected, { [field]: 'Stale edit' },
+      ]),
+    );
+    assert.equal(two.error?.code, 'PT409');
+    const { rows: [saved] } = await admin.query('select * from public.purchases');
+    assert.equal(saved[field], 'New value');
+  });
+
+  test(`an edit cannot omit ${field} from its expected snapshot`, async () => {
+    const { rows: [expected] } = await admin.query(
+      'select approvers, status, items, expidited, "requestName", catagory, reason from public.purchases',
+    );
+    delete expected[field];
+    await assert.rejects(first.query('select public.edit_purchase_if_unchanged($1, $2, $3)', [
+      '1', expected, { [field]: 'Unchecked edit' },
+    ]), { code: 'PT409' });
+  });
+}
 
 test('only the original approver may withdraw, and withdrawal reopens an approved order', async () => {
   await change(first, 'studentLead');

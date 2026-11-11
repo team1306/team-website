@@ -201,6 +201,9 @@ export async function PATCH(request: NextRequest) {
       status: existing.status,
       items: existing.items,
       expidited: existing.expidited,
+      requestName: existing.requestName,
+      catagory: existing.catagory,
+      reason: existing.reason,
     },
     p_changes: updateObj,
   });
