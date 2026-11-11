@@ -2,6 +2,7 @@
 
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Trash2, Save, StickyNote, Globe } from "lucide-react"
 import { useState } from "react"
 import { Input } from "@base-ui/react/input"
@@ -108,7 +109,10 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                         <div className="flex ml-auto">
-                            <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
+                            <Tooltip>
+                                <TooltipTrigger render={<Button aria-label={`Open item link: ${linkValue}`} className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")} />}><Globe /></TooltipTrigger>
+                                <TooltipContent className="[--foreground:var(--color-zinc-600)] [--background:var(--color-white)] ring-1 ring-white/15 shadow-lg"><span className="min-w-0 break-all">{linkValue}</span></TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
                     <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
@@ -125,7 +129,10 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
             <div className="flex">
                 <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                 <div className="flex ml-auto">
-                    <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
+                    <Tooltip>
+                        <TooltipTrigger render={<Button aria-label={`Open item link: ${linkValue}`} className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")} />}><Globe /></TooltipTrigger>
+                        <TooltipContent className="[--foreground:var(--color-zinc-600)] [--background:var(--color-white)] ring-1 ring-white/15 shadow-lg"><span className="min-w-0 break-all">{linkValue}</span></TooltipContent>
+                    </Tooltip>
                 </div>
             </div>
             <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>

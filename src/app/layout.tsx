@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toast"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default function RootLayout({
       lang="en"
       className="h-full antialiased font-sans"
     >
-      <body className="min-h-full flex flex-col">{children}       <Toaster /></body>
+      <body className="min-h-full flex flex-col"><TooltipProvider delay={200}>{children}<Toaster /></TooltipProvider></body>
     </html>
   );
 }
