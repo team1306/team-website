@@ -305,10 +305,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
+    const approvalDisabled = status === "onHold" || status === "rejected";
+    const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
+    const canWithdraw = !withdrawDisabled && approvers.some((approver) =>
+        approver.requiredRole !== "programDirector" && approver.approved &&
+        !!approver.approverID && approver.approverID === user.id
+    );
+
     const purchaseApprovers = () => {
         const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
-        const approvalDisabled = status === "onHold" || status === "rejected";
-        const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
                 {approvers.filter((approver) => approver.requiredRole !== "programDirector").map((approver) => (
@@ -476,7 +481,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
                     <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
-                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
+                        <Card className="p-0 mb-0 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -643,9 +648,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        <ScrollArea className="w-full rounded-md pr-3 flex-1 min-h-0">
+                        <ScrollArea className="w-full rounded-md pr-1 flex-1 min-h-0">
                             {(status == 'needsAproval' || status == 'approved') && (
-                                <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                                <Card className="bg-mist-800 mx-1 mb-1.5 mt-2 p-0 rounded-xl gap-0">
                                     {(status == 'approved' && expidited != "approved") && (
                                         <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">{isAmazonVendor(vendor) ? "Can be Ordered Now" : `Will be Ordered: ${getNextPurchaseDate()}`}</h1>
                                     )}
@@ -660,13 +665,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                 </Card>
                             )}
-                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                            <Card className="bg-mist-800 mx-1 my-1.5 p-0 rounded-xl gap-0">
                                 <div className="flex p-2 pb-0">
                                     {(!editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Items</CardTitle>
                                     )}
                                     {(editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Edit Items</CardTitle>
                                     )}
                                     <div className="flex ml-auto">
                                     </div>
@@ -707,7 +712,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                             {(!editMode) && (
-                                <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
+                                <Card className="bg-mist-800 mx-1 mb-1 mt-1.5 p-0 rounded-xl gap-0">
                                     <CardTitle className="text-lg ml-3 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
                                     {hasOtherApprovedVendorOrders && (
                                         <div className="p-2 pt-1 pb-0">
@@ -718,7 +723,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
-                                        {nextApproval && (
+                                        {nextApproval && !canWithdraw && (
                                             <Button
                                                 onClick={approveNextRole}
                                                 disabled={approving || status !== "needsAproval"}
