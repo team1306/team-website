@@ -49,7 +49,7 @@ before(async () => {
     grant usage on schema auth to authenticated;
     grant execute on function auth.uid() to authenticated;
     create table public.purchases (
-      "purchaseID" bigint primary key, approvers jsonb, status text,
+      "purchaseID" bigint primary key, approvers jsonb[], status text,
       "requestName" text, requestor uuid, catagory text, vendor text, reason text,
       expidited text, items jsonb, cost numeric, "slack-thread-id" text
     );
@@ -78,7 +78,7 @@ beforeEach(async () => {
   await admin.query('truncate public.purchases');
   await admin.query(`insert into public.purchases
     ("purchaseID", approvers, status, items, expidited)
-    values (1, $1, 'needsAproval', '[]', 'NULL')`, [JSON.stringify(initialApprovers)]);
+    values (1, $1, 'needsAproval', '[]', 'NULL')`, [initialApprovers]);
 });
 
 function change(client, role, approved = true) {

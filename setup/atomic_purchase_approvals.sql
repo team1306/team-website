@@ -39,7 +39,8 @@ begin
     raise sqlstate 'PT409' using message = 'Order changed; refresh and try again';
   end if;
 
-  v_approvers := coalesce(v_purchase.approvers::jsonb, '[]'::jsonb);
+  -- approvers is a PostgreSQL jsonb[]; serialize it as a JSON array to edit it.
+  v_approvers := coalesce(to_jsonb(v_purchase.approvers), '[]'::jsonb);
   select entry.value, (entry.ordinality - 1)::integer into v_slot, v_index
     from jsonb_array_elements(v_approvers) with ordinality as entry(value, ordinality)
     where entry.value->>'requiredRole' = p_approval_role
@@ -63,7 +64,9 @@ begin
     when v_purchase.status = 'approved' then 'needsAproval'
     else v_purchase.status end;
 
-  update public.purchases set approvers = v_approvers, status = v_status
+  -- Convert back through the table's row type, including its native array type.
+  v_purchase := jsonb_populate_record(v_purchase, jsonb_build_object('approvers', v_approvers));
+  update public.purchases set approvers = v_purchase.approvers, status = v_status
     where "purchaseID" = v_id returning * into v_purchase;
   if not found then
     raise sqlstate 'PT403' using message = 'Approval update denied';
