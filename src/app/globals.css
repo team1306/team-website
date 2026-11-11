@@ -216,6 +216,56 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Vega is an optional red-accented theme; user settings can select it via data-theme. */
+:root[data-theme="vega"] {
+  color-scheme: light;
+  --background: color-mix(in srgb, var(--primary) 2%, #ffffff);
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: #ffffff;
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #c12323;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in srgb, var(--primary) 8%, #f4f4f5);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: color-mix(in srgb, var(--primary) 5%, #f4f4f5);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: var(--secondary);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: color-mix(in srgb, var(--primary) 14%, #e4e4e7);
+  --input: color-mix(in srgb, var(--primary) 20%, #d4d4d8);
+  --ring: var(--primary);
+  --chart-1: var(--primary);
+  --chart-2: color-mix(in srgb, var(--primary) 55%, #ffffff);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+:root.dark[data-theme="vega"] {
+  color-scheme: dark;
+  --background: color-mix(in srgb, var(--primary) 4%, #100d0f);
+  --foreground: oklch(0.985 0 0);
+  --card: color-mix(in srgb, var(--primary) 7%, #171717);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: color-mix(in srgb, var(--primary) 10%, #1b1b1b);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: color-mix(in srgb, var(--primary) 18%, #262626);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: color-mix(in srgb, var(--primary) 12%, #242424);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: var(--secondary);
+  --accent-foreground: oklch(0.985 0 0);
+  --border: color-mix(in srgb, var(--primary) 22%, #292929);
+  --input: color-mix(in srgb, var(--primary) 34%, #292929);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
