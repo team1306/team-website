@@ -81,7 +81,9 @@ export function ThemeSettings({ userId }: { userId: string }) {
       const savedColor = preferences?.themeColor
       const savedMode = preferences?.colorMode
       const nextColor = isValidThemeColor(savedColor) ? savedColor : DEFAULT_THEME_COLOR
-      const nextMode = savedMode === "light" ? "light" : "dark"
+      const nextMode: ColorMode = savedMode === "light" || savedMode === "dark"
+        ? savedMode
+        : document.documentElement.classList.contains("dark") ? "dark" : "light"
       setThemeColor(nextColor)
       setColorMode(nextMode)
       applyTheme(nextColor, nextMode)
