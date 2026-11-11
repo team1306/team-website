@@ -30,6 +30,7 @@ import {
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react";
+import { ThemeSettings } from "@/components/ui/themeSettings";
 
 type user = {
     user: UserData;
@@ -138,7 +139,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
         router.refresh();
     }
 
-    const activeCSSmobile = (url: String) => {
+    const activeCSSmobile = (url: string) => {
         if (url == theCurrentPage) {
             return ("bg-red-400 text-zinc-100 focus:bg-red-400 focus:text-zinc-100");
         }
@@ -178,6 +179,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         )}
                     </div>
                     <div className="ml-auto flex items-center gap-3">
+                        <ThemeSettings userId={user.id} />
                         <HoverCard>
                             <HoverCardTrigger>
                                 <div className="flex items-center gap-2 cursor-pointer">
@@ -211,6 +213,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         Purchasing App
                     </h1>
                     <div className="ml-auto flex items-center gap-3">
+                        <ThemeSettings userId={user.id} />
                         <DropdownMenu>
                             <DropdownMenuTrigger nativeButton={false} render={<Avatar className="w-10 h-10"><AvatarImage src={userPicture} /><AvatarFallback className="bg-red-400 text-zinc-100 items-center">EU</AvatarFallback></Avatar>} />
                             <DropdownMenuContent className="w-fit bg-mist-500">
