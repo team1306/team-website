@@ -48,6 +48,10 @@ begin
   if not found then
     raise sqlstate 'PT404' using message = 'Approval slot not found';
   end if;
+  -- programDirector records who expedited the order, not a required approval.
+  if p_approval_role = 'programDirector' then
+    raise sqlstate 'PT409' using message = 'Approval changed; refresh and try again';
+  end if;
   if coalesce((v_slot->>'approved')::boolean, false) = p_approved then
     raise sqlstate 'PT409' using message = 'Approval changed; refresh and try again';
   end if;
@@ -60,7 +64,8 @@ begin
       'approver', case when p_approved then v_user_id else '' end));
   v_status := case
     when not exists (select 1 from jsonb_array_elements(v_approvers) as entry(value)
-      where not coalesce((entry.value->>'approved')::boolean, false)) then 'approved'
+      where entry.value->>'requiredRole' is distinct from 'programDirector'
+        and not coalesce((entry.value->>'approved')::boolean, false)) then 'approved'
     when v_purchase.status = 'approved' then 'needsAproval'
     else v_purchase.status end;
 

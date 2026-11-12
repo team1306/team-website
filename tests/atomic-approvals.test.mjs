@@ -13,6 +13,7 @@ const bob = '22222222-2222-4222-8222-222222222222';
 const initialApprovers = [
   { requiredRole: 'studentLead', approved: false, approver: '' },
   { requiredRole: 'mentor', approved: false, approver: '' },
+  { requiredRole: 'programDirector', approved: false, approver: alice, approverName: 'Expediter' },
 ];
 let database;
 let directory;
@@ -122,7 +123,36 @@ test('two simultaneous approvers retain both approvals and finish approved', asy
   assert.deepEqual(saved.approvers, [
     { ...initialApprovers[0], approved: true, approver: alice },
     { ...initialApprovers[1], approved: true, approver: bob },
+    initialApprovers[2],
   ]);
+});
+
+for (const approved of [false, true]) {
+  for (const action of [false, true]) {
+    test(`expedite attribution (approved=${approved}) rejects approval action ${action}`, async () => {
+      const approvers = initialApprovers.map(entry => entry.requiredRole === 'programDirector'
+        ? { ...entry, approved } : entry);
+      await admin.query('update public.purchases set approvers = $1', [approvers]);
+      const { rows: [before] } = await admin.query('select * from public.purchases');
+      await assert.rejects(change(first, 'programDirector', action), { code: 'PT409' });
+      const { rows: [after] } = await admin.query('select * from public.purchases');
+      assert.deepEqual(after, before);
+    });
+  }
+}
+
+test('a stuck order completes when its remaining required approval is given', async () => {
+  await admin.query('update public.purchases set approvers = $1', [[
+    { ...initialApprovers[0], approved: true, approver: alice },
+    initialApprovers[1],
+    initialApprovers[2],
+  ]]);
+  const { rows: [result] } = await change(second, 'mentor');
+  assert.equal(result.purchase.status, 'approved');
+  assert.deepEqual(result.purchase.approvers[2], initialApprovers[2]);
+  const { rows: [saved] } = await admin.query('select * from public.purchases');
+  assert.deepEqual(saved.approvers, result.purchase.approvers);
+  assert.equal(saved.status, 'approved');
 });
 
 test('simultaneous approvals of the same slot return a conflict to the loser', async () => {
@@ -200,6 +230,7 @@ test('only the original approver may withdraw, and withdrawal reopens an approve
   const { rows: [result] } = await change(first, 'studentLead', false);
   assert.equal(result.purchase.status, 'needsAproval');
   assert.equal(result.purchase.approvers[1].approver, bob);
+  assert.deepEqual(result.purchase.approvers[2], initialApprovers[2]);
 });
 
 test('missing orders, changed statuses, and missing slots have clear errors', async () => {
