@@ -1,3 +1,4 @@
+import { approvalErrorStatus } from "@/lib/approvalErrors";
 import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
@@ -193,16 +194,25 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const { error } = await supabase
-    .from('purchases')
-    .update(updateObj)
-    .eq('purchaseID', id);
+  const { error } = await supabase.rpc("edit_purchase_if_unchanged", {
+    p_item_id: String(id),
+    p_expected: {
+      approvers: existing.approvers,
+      status: existing.status,
+      items: existing.items,
+      expidited: existing.expidited,
+      requestName: existing.requestName,
+      catagory: existing.catagory,
+      reason: existing.reason,
+    },
+    p_changes: updateObj,
+  });
 
   if (error) {
     if (error.code === '42501') {
       return NextResponse.json({ error: 'Auth Error - Acess Denied' }, { status: 403 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: approvalErrorStatus(error.code) });
   }
 
   const affectsSpending =
@@ -222,7 +232,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   after(async () => {
-    const threadTs: string | null = (existing as any)["slack-thread-id"] ?? null;
+    const threadTs: string | null = existing["slack-thread-id"] ?? null;
 
     try {
       let cachedEditorMention: string | null = null;
@@ -254,7 +264,7 @@ export async function PATCH(request: NextRequest) {
 
       if (expiditeTransition === "requested") {
         const mention = await getEditorMention();
-        await postSlackThreadReply(`${mention} has requested this order to be expedited @Andrew.`, threadTs);
+        await postSlackThreadReply(`${mention} has requested this order to be expedited <@U07CRE78LKC>.`, threadTs);
       } else if (expiditeTransition === "approved") {
         const mention = await getEditorMention();
         await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);

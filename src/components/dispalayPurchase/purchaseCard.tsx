@@ -1,7 +1,8 @@
 'use client'
+import { isAmazonVendor } from "@/lib/orderPolicy";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
+import { EllipsisVertical, Pencil } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -168,7 +169,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: name,
-                    requestor: "Example User",
+                    requestor: user.id,
                     category: itemCatagory,
                     items: itemsArray,
                     vendor: orderVendor,
@@ -219,53 +220,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const selectedCategoryData = categories.find((c) => c.categoryID === itemCatagory);
     const categoryMax = selectedCategoryData?.categoryBudget ?? 4000;
 
-    const CategoryTitle = () => {
-        switch (itemCatagory) {
-            case "Robot":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Cog className="size-4 text-yellow-600" />
-                        <h2 className="text-base font-bold text-yellow-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Competition":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Tools":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Wrench className="size-4 text-rose-600" />
-                        <h2 className="text-base font-bold text-rose-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Field":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Volleyball className="size-4 text-lime-600" />
-                        <h2 className="text-base font-bold text-lime-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Outreach":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Handshake className="size-4 text-cyan-600" />
-                        <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
-                    </div>
-                )
-
-        }
-    }
-
     const statusBadge = () => {
         switch (status) {
             case "needsAproval":
@@ -312,10 +266,54 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return (Math.round(((categoryMax - calculatePrice()) / categoryMax) * 100))
     }
 
+    const [approving, setApproving] = useState(false);
+    const [approvalError, setApprovalError] = useState("");
+
+    const nextApproval = approvers.find((approver) => {
+        if (approver.approved || ["programDirector", "nProgramDirector"].includes(approver.requiredRole)) return false;
+        if (user.role === "teamAdministrator") return true;
+        switch (approver.requiredRole) {
+            case "mentor":
+                return ["mentor", "mentorLead", "programDirector"].includes(user.role);
+            case "mentorLead":
+                return ["mentorLead", "programDirector"].includes(user.role);
+            case "studentLead":
+                return user.role === "studentLead" || (user.role === "president" && !isTierTwo());
+            case "president":
+                return user.role === "president";
+            default:
+                return false;
+        }
+    });
+
+    async function approveNextRole() {
+        if (!nextApproval || approving) return;
+        setApproving(true);
+        setApprovalError("");
+        try {
+            const res = await fetch('/api/order/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: id, approvalRole: nextApproval.requiredRole }),
+            });
+            if (!res.ok) throw new Error("Approval failed");
+            await onPurchaseEdited();
+        } catch {
+            setApprovalError("Unable to approve. Please try again.");
+        } finally {
+            setApproving(false);
+        }
+    }
+
+    const approvalEnabled = status !== "onHold" && status !== "rejected";
+    const withdrawEnabled = approvalEnabled && (status === "needsAproval" || status === "approved");
+    const canWithdraw = withdrawEnabled && approvers.some((approver) =>
+        approver.requiredRole !== "programDirector" && approver.approved &&
+        !!approver.approverID && approver.approverID === user.id
+    );
+
     const purchaseApprovers = () => {
         const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
-        const approvalDisabled = status === "onHold" || status === "rejected";
-        const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
                 {approvers.filter((approver) => approver.requiredRole !== "programDirector").map((approver) => (
@@ -327,22 +325,20 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         requiredRole={approver.requiredRole}
                         approved={approver.approved}
                         user={user}
-                        onApproved={onPurchaseEdited}
                         onWithdrawn={onPurchaseEdited}
                         itemID={id}
-                        disable={approvalDisabled}
-                        disableWithdraw={withdrawDisabled}
-                        tierTwo={isTierTwo()}
+                        disable={!approvalEnabled}
+                        disableWithdraw={!withdrawEnabled}
                     />
                 ))}
                 {(expidited == "approved") && (
-                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={!approvalEnabled} />
                 )}
                 {(expidited == "requested") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={!approvalEnabled} />
                 )}
                 {(expidited == "rejected") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={!approvalEnabled} />
                 )}
             </div>
         )
@@ -472,22 +468,20 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
+                    <div className="hidden md:grid grid-cols-[7rem_12rem] gap-3 mt-2 shrink-0">
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
                             <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                             <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                         </div>
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
-                            <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
-                            <div className="flex items-center gap-2">
-                                {CategoryTitle()}
-                            </div>
+                            <h3 className="text-xs font-bold text-zinc-100">Vendor:</h3>
+                            <h2 className="truncate text-base font-bold text-zinc-100" title={vendor || "Not specified"}>{vendor || "Not specified"}</h2>
                         </div>
                     </div>
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
                     <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
-                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
+                        <Card className="p-0 mb-0 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>
@@ -654,14 +648,14 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                         )}
-                        <ScrollArea className="w-full rounded-md pr-3 flex-1 min-h-0">
+                        <ScrollArea className="w-full rounded-md pr-1 flex-1 min-h-0">
                             {(status == 'needsAproval' || status == 'approved') && (
-                                <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                                <Card className="bg-mist-800 mx-1 mb-1.5 mt-2 p-0 rounded-xl gap-0">
                                     {(status == 'approved' && expidited != "approved") && (
-                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">Will be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="text-emerald-500 text-xl font-bold p-1 pl-3">{isAmazonVendor(vendor) ? "Can be Ordered Now" : `Will be Ordered: ${getNextPurchaseDate()}`}</h1>
                                     )}
                                     {(status == 'needsAproval' && expidited != "approved") && (
-                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Can be Ordered: {getNextPurchaseDate()}</h1>
+                                        <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">{isAmazonVendor(vendor) ? "Can be Ordered Once Approved" : `Can be Ordered: ${getNextPurchaseDate()}`}</h1>
                                     )}
                                     {(expidited == "approved" && status == "needsAproval") && (
                                         <h1 className="text-yellow-600 text-xl font-bold p-1 pl-3">Expidited: Needs Approval(s)</h1>
@@ -671,13 +665,13 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                 </Card>
                             )}
-                            <Card className="bg-mist-800 mt-2 m-1 m-1 p-0 rounded-xl gap-0">
+                            <Card className="bg-mist-800 mx-1 my-1.5 p-0 rounded-xl gap-0">
                                 <div className="flex p-2 pb-0">
                                     {(!editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Items</CardTitle>
                                     )}
                                     {(editMode) && (
-                                        <CardTitle className="text-lg ml-2 text-zinc-100 font-bold">Edit Items</CardTitle>
+                                        <CardTitle className="text-lg text-zinc-100 font-bold">Edit Items</CardTitle>
                                     )}
                                     <div className="flex ml-auto">
                                     </div>
@@ -718,7 +712,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                 </div>
                             </Card>
                             {(!editMode) && (
-                                <Card className="bg-mist-800 mt-2 m-1 p-0 rounded-xl gap-0">
+                                <Card className="bg-mist-800 mx-1 mb-1 mt-1.5 p-0 rounded-xl gap-0">
                                     <CardTitle className="text-lg ml-3 text-zinc-100 font-bold mt-3">Approvers</CardTitle>
                                     {hasOtherApprovedVendorOrders && (
                                         <div className="p-2 pt-1 pb-0">
@@ -729,6 +723,16 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
+                                        {nextApproval && !canWithdraw && (
+                                            <Button
+                                                onClick={approveNextRole}
+                                                disabled={approving || status !== "needsAproval"}
+                                                className="cursor-pointer text-base w-full bg-green-900 text-zinc-100 hover:bg-green-950 p-3"
+                                            >
+                                                {approving ? "Approving…" : "Approve"}
+                                            </Button>
+                                        )}
+                                        {approvalError && <p role="alert" className="mt-2 text-sm text-red-400">{approvalError}</p>}
                                     </div>
                                 </Card>
                             )}

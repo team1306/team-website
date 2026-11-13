@@ -3,6 +3,8 @@ import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 import { currency, escapeSlack, getCost, buildSlackBlocks, postSlackMessage } from "@/lib/slack";
 
+import { canApproveCategory } from "@/lib/orderApproval";
+
 interface ItemData {
   id: string;
   ItemName: string;
@@ -46,8 +48,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid Input' }, { status: 400 });
   }
 
+  if (typeof vendor !== 'string' || !vendor.trim() || /^other(?:\s*-\s*)?$/i.test(vendor.trim())) {
+    return NextResponse.json({ error: 'Enter the vendor name' }, { status: 400 });
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (requestor !== authData.user.id) {
+    return NextResponse.json({ error: 'Requestor must match the signed-in user' }, { status: 403 });
+  }
+
+  const { data: requester, error: requesterError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('user_id', authData.user.id)
+    .single();
+
+  if (requesterError || !requester) {
+    return NextResponse.json({ error: 'Unable to load requester role' }, { status: 500 });
+  }
+
   const purchaseID = Math.floor(Date.now() / 1000);
   const totalCost = getCost(items);
+  // Apply self-approvals directly so no approval replies are posted to Slack.
+  const approvers = generateApprovers(items).map((entry) =>
+    requester.role !== 'teamAdministrator' &&
+    canApproveCategory(requester.role, entry.requiredRole, totalCost > 250)
+      ? { ...entry, approved: true, approver: authData.user.id }
+      : entry
+  );
+  const status = approvers.every((entry) => entry.approved) ? 'approved' : 'needsAproval';
 
   const { error } = await supabase.from('purchases').insert({
     purchaseID: purchaseID,
@@ -55,9 +87,9 @@ export async function POST(request: NextRequest) {
     cost: totalCost,
     requestor: requestor,
     catagory: category,
-    status: 'needsAproval',
+    status,
     items: items,
-    approvers: generateApprovers(items),
+    approvers,
     vendor: vendor,
     reason: "",
   })
@@ -96,7 +128,7 @@ export async function POST(request: NextRequest) {
       totalCost,
       vendor,
       category,
-      status: 'needsAproval',
+      status,
       expidited: 'NULL',
     });
 

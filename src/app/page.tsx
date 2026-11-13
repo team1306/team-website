@@ -8,6 +8,7 @@ import Home from "@/components/orders/page";
 import Budget from "@/components/budget/page";
 import Admin from "@/components/admin/page";
 import Create from "@/components/create/page";
+import { Button } from "@/components/ui/button";
 
 interface UserData {
     id: string;
@@ -85,12 +86,22 @@ export default function App() {
     }
 
     const [purchases, setPurchases] = useState<PurchaseData[]>([]);
+    const [purchaseLoadError, setPurchaseLoadError] = useState<string | null>(null);
     async function loadPurchases(): Promise<PurchaseData[]> {
-        const res = await fetch('/api/order/getOrders', { cache: 'no-store' });
-        const data = await res.json();
-        const loadedPurchases = data.parsed ?? [];
-        setPurchases(loadedPurchases);
-        return loadedPurchases;
+        try {
+            const res = await fetch('/api/order/getOrders', { cache: 'no-store' });
+            if (!res.ok) throw new Error("Failed to fetch orders");
+            const data = await res.json();
+            if (!Array.isArray(data?.parsed)) throw new Error("Invalid orders response");
+            const loadedPurchases: PurchaseData[] = data.parsed;
+            setPurchases(loadedPurchases);
+            setPurchaseLoadError(null);
+            return loadedPurchases;
+        } catch (error) {
+            console.error("Failed to refresh orders:", error);
+            setPurchaseLoadError("Unable to refresh orders. The list may be out of date. Please retry.");
+            return purchases;
+        }
     }
 
     const [users, setUsers] = useState<UserData[] | null>(null);
@@ -163,6 +174,11 @@ export default function App() {
         setCurrentPage('/');
     }
 
+    function onPurchaseCreated() {
+        setCurrentPage('/');
+        void loadPurchases();
+    }
+
     function switchPage(newPage: string) {
         setCurrentPage(newPage);
     }
@@ -170,10 +186,16 @@ export default function App() {
     return (
         <div>
             <Navbar user={user} setCurrentPage={switchPage} />
+            {currentPage === "/" && purchaseLoadError && (
+                <div role="alert" className="m-3 flex items-center gap-3 rounded-md border border-amber-500 p-3 text-zinc-100">
+                    <p>{purchaseLoadError}</p>
+                    <Button onClick={() => { void loadPurchases(); }}>Retry</Button>
+                </div>
+            )}
             {currentPage === "/" && <Home onCreate={onCreate} currentUser={user} purchases={purchases} loadPurchases={loadPurchases} />}
             {currentPage === "/budget" && <Budget categories={categories} fetchCategories={fetchCategories} currentUser={user} />}
             {currentPage === "/admin" && <Admin currentUser={user} users={users ?? []} loadUsers={loadUsers} />}
-            {currentPage === "/create" && <Create onDiscard={onDiscard} currentUser={user} />}
+            {currentPage === "/create" && <Create onDiscard={onDiscard} onPurchaseCreated={onPurchaseCreated} currentUser={user} />}
         </div>
     )
 }

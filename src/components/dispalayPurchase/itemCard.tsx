@@ -1,7 +1,8 @@
 'use client'
 
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Trash2, Save, StickyNote, Globe } from "lucide-react"
 import { useState } from "react"
 import { Input } from "@base-ui/react/input"
@@ -108,7 +109,15 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                         <div className="flex ml-auto">
-                            <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
+                            <a
+                                href={linkValue}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Open item link: ${linkValue}`}
+                                className={cn(buttonVariants(), "mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300")}
+                            >
+                                <Globe />
+                            </a>
                         </div>
                     </div>
                     <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
@@ -125,7 +134,15 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
             <div className="flex">
                 <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                 <div className="flex ml-auto">
-                    <Button className="mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300" onClick={() => window.open(linkValue, "_blank")}><Globe /></Button>
+                    <a
+                        href={linkValue}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open item link: ${linkValue}`}
+                        className={cn(buttonVariants(), "mr-2 bg-zinc-100 text-black text-lg hover:bg-zinc-300")}
+                    >
+                        <Globe />
+                    </a>
                 </div>
             </div>
             <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
