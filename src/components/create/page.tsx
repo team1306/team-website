@@ -1,7 +1,6 @@
 'use client'
 import Navbar from "@/components/ui/navbar"
 import { useState, useRef } from "react";
-import { useRouter } from 'next/navigation'
 import {
     Field,
     FieldContent,
@@ -43,11 +42,11 @@ interface UserData {
 type CreateProps = {
     currentUser: UserData;
     onDiscard: () => void;
+    onPurchaseCreated: () => void;
 };
 
-export default function Create({ currentUser, onDiscard }: CreateProps) {
+export default function Create({ currentUser, onDiscard, onPurchaseCreated }: CreateProps) {
     const [userLoading, setUserLoading] = useState(true);
-    const router = useRouter();
     const [submitting, setSubmitting] = useState(false);
     const submissionInFlight = useRef(false);
 
@@ -117,13 +116,14 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     const [catagory, setCatagory] = useState(String(""));
     const [supplierPicker, setSupplierPicker] = useState(String(""));
     const [otherSupplier, setOtherSupplier] = useState(String(""));
+    const [supplierError, setSupplierError] = useState("");
 
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [selectedCatagory, setSelectedCatagory] = useState<CategoryData[]>([]);
 
     function supplier() {
-        if (supplierPicker == "Other" && !otherSupplier) {
-            return ("Other - " + otherSupplier);
+        if (supplierPicker === "Other") {
+            return ("Other - " + otherSupplier.trim());
         }
         else {
             return (supplierPicker);
@@ -132,6 +132,10 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
 
     async function submitPurchase() {
         if (!currentUser || submissionInFlight.current) return;
+        if (supplierPicker === "Other" && otherSupplier.trim() === "") {
+            setSupplierError("Enter the vendor name");
+            return;
+        }
         submissionInFlight.current = true;
         setSubmitting(true);
         let created = false;
@@ -154,7 +158,6 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 toast.add({
                     title: "Item Created",
                 });
-                router.push("/");
             } else {
                 toast.add({
                     title: "Error",
@@ -164,12 +167,14 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
             console.error(err);
             toast.add({ title: "Error" });
         } finally {
-            // Keep successful submissions locked until navigation completes.
+            // Keep successful submissions locked until the parent shows Orders.
             if (!created) {
                 submissionInFlight.current = false;
                 setSubmitting(false);
             }
         }
+        // A list refresh failure must not be reported as a failed creation.
+        if (created) onPurchaseCreated();
     }
 
     async function fetchCategories() {
@@ -240,9 +245,12 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                                     </SelectContent>
                                 </Select>
                             </Field>
-                            <Field className="mt-2">
+                            <Field className="mt-2" data-invalid={!!supplierError}>
                                 <FieldLabel>Supplier:</FieldLabel>
-                                <Select value={supplierPicker} onValueChange={(value) => setSupplierPicker(String(value))}>
+                                <Select value={supplierPicker} onValueChange={(value) => {
+                                    setSupplierPicker(String(value));
+                                    setSupplierError("");
+                                }}>
                                     <SelectTrigger className="cursor-pointer w-full">
                                         <SelectValue className="text-zinc-100" placeholder="Select a supplier" />
                                     </SelectTrigger>
@@ -257,8 +265,12 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                                     </SelectContent>
                                 </Select>
                                 {(supplierPicker == "Other") && (
-                                    <Input value={otherSupplier} onValueChange={(otherSupplier) => setOtherSupplier(otherSupplier)} id="value" autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
+                                    <Input value={otherSupplier} onValueChange={(value) => {
+                                        setOtherSupplier(value);
+                                        setSupplierError("");
+                                    }} id="value" aria-label="Other vendor name" aria-invalid={!!supplierError} aria-describedby={supplierError ? "other-supplier-error" : undefined} autoComplete="off" placeholder="Other Vendor Name" className="bg-input/20 border-1 border-zinc-100 rounded-md mt-1 text-sm p-1 w-full" />
                                 )}
+                                {supplierError && <FieldError id="other-supplier-error">{supplierError}</FieldError>}
                             </Field>
                         </div>
                     </div>
