@@ -169,7 +169,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: name,
-                    requestor: "Example User",
+                    requestor: user.id,
                     category: itemCatagory,
                     items: itemsArray,
                     vendor: orderVendor,
