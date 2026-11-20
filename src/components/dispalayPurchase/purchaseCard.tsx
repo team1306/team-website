@@ -289,6 +289,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         if (!nextApproval || approving) return;
         setApproving(true);
         setApprovalError("");
+        let approvalSaved = false;
         try {
             const res = await fetch('/api/order/approve', {
                 method: 'POST',
@@ -296,9 +297,12 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                 body: JSON.stringify({ itemID: id, approvalRole: nextApproval.requiredRole }),
             });
             if (!res.ok) throw new Error("Approval failed");
+            approvalSaved = true;
             await onPurchaseEdited();
         } catch {
-            setApprovalError("Unable to approve. Please try again.");
+            setApprovalError(approvalSaved
+                ? "Approval saved. Reload the page to see the latest status."
+                : "Unable to approve. Please try again.");
         } finally {
             setApproving(false);
         }
