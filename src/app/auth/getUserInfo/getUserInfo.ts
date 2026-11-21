@@ -36,7 +36,7 @@ export async function getUserInfo(): Promise<UserData> {
                 name: displayName,
                 role: "student",
                 picture: user.user_metadata?.picture,
-                slack_userid: user.user_metadata?.sub ?? null,
+                slack_userid: user.user_metadata?.sub,
             })
             .select("name, role, picture, slack_userid")
             .single();
@@ -46,7 +46,7 @@ export async function getUserInfo(): Promise<UserData> {
             name: created.name,
             role: created.role,
             profilePicture: created.picture,
-            slack_userid: created.slack_userid ?? "",
+            slack_userid: created.slack_userid,
         };
     }
 
