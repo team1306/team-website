@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,7 +30,7 @@ type ColorMode = "light" | "dark"
 
 function isValidThemeColor(value: unknown): value is string {
   return value === ORIGINAL_THEME ||
-    (typeof value === "string" && THEME_COLORS.some((theme) => theme.value === value))
+    (typeof value === "string" && /^#[\da-f]{6}$/i.test(value))
 }
 
 function getAccentForeground(color: string) {
@@ -48,15 +48,24 @@ function applyTheme(themeColor: string, colorMode: ColorMode) {
   root.style.colorScheme = colorMode
 
   if (themeColor === ORIGINAL_THEME) {
-    root.removeAttribute("data-theme")
+    root.setAttribute("data-theme", ORIGINAL_THEME)
     root.style.removeProperty("--primary")
     root.style.removeProperty("--primary-foreground")
+    root.style.removeProperty("--ring")
+    root.style.removeProperty("--chart-1")
+    root.style.removeProperty("--sidebar-primary")
+    root.style.removeProperty("--sidebar-primary-foreground")
     return
   }
 
   root.setAttribute("data-theme", "vega")
   root.style.setProperty("--primary", themeColor)
-  root.style.setProperty("--primary-foreground", getAccentForeground(themeColor))
+  const foreground = getAccentForeground(themeColor)
+  root.style.setProperty("--primary-foreground", foreground)
+  root.style.setProperty("--ring", themeColor)
+  root.style.setProperty("--chart-1", themeColor)
+  root.style.setProperty("--sidebar-primary", themeColor)
+  root.style.setProperty("--sidebar-primary-foreground", foreground)
 }
 
 export function ThemeSettings({ userId }: { userId: string }) {
@@ -69,7 +78,7 @@ export function ThemeSettings({ userId }: { userId: string }) {
   const [error, setError] = useState("")
   const [saved, setSaved] = useState(false)
 
-  async function loadPreferences() {
+  const loadPreferences = useCallback(async () => {
     setError("")
     try {
       const { data, error: loadError } = await supabase.auth.getUser()
@@ -78,8 +87,16 @@ export function ThemeSettings({ userId }: { userId: string }) {
       }
 
       const preferences = data.user.user_metadata?.purchasing_preferences
-      const savedColor = preferences?.themeColor
-      const savedMode = preferences?.colorMode
+      let localColor: string | null = null
+      let localMode: string | null = null
+      try {
+        localColor = window.localStorage.getItem("purchasing-app-accent-color")
+        localMode = window.localStorage.getItem("purchasing-app-color-mode")
+      } catch {
+        // Browser storage can be disabled; account preferences still work.
+      }
+      const savedColor = preferences?.themeColor ?? localColor
+      const savedMode = preferences?.colorMode ?? localMode
       const nextColor = isValidThemeColor(savedColor) ? savedColor : DEFAULT_THEME_COLOR
       const nextMode: ColorMode = savedMode === "light" || savedMode === "dark"
         ? savedMode
@@ -92,7 +109,16 @@ export function ThemeSettings({ userId }: { userId: string }) {
     } finally {
       setLoaded(true)
     }
-  }
+  }, [supabase, userId])
+
+  useEffect(() => {
+    applyTheme(themeColor, colorMode)
+  }, [themeColor, colorMode])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadPreferences() }, 0)
+    return () => window.clearTimeout(timer)
+  }, [loadPreferences])
 
   async function savePreferences() {
     setSaving(true)
@@ -113,6 +139,12 @@ export function ThemeSettings({ userId }: { userId: string }) {
       }
 
       applyTheme(themeColor, colorMode)
+      try {
+        window.localStorage.setItem("purchasing-app-accent-color", themeColor)
+        window.localStorage.setItem("purchasing-app-color-mode", colorMode)
+      } catch {
+        // Saving to the account is primary; browser storage is only a fallback.
+      }
       setSaved(true)
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save your appearance settings.")
@@ -122,10 +154,7 @@ export function ThemeSettings({ userId }: { userId: string }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => {
-      setOpen(nextOpen)
-      if (nextOpen && !loaded) void loadPreferences()
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="ghost" size="icon" disabled={!userId} aria-label="Appearance settings" title="Appearance settings" />}>
         <Settings aria-hidden="true" />
       </DialogTrigger>
@@ -153,6 +182,16 @@ export function ThemeSettings({ userId }: { userId: string }) {
               </label>
             ))}
           </div>
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border p-2 text-sm">
+            Custom color
+            <input
+              type="color"
+              value={themeColor === ORIGINAL_THEME ? "#c12323" : themeColor}
+              onChange={(event) => { setThemeColor(event.currentTarget.value); setSaved(false) }}
+              aria-label="Custom theme color"
+              className="size-8 cursor-pointer rounded border-0 bg-transparent p-0"
+            />
+          </label>
         </fieldset>
 
         <fieldset className="grid grid-cols-2 gap-2" disabled={!loaded || saving}>
@@ -171,7 +210,7 @@ export function ThemeSettings({ userId }: { userId: string }) {
           ))}
         </fieldset>
 
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        {error && <div role="alert" className="flex items-center justify-between gap-3 text-sm text-destructive"><span>{error}</span><Button variant="outline" size="sm" onClick={() => { setLoaded(false); void loadPreferences() }}>Retry</Button></div>}
         {saved && <p role="status" className="text-sm text-muted-foreground">Appearance saved.</p>}
         <DialogFooter>
           <Button onClick={savePreferences} disabled={!loaded || saving} aria-busy={saving}>

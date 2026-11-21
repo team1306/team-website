@@ -122,6 +122,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  /* Legacy screen colors are aliases for the active theme, so older screens
+     respond to the same palette as the shared controls. */
+  --color-mist-200: var(--muted-foreground);
+  --color-mist-400: var(--popover);
+  --color-mist-500: var(--secondary);
+  --color-mist-600: var(--card);
+  --color-mist-700: var(--muted);
+  --color-mist-800: var(--background);
+  --color-mist-900: var(--background);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -183,6 +192,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -264,6 +274,19 @@
   --accent-foreground: oklch(0.985 0 0);
   --border: color-mix(in srgb, var(--primary) 22%, #292929);
   --input: color-mix(in srgb, var(--primary) 34%, #292929);
+}
+
+:root[data-theme="original"] .theme-header {
+  --foreground: #ffffff;
+  --primary: #b91c1c;
+  --primary-foreground: #ffffff;
+  color: #ffffff;
+  background-color: #7f1d1d;
+}
+
+:root[data-theme="original"] .theme-header [data-slot="button"][aria-current="page"] {
+  background-color: #ef4444;
+  color: #ffffff;
 }
 
 @layer base {

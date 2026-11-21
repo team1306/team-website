@@ -113,10 +113,10 @@ export default function Navbar({ user, setCurrentPage }: user) {
 
     const activeCSS = (url: string) => {
         if (url == theCurrentPage) {
-            return ("rounded-md text-lg bg-red-400 hover:bg-red-400 mr-1 text-zinc-100");
+            return ("rounded-md text-lg bg-primary-foreground/20 hover:bg-primary-foreground/25 mr-1 text-primary-foreground");
         }
         else {
-            return ("cursor-pointer rounded-md text-lg bg-red-600 hover:bg-red-400 mr-1 text-zinc-100");
+            return ("cursor-pointer rounded-md text-lg bg-transparent hover:bg-primary-foreground/20 mr-1 text-primary-foreground");
         }
     }
 
@@ -141,7 +141,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
 
     const activeCSSmobile = (url: string) => {
         if (url == theCurrentPage) {
-            return ("bg-red-400 text-zinc-100 focus:bg-red-400 focus:text-zinc-100");
+            return ("bg-primary-foreground/20 text-primary-foreground focus:bg-primary-foreground/25 focus:text-primary-foreground");
         }
         else {
             return ("bg-transparent hover:bg-red-100 focus:bg-transparent");
@@ -158,7 +158,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
     return (
         <div>
             <div className="hidden md:block">
-                <div className="bg-red-900 w-full h-16 flex items-center px-4">
+                <div className="theme-header bg-primary text-primary-foreground w-full h-16 flex items-center px-4">
                     <Image
                         src="/badgerbots.svg"
                         alt="Battery image"
@@ -168,7 +168,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         onClick={() => updateCurrentPage('/')}
                         preload
                     />
-                    <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">
+                    <h1 className="text-primary-foreground text-2xl font-title font-bold ml-4">
                         Purchasing App
                     </h1>
                     <div className="ml-3 mt-1">
@@ -185,11 +185,11 @@ export default function Navbar({ user, setCurrentPage }: user) {
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     {roleBadge()}
                                     <div className="text-right">
-                                        <h2 className="text-lg font-jetbrains font-bold text-white ml-1 mr-2 text-zinc-100">{userName}</h2>
+                                        <h2 className="text-lg font-jetbrains font-bold text-primary-foreground ml-1 mr-2">{userName}</h2>
                                     </div>
                                     <Avatar className="w-10 h-10">
                                         <AvatarImage src={userPicture} />
-                                        <AvatarFallback className="bg-red-400 text-zinc-100 items-center">EU</AvatarFallback>
+                                        <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground items-center">EU</AvatarFallback>
                                     </Avatar>
                                 </div>
                             </HoverCardTrigger>
@@ -201,7 +201,7 @@ export default function Navbar({ user, setCurrentPage }: user) {
                 </div>
             </div>
             <div className="block md:hidden">
-                <div className="bg-red-900 w-full h-16 flex items-center px-4">
+                <div className="theme-header bg-primary text-primary-foreground w-full h-16 flex items-center px-4">
                     <Image
                         src="/badgerbots.svg"
                         alt="Battery image"
@@ -209,13 +209,13 @@ export default function Navbar({ user, setCurrentPage }: user) {
                         height={55}
                         className="cursor-pointer"
                     />
-                    <h1 className="text-zinc-100 text-2xl font-title font-bold ml-4">
+                    <h1 className="text-primary-foreground text-2xl font-title font-bold ml-4">
                         Purchasing App
                     </h1>
                     <div className="ml-auto flex items-center gap-3">
                         <ThemeSettings userId={user.id} />
                         <DropdownMenu>
-                            <DropdownMenuTrigger nativeButton={false} render={<Avatar className="w-10 h-10"><AvatarImage src={userPicture} /><AvatarFallback className="bg-red-400 text-zinc-100 items-center">EU</AvatarFallback></Avatar>} />
+                            <DropdownMenuTrigger nativeButton={false} render={<Avatar className="w-10 h-10"><AvatarImage src={userPicture} /><AvatarFallback className="bg-primary-foreground/20 text-primary-foreground items-center">EU</AvatarFallback></Avatar>} />
                             <DropdownMenuContent className="w-fit bg-mist-500">
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel className="text-zinc-100">{userName}</DropdownMenuLabel>

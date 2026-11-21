@@ -16,6 +16,9 @@ export async function getUserInfo(): Promise<UserData> {
     const supabase = createClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
+    const displayName = user.is_anonymous
+        ? `Guest-${user.id.slice(0, 8).toUpperCase()}`
+        : user.user_metadata?.name;
 
     const { data, error } = await supabase
         .from("users")
@@ -30,7 +33,7 @@ export async function getUserInfo(): Promise<UserData> {
             .from("users")
             .insert({
                 user_id: user.id,
-                name: user.user_metadata?.name,
+                name: displayName,
                 role: "student",
                 picture: user.user_metadata?.picture,
                 slack_userid: user.user_metadata?.sub ?? null,
@@ -49,7 +52,7 @@ export async function getUserInfo(): Promise<UserData> {
 
     return {
         id: user.id,
-        name: data?.name ?? user.user_metadata?.name ?? "Unknown",
+        name: data?.name ?? displayName ?? "Unknown",
         role: data?.role ?? "unknown",
         profilePicture: data?.picture ?? user.user_metadata?.picture ?? user.user_metadata?.avatar_url ?? "",
         slack_userid: data?.slack_userid ?? user.user_metadata?.sub ?? "",
