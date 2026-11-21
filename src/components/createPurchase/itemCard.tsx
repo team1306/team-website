@@ -103,7 +103,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
 
     if (editMode && !containsNote) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+            <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex">
                     <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className={`bg-mist-800 rounded-md pl-2 ${errors.name ? "border-2 border-red-600" : ""}`} type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
                     <div className="flex ml-auto">
@@ -122,7 +122,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
 
     if (editMode && containsNote) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
+            <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 p-0 mb-2">
                 <div className="pl-2 pt-2">
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className={`bg-mist-800 rounded-md pl-2 ${errors.name ? "border-2 border-red-600" : ""}`} type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => handleNameChange(String(value))} /></CardTitle>
@@ -137,7 +137,7 @@ export default function Item({ id, name, cost, quantity, link, onDelete, onUpdat
                         <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => handleLinkChange(String(value))} className={`bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1 ${errors.link ? "border-2 border-red-600" : ""}`}></Input>
                     </div>
                 </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
+                <Card className="purchase-item-note mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
                     <Input type="text" placeholder="Notes" value={notes} onValueChange={(value) => setNotes(String(value))} className="bg-mist-800 rounded-md p-1 text-sm flex-1 text-zinc-100"></Input>
                 </Card>
             </Card>

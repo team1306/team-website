@@ -100,7 +100,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
         { name: "Remains", value: Math.max(0, selectedCategoryBudget - selectedCategorySpent - orderTotal) },
         { name: "Order Cost", value: orderTotal },
     ];
-    const COLORS = ["#e7000b", "#00bc7d", "#bc7d00ff"];
+    const COLORS = ["var(--chart-1)", "var(--chart-3)", "var(--chart-5)"];
 
     function clearError(key: keyof FormErrors) {
         setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -276,15 +276,6 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
         }
     }
 
-    function budgetHue(): number {
-        if (selectedCategoryBudget <= 0) return 205;
-        const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetRemainPercent(): number {
         if (selectedCategoryBudget <= 0) return 0;
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
@@ -302,7 +293,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                                 <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                             </Card>
                             <div className="p-2 w-full">
-                                <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-4xl sm:text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                                <h1 style={{ color: "var(--link)" }} className="text-4xl sm:text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
                                 <h2 className="text-lg mt-2">Remains in Robot ({budgetRemainPercent()}%)</h2>
                                 <ResponsiveContainer width="100%" height={260}>
                                     <PieChart>
@@ -397,7 +388,7 @@ export default function CreatePurchase({ onPurchaseCreated, user, overrideOpen, 
                             <Card className="w-full gap-0 bg-mist-600 text-zinc-100 p-2 flex-none">
                                 <h2>Order Total:</h2>
                                 <div className="flex">
-                                    <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                                    <h1 style={{ color: "var(--link)" }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
                                     <div className="ml-auto flex gap-2">
                                         <Button onClick={() => discard()} className="cursor-pointer w-fit text-base bg-red-700 text-zinc-100 border-0 hover:bg-red-800">Discard</Button>
                                         <Button onClick={() => submitPurchase()} disabled={submitting} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>
