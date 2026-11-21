@@ -1,7 +1,7 @@
 'use client'
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cog, Swords, Wrench, Volleyball, Handshake, EllipsisVertical, Pencil } from "lucide-react"
+import { EllipsisVertical, Pencil } from "lucide-react"
 import {
     Drawer,
     DrawerClose,
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
-import Approver from "./approverCard"
+import Approver, { approvalRoleLabel } from "./approverCard"
 import { Button } from "../ui/button"
 import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { Input } from "@base-ui/react/input"
@@ -219,53 +219,6 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     const selectedCategoryData = categories.find((c) => c.categoryID === itemCatagory);
     const categoryMax = selectedCategoryData?.categoryBudget ?? 4000;
 
-    const CategoryTitle = () => {
-        switch (itemCatagory) {
-            case "Robot":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Cog className="size-4 text-yellow-600" />
-                        <h2 className="text-base font-bold text-yellow-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Competition":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Swords className="size-4 text-emerald-600" />
-                        <h2 className="text-base font-bold text-emerald-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Tools":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Wrench className="size-4 text-rose-600" />
-                        <h2 className="text-base font-bold text-rose-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Field":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Volleyball className="size-4 text-lime-600" />
-                        <h2 className="text-base font-bold text-lime-600">{itemCatagory}</h2>
-                    </div>
-                )
-            case "Outreach":
-                return (
-                    <div className="flex items-center gap-2">
-                        <Handshake className="size-4 text-cyan-600" />
-                        <h2 className="text-base font-bold text-cyan-600">{itemCatagory}</h2>
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-zinc-100">{itemCatagory}</h2>
-                    </div>
-                )
-
-        }
-    }
-
     const statusBadge = () => {
         switch (status) {
             case "needsAproval":
@@ -312,10 +265,82 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         return (Math.round(((categoryMax - calculatePrice()) / categoryMax) * 100))
     }
 
+    const [approving, setApproving] = useState(false);
+    const [withdrawingRole, setWithdrawingRole] = useState<string | null>(null);
+    const [approvalActionError, setApprovalActionError] = useState("");
+    const approvalActionPending = approving || withdrawingRole !== null;
+
+    const withdrawableApprovals = status === "needsAproval" || status === "approved"
+        ? approvers.filter((approver) =>
+            approver.approved && approver.approverID && approver.approverID === user.id && approver.requiredRole !== "programDirector"
+        )
+        : [];
+
+    const nextApproval = approvers.find((approver) => {
+        if (approver.approved || ["programDirector", "nProgramDirector"].includes(approver.requiredRole)) return false;
+        if (user.role === "teamAdministrator") return true;
+        switch (approver.requiredRole) {
+            case "mentor":
+                return ["mentor", "mentorLead", "programDirector"].includes(user.role);
+            case "mentorLead":
+                return ["mentorLead", "programDirector"].includes(user.role);
+            case "studentLead":
+                return user.role === "studentLead" || (user.role === "president" && !isTierTwo());
+            case "president":
+                return user.role === "president";
+            default:
+                return false;
+        }
+    });
+
+    async function approveNextRole() {
+        if (!nextApproval || approvalActionPending) return;
+        setApproving(true);
+        setApprovalActionError("");
+        let approvalSaved = false;
+        try {
+            const res = await fetch('/api/order/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: id, approvalRole: nextApproval.requiredRole }),
+            });
+            if (!res.ok) throw new Error("Approval failed");
+            approvalSaved = true;
+            await onPurchaseEdited();
+        } catch {
+            setApprovalActionError(approvalSaved
+                ? "Approval saved. Reload the page to see the latest status."
+                : "Unable to approve. Please try again.");
+        } finally {
+            setApproving(false);
+        }
+    }
+
+    async function withdrawApproval(approvalRole: string) {
+        if (approvalActionPending) return;
+        setWithdrawingRole(approvalRole);
+        setApprovalActionError("");
+        let withdrawalSaved = false;
+        try {
+            const res = await fetch('/api/order/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: id, approvalRole }),
+            });
+            if (!res.ok) throw new Error("Withdrawal failed");
+            withdrawalSaved = true;
+            await onPurchaseEdited();
+        } catch {
+            setApprovalActionError(withdrawalSaved
+                ? "Withdrawal saved. Reload the page to see the latest status."
+                : "Unable to withdraw approval. Please try again.");
+        } finally {
+            setWithdrawingRole(null);
+        }
+    }
+
     const purchaseApprovers = () => {
         const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
-        const approvalDisabled = status === "onHold" || status === "rejected";
-        const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
                 {approvers.filter((approver) => approver.requiredRole !== "programDirector").map((approver) => (
@@ -323,26 +348,18 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         key={approver.requiredRole}
                         approverName={approver.approverName}
                         approverPicture={approver.approverPicture}
-                        approverID={approver.approverID}
                         requiredRole={approver.requiredRole}
                         approved={approver.approved}
-                        user={user}
-                        onApproved={onPurchaseEdited}
-                        onWithdrawn={onPurchaseEdited}
-                        itemID={id}
-                        disable={approvalDisabled}
-                        disableWithdraw={withdrawDisabled}
-                        tierTwo={isTierTwo()}
                     />
                 ))}
                 {(expidited == "approved") && (
-                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} />
                 )}
                 {(expidited == "requested") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} />
                 )}
                 {(expidited == "rejected") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} rejected={true} />
                 )}
             </div>
         )
@@ -472,16 +489,14 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         </div>
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
-                    <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
+                    <div className="hidden md:grid grid-cols-[7rem_12rem] gap-3 mt-2 shrink-0">
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
                             <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                             <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                         </div>
                         <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
-                            <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
-                            <div className="flex items-center gap-2">
-                                {CategoryTitle()}
-                            </div>
+                            <h3 className="text-xs font-bold text-zinc-100">Vendor:</h3>
+                            <h2 className="truncate text-base font-bold text-zinc-100" title={vendor || "Not specified"}>{vendor || "Not specified"}</h2>
                         </div>
                     </div>
                 </div>
@@ -729,6 +744,29 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
+                                        <div className="grid gap-2">
+                                            {nextApproval && (
+                                                <Button
+                                                    onClick={approveNextRole}
+                                                    disabled={approvalActionPending || status !== "needsAproval"}
+                                                    className="cursor-pointer text-base w-full bg-green-900 text-zinc-100 hover:bg-green-950 p-3"
+                                                >
+                                                    {approving ? "Approving…" : "Approve"}
+                                                </Button>
+                                            )}
+                                            {withdrawableApprovals.map(({ requiredRole }) => (
+                                                <Button
+                                                    key={requiredRole}
+                                                    onClick={() => withdrawApproval(requiredRole)}
+                                                    disabled={approvalActionPending}
+                                                    className="cursor-pointer text-base w-full bg-red-700 text-zinc-100 hover:bg-red-800 p-3"
+                                                >
+                                                    {withdrawingRole === requiredRole ? "Withdrawing…" : "Withdraw"}
+                                                    {withdrawableApprovals.length > 1 && ` (${approvalRoleLabel(requiredRole) ?? requiredRole})`}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        {approvalActionError && <p role="alert" className="mt-2 text-sm text-red-400">{approvalActionError}</p>}
                                     </div>
                                 </Card>
                             )}
