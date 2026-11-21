@@ -230,3 +230,59 @@
     @apply font-sans;
   }
 }
+
+/* Order list and bulk-purchase layouts. */
+.page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.page-heading h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.purchase-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--muted-foreground);
+  text-align: center;
+}
+.purchase-empty-state h2 {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.purchase-detail-drawer {
+  --drawer-content-width: min(100vw, 38rem);
+  --drawer-content-height: 100dvh;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+}
+.purchase-item-editor {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem 0;
+}
+.purchase-edit-field {
+  display: grid;
+  min-width: 0;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.purchase-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.purchase-detail-item {
+  padding: 1rem 0;
+}
