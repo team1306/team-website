@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import Item from "../dispalayPurchase/itemCard"
-import Approver from "./approverCard"
+import Approver, { approvalRoleLabel } from "./approverCard"
 import { Button } from "../ui/button"
 import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
 import { Input } from "@base-ui/react/input"
@@ -266,7 +266,15 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     }
 
     const [approving, setApproving] = useState(false);
-    const [approvalError, setApprovalError] = useState("");
+    const [withdrawingRole, setWithdrawingRole] = useState<string | null>(null);
+    const [approvalActionError, setApprovalActionError] = useState("");
+    const approvalActionPending = approving || withdrawingRole !== null;
+
+    const withdrawableApprovals = status === "needsAproval" || status === "approved"
+        ? approvers.filter((approver) =>
+            approver.approved && approver.approverID && approver.approverID === user.id && approver.requiredRole !== "programDirector"
+        )
+        : [];
 
     const nextApproval = approvers.find((approver) => {
         if (approver.approved || ["programDirector", "nProgramDirector"].includes(approver.requiredRole)) return false;
@@ -286,9 +294,9 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
     });
 
     async function approveNextRole() {
-        if (!nextApproval || approving) return;
+        if (!nextApproval || approvalActionPending) return;
         setApproving(true);
-        setApprovalError("");
+        setApprovalActionError("");
         let approvalSaved = false;
         try {
             const res = await fetch('/api/order/approve', {
@@ -300,7 +308,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
             approvalSaved = true;
             await onPurchaseEdited();
         } catch {
-            setApprovalError(approvalSaved
+            setApprovalActionError(approvalSaved
                 ? "Approval saved. Reload the page to see the latest status."
                 : "Unable to approve. Please try again.");
         } finally {
@@ -308,10 +316,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         }
     }
 
+    async function withdrawApproval(approvalRole: string) {
+        if (approvalActionPending) return;
+        setWithdrawingRole(approvalRole);
+        setApprovalActionError("");
+        let withdrawalSaved = false;
+        try {
+            const res = await fetch('/api/order/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemID: id, approvalRole }),
+            });
+            if (!res.ok) throw new Error("Withdrawal failed");
+            withdrawalSaved = true;
+            await onPurchaseEdited();
+        } catch {
+            setApprovalActionError(withdrawalSaved
+                ? "Withdrawal saved. Reload the page to see the latest status."
+                : "Unable to withdraw approval. Please try again.");
+        } finally {
+            setWithdrawingRole(null);
+        }
+    }
+
     const purchaseApprovers = () => {
         const expediteApprover = approvers.find((approver) => approver.requiredRole === "programDirector");
-        const approvalDisabled = status === "onHold" || status === "rejected";
-        const withdrawDisabled = approvalDisabled || (status !== "needsAproval" && status !== "approved");
         return (
             <div>
                 {approvers.filter((approver) => approver.requiredRole !== "programDirector").map((approver) => (
@@ -319,24 +348,18 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         key={approver.requiredRole}
                         approverName={approver.approverName}
                         approverPicture={approver.approverPicture}
-                        approverID={approver.approverID}
                         requiredRole={approver.requiredRole}
                         approved={approver.approved}
-                        user={user}
-                        onWithdrawn={onPurchaseEdited}
-                        itemID={id}
-                        disable={approvalDisabled}
-                        disableWithdraw={withdrawDisabled}
                     />
                 ))}
                 {(expidited == "approved") && (
-                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName={expediteApprover?.approverName || "Program Director"} approverPicture={expediteApprover?.approverPicture || ""} requiredRole="programDirector" approved={true} />
                 )}
                 {(expidited == "requested") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} />
                 )}
                 {(expidited == "rejected") && (
-                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} user={user} rejected={true} itemID={id} disable={approvalDisabled} />
+                    <Approver approverName="Program Director" approverPicture="" requiredRole="nProgramDirector" approved={false} rejected={true} />
                 )}
             </div>
         )
@@ -721,16 +744,29 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                                     )}
                                     <div className="p-2">
                                         {purchaseApprovers()}
-                                        {nextApproval && (
-                                            <Button
-                                                onClick={approveNextRole}
-                                                disabled={approving || status !== "needsAproval"}
-                                                className="cursor-pointer text-base w-full bg-green-900 text-zinc-100 hover:bg-green-950 p-3"
-                                            >
-                                                {approving ? "Approving…" : "Approve"}
-                                            </Button>
-                                        )}
-                                        {approvalError && <p role="alert" className="mt-2 text-sm text-red-400">{approvalError}</p>}
+                                        <div className="grid gap-2">
+                                            {nextApproval && (
+                                                <Button
+                                                    onClick={approveNextRole}
+                                                    disabled={approvalActionPending || status !== "needsAproval"}
+                                                    className="cursor-pointer text-base w-full bg-green-900 text-zinc-100 hover:bg-green-950 p-3"
+                                                >
+                                                    {approving ? "Approving…" : "Approve"}
+                                                </Button>
+                                            )}
+                                            {withdrawableApprovals.map(({ requiredRole }) => (
+                                                <Button
+                                                    key={requiredRole}
+                                                    onClick={() => withdrawApproval(requiredRole)}
+                                                    disabled={approvalActionPending}
+                                                    className="cursor-pointer text-base w-full bg-red-700 text-zinc-100 hover:bg-red-800 p-3"
+                                                >
+                                                    {withdrawingRole === requiredRole ? "Withdrawing…" : "Withdraw"}
+                                                    {withdrawableApprovals.length > 1 && ` (${approvalRoleLabel(requiredRole) ?? requiredRole})`}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        {approvalActionError && <p role="alert" className="mt-2 text-sm text-red-400">{approvalActionError}</p>}
                                     </div>
                                 </Card>
                             )}
