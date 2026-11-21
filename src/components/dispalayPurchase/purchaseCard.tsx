@@ -270,31 +270,31 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
         switch (status) {
             case "needsAproval":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
+                    <Badge className="status-badge status-needs-approval text-sm w-fit h-fit border-3 border-amber-500 bg-transparent font-bold text-amber-500 ml-auto md:ml-0">Needs Approval</Badge>
                 )
             case "approved":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-sky-500 bg-transparent font-bold text-sky-500 ml-auto md:ml-0">Approved</Badge>
+                    <Badge className="status-badge status-approved text-sm w-fit h-fit border-3 border-sky-500 bg-transparent font-bold text-sky-500 ml-auto md:ml-0">Approved</Badge>
                 )
             case "purchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
+                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Purchased</Badge>
                 )
             case "selfPurchased":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
+                    <Badge className="status-badge status-purchased text-sm w-fit h-fit border-3 border-pink-500 bg-transparent font-bold text-pink-500 ml-auto md:ml-0">Self Purchased</Badge>
                 )
             case "recived":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
+                    <Badge className="status-badge status-received text-sm w-fit h-fit border-3 border-green-500 bg-transparent font-bold text-green-500 ml-auto md:ml-0">Received</Badge>
                 )
             case "rejected":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
+                    <Badge className="status-badge status-rejected text-sm w-fit h-fit border-3 border-red-500 bg-transparent font-bold text-red-500 ml-auto md:ml-0">Rejected</Badge>
                 )
             case "onHold":
                 return (
-                    <Badge className="text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
+                    <Badge className="status-badge status-on-hold text-sm w-fit h-fit border-3 border-orange-500 bg-transparent font-bold text-orange-500 ml-auto md:ml-0">On Hold</Badge>
                 )
         }
     }
@@ -454,7 +454,7 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
 
     return (
         <div>
-            <Card className="p-2 bg-mist-700 h-fit cursor-pointer hover:bg-mist-800" onClick={() => setOpen(true)}>
+            <Card className="purchase-summary-card p-2 bg-mist-700 h-fit cursor-pointer hover:bg-mist-800" onClick={() => setOpen(true)}>
                 <div className="flex gap-3 items-stretch">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -473,11 +473,11 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                         <CardDescription className="text-sm text-zinc-300 mt-1">Requested By: {requestor} on {requestedDate}</CardDescription>
                     </div>
                     <div className="hidden md:grid grid-cols-2 gap-3 mt-2 shrink-0">
-                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
+                        <div className="purchase-summary-facts bg-mist-600 px-4 py-1 rounded-lg min-w-28">
                             <h3 className="text-xs font-bold text-zinc-100">Cost:</h3>
                             <h2 className={`text-base font-bold ${priceColor}`}>{displayPrice()}</h2>
                         </div>
-                        <div className="bg-mist-600 px-4 py-1 rounded-lg min-w-28">
+                        <div className="purchase-summary-facts bg-mist-600 px-4 py-1 rounded-lg min-w-28">
                             <h3 className="text-xs font-bold text-zinc-100">Category:</h3>
                             <div className="flex items-center gap-2">
                                 {CategoryTitle()}
@@ -486,8 +486,8 @@ export default function Purchase({ id, itemName, cost, requestor, catagory, requ
                     </div>
                 </div>
                 <Drawer open={open} onOpenChange={setOpen} swipeDirection={isMobile ? "down" : "right"} modal={false}>
-                    <DrawerContent className="[--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
-                        <Card className="p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
+                    <DrawerContent className="purchase-detail-drawer [--drawer-inset:0px] rounded-tl-md rounded-tr-none border-0 w-full md:w-1/3 bg-mist-600 h-[90vh] md:h-full flex flex-col overflow-hidden">
+                        <Card className="purchase-detail-header p-0 pb-2 mb-2 bg-mist-800 rounded-t-sm rounded-bl-sm rounded-b-none rounded-tr-none gap-0 shrink-0">
                             {(editMode) && (
                                 <div className="bg-amber-600 flex">
                                     <h1 className="text-zinc-100 text-lg ml-2 mt-1">Edit Mode</h1>

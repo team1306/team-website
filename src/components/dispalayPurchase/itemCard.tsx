@@ -59,7 +59,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
 
     if (editMode && !containsNote) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+            <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="flex">
                     <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => { setNameValue(String(value)); onUpdate({ id, ItemName: String(value), ItemCost: Number(costValue), ItemQuantity: Number(quantityValue), ItemLink: linkValue, comments: notes }); }} /></CardTitle>
                     <div className="flex ml-auto">
@@ -78,7 +78,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
 
     if (editMode && containsNote) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
+            <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 p-0 mb-2">
                 <div className="pl-2 pt-2">
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1"><Input className="bg-mist-800 rounded-md pl-2" type="text" value={nameValue} placeholder="Item Name" onValueChange={(value) => setNameValue(String(value))} /></CardTitle>
@@ -94,7 +94,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                         <Input type="url" placeholder="https://example.com" value={linkValue} onValueChange={(value) => setLinkValue(String(value))} className="bg-mist-800 rounded-md pl-2 text-sm flex-1 mr-2 text-zinc-100 mt-1"></Input>
                     </div>
                 </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
+                <Card className="purchase-item-note mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
                     <Input type="text" placeholder="Notes" value={notes} onValueChange={(value) => setNotes(String(value))} className="bg-mist-800 rounded-md p-1 text-sm flex-1 text-zinc-100"></Input>
                 </Card>
             </Card>
@@ -103,7 +103,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
 
     if (containsNote && !editMode) {
         return (
-            <Card className="bg-mist-700 h-fit gap-0 p-0 mb-2">
+            <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 p-0 mb-2">
                 <div className="pl-2 pt-2">
                     <div className="flex">
                         <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
@@ -113,7 +113,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
                     </div>
                     <CardDescription className={isKrakenMode ? "text-sm text-blue-500" : "text-sm text-zinc-300"}>{isKrakenMode ? unitPriceText() : `x${quantityValue} at ${unitPriceText()}`}</CardDescription>
                 </div>
-                <Card className=" mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
+                <Card className="purchase-item-note mt-2 p-1 mb-0 bg-red-900 rounded-t-none rounded-b-md">
                     <h1 className="text-sm font-jetbrains text-zinc-100">{notes}</h1>
                 </Card>
             </Card>
@@ -121,7 +121,7 @@ export default function Item({ id, name, cost, quantity, link, defaultEdit, onUp
     }
 
     return (
-        <Card className="bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
+        <Card className="purchase-item-surface bg-mist-700 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
             <div className="flex">
                 <CardTitle className="text-lg text-zinc-100 font-bold mb-1">{nameValue}</CardTitle>
                 <div className="flex ml-auto">

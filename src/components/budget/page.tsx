@@ -103,21 +103,11 @@ export default function Budget({ currentUser, categories, fetchCategories }: Bud
     const totalSpent = findTotalSpent();
     const canManage = canManageBudget(currentUser);
 
-    function budgetHue(): number {
-        if (totalBudget <= 0) return 220;
-        const percent = (totalSpent / totalBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetFill(): React.CSSProperties {
         const percent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
         const remaining = 100 - percent;
-        const hue = budgetHue();
-        const filledColor = `hsl(${hue}, 70%, 40%)`;
-        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
+        const filledColor = `color-mix(in srgb, var(--primary) 18%, var(--card))`;
+        const unfilledColor = "var(--muted)";
         return {
             background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
         };
@@ -302,21 +292,11 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
         }
     }
 
-    function budgetHue(): number {
-        if (categoryBudget <= 0) return 220;
-        const percent = (categorySpent / categoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetFill(): React.CSSProperties {
         const percent = categoryBudget > 0 ? Math.min((categorySpent / categoryBudget) * 100, 100) : 0;
         const remaining = 100 - percent;
-        const hue = budgetHue();
-        const filledColor = `hsl(${hue}, 70%, 40%)`;
-        const unfilledColor = `hsl(${hue}, 70%, 20%)`;
+        const filledColor = `color-mix(in srgb, var(--primary) 18%, var(--card))`;
+        const unfilledColor = "var(--muted)";
         return {
             background: `linear-gradient(to right, ${filledColor} ${remaining}%, ${unfilledColor} ${remaining}%)`,
         };
@@ -404,7 +384,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                     <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}<span className="mx-2">/</span>{formatMoney(categoryBudget)}</h1>
                 </div>
                 {canManageBudget(currentUser) && (
-                    <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />
+                    <Button variant="ghost" size="icon" aria-label={`Edit ${categoryName}`} onClick={() => { resetFields(); setOpen(true); }} className="ml-auto self-start"><EllipsisVertical aria-hidden="true" /></Button>
                 )}
             </div>
             <Drawer open={open} onOpenChange={(next) => { if (!next) resetFields(); setOpen(next); }} swipeDirection="right" modal={false}>

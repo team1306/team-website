@@ -176,15 +176,6 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
     const selectedCategoryBudget = categories.find((c) => c.categoryID === catagory)?.categoryBudget ?? 0;
     const selectedCategorySpent = categories.find((c) => c.categoryID === catagory)?.categorySpent ?? 0;
 
-    function budgetHue(): number {
-        if (selectedCategoryBudget <= 0) return 220;
-        const percent = ((selectedCategorySpent + orderTotal) / selectedCategoryBudget) * 100;
-        if (percent >= 100) return 0;
-        if (percent >= 75) return 20;
-        if (percent >= 50) return 50;
-        return 120;
-    }
-
     function budgetRemainPercent(): number {
         if (selectedCategoryBudget <= 0) return 0;
         return Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100);
@@ -198,7 +189,7 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                         <CardTitle className="ml-2 text-lg font-jetbrains font-bold text-zinc-100">Budget</CardTitle>
                     </Card>
                     <div className="p-1 w-full">
-                        <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
+                        <h1 style={{ color: "var(--link)" }} className="text-5xl font-bold mt-4">${(selectedCategoryBudget - selectedCategorySpent - orderTotal).toFixed(2)}</h1>
                         <h2 className="text-lg mt-2">Remains in Robot ({Math.round(((selectedCategoryBudget - selectedCategorySpent - orderTotal) / selectedCategoryBudget) * 100)}%)</h2>
                     </div>
                 </Card>
@@ -266,7 +257,7 @@ export default function Create({ currentUser, onDiscard }: CreateProps) {
                 <Card className="w-full mt-3 gap-0 bg-mist-600 text-zinc-100 p-2 rounded-md border-t border-zinc-700 sticky bottom-0 left-0 z-10">
                     <h2>Order Total:</h2>
                     <div className="flex items-center">
-                        <h1 style={{ color: `hsl(${budgetHue()}, 70%, 50%)` }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
+                        <h1 style={{ color: "var(--link)" }} className="text-2xl font-bold">${orderTotal.toFixed(2)}</h1>
                         <div className="flex ml-auto gap-3">
                             <Button onClick={() => { onDiscard(); }} className="cursor-pointer w-fit text-base bg-red-500 text-zinc-100 border-0 hover:bg-red-600">Discard</Button>
                             <Button onClick={() => { submitPurchase(); }} className="cursor-pointer w-fit text-base bg-zinc-100 text-black border-0 hover:bg-zinc-300">Create</Button>

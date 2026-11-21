@@ -122,6 +122,13 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-mist-200: var(--muted-foreground);
+  --color-mist-400: var(--popover);
+  --color-mist-500: var(--secondary);
+  --color-mist-600: var(--card);
+  --color-mist-700: var(--muted);
+  --color-mist-800: var(--background);
+  --color-mist-900: var(--background);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -214,6 +221,253 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* New-UI palette, applied without changing the old UI's layout or drawers. */
+:root[data-theme="vega"] {
+  color-scheme: light;
+  --background: color-mix(in srgb, var(--primary) 14%, #f5f3f4);
+  --foreground: oklch(0.145 0 0);
+  --card: color-mix(in srgb, var(--primary) 6%, #faf8f9);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: color-mix(in srgb, var(--primary) 9%, #faf8f9);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #c12323;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in srgb, var(--primary) 20%, #f5f3f4);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: color-mix(in srgb, var(--primary) 15%, #f5f3f4);
+  --muted-foreground: #4b4248;
+  --accent: var(--secondary);
+  --accent-foreground: oklch(0.205 0 0);
+  --border: color-mix(in srgb, var(--primary) 30%, #858085);
+  --input: color-mix(in srgb, var(--primary) 15%, #4b4248);
+  --ring: color-mix(in srgb, var(--primary) 30%, #000);
+  --control-border: color-mix(in srgb, var(--primary) 15%, #4b4248);
+  --link: color-mix(in srgb, var(--primary) 30%, #000);
+  --status-warning: var(--link);
+  --status-red: var(--link);
+  --status-purple: var(--link);
+  --status-green: var(--link);
+  --chart-1: color-mix(in srgb, var(--primary) 100%, var(--foreground));
+  --chart-2: color-mix(in srgb, var(--primary) 75%, var(--foreground));
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+:root.dark[data-theme="vega"] {
+  color-scheme: dark;
+  --background: color-mix(in srgb, var(--primary) 5%, #100d0f);
+  --foreground: oklch(0.985 0 0);
+  --card: color-mix(in srgb, var(--primary) 9%, #171417);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: color-mix(in srgb, var(--primary) 12%, #1d191d);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: #c12323;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in srgb, var(--primary) 20%, #282127);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: color-mix(in srgb, var(--primary) 14%, #241d22);
+  --muted-foreground: #d4cbd0;
+  --accent: var(--secondary);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: var(--link);
+  --border: color-mix(in srgb, var(--primary) 25%, #4a4148);
+  --input: color-mix(in srgb, var(--primary) 25%, #685b64);
+  --ring: color-mix(in srgb, var(--primary) 35%, #fff);
+  --control-border: color-mix(in srgb, var(--primary) 20%, #c8bdc3);
+  --link: color-mix(in srgb, var(--primary) 35%, #fff);
+  --status-warning: var(--link);
+  --status-red: var(--link);
+  --status-purple: var(--link);
+  --status-green: var(--link);
+  --chart-1: color-mix(in srgb, var(--primary) 100%, var(--foreground));
+  --chart-2: color-mix(in srgb, var(--primary) 75%, var(--foreground));
+  --chart-3: color-mix(in srgb, var(--primary) 55%, var(--foreground));
+  --chart-4: color-mix(in srgb, var(--primary) 35%, var(--foreground));
+  --chart-5: color-mix(in srgb, var(--primary) 15%, var(--foreground));
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+:root[data-theme="vega"] .status-badge {
+  background: color-mix(in srgb, var(--status-color) 12%, transparent);
+  color: var(--status-color);
+  border-color: color-mix(in srgb, var(--status-color) 25%, transparent);
+}
+:root[data-theme="vega"] .status-needs-approval,
+:root[data-theme="vega"] .status-on-hold { --status-color: var(--status-warning); }
+:root[data-theme="vega"] .status-approved,
+:root[data-theme="vega"] .status-rejected { --status-color: var(--status-red); }
+:root[data-theme="vega"] .status-purchased,
+:root[data-theme="vega"] .status-self-purchased { --status-color: var(--status-purple); }
+:root[data-theme="vega"] .status-received { --status-color: var(--status-green); }
+
+/* Legacy color utilities derive from the selected accent, including states. */
+:root[data-theme="vega"] {
+  --color-red-100: var(--secondary);
+  --color-red-400: var(--link);
+  --color-red-500: var(--link);
+  --color-red-600: var(--primary);
+  --color-red-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-red-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-red-900: var(--muted);
+  --color-amber-400: var(--link);
+  --color-amber-500: var(--link);
+  --color-amber-600: var(--primary);
+  --color-amber-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-amber-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-amber-900: var(--muted);
+  --color-yellow-400: var(--link);
+  --color-yellow-500: var(--link);
+  --color-yellow-600: var(--primary);
+  --color-yellow-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-yellow-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-yellow-900: var(--muted);
+  --color-orange-400: var(--link);
+  --color-orange-500: var(--link);
+  --color-orange-600: var(--primary);
+  --color-orange-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-orange-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-orange-900: var(--muted);
+  --color-blue-400: var(--link);
+  --color-blue-500: var(--link);
+  --color-blue-600: var(--primary);
+  --color-blue-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-blue-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-blue-900: var(--muted);
+  --color-sky-400: var(--link);
+  --color-sky-500: var(--link);
+  --color-sky-600: var(--primary);
+  --color-sky-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-sky-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-sky-900: var(--muted);
+  --color-pink-400: var(--link);
+  --color-pink-500: var(--link);
+  --color-pink-600: var(--primary);
+  --color-pink-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-pink-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-pink-900: var(--muted);
+  --color-violet-400: var(--link);
+  --color-violet-500: var(--link);
+  --color-violet-600: var(--primary);
+  --color-violet-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-violet-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-violet-900: var(--muted);
+  --color-green-400: var(--link);
+  --color-green-500: var(--link);
+  --color-green-600: var(--primary);
+  --color-green-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-green-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-green-900: var(--muted);
+  --color-emerald-400: var(--link);
+  --color-emerald-500: var(--link);
+  --color-emerald-600: var(--primary);
+  --color-emerald-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-emerald-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-emerald-900: var(--muted);
+  --color-teal-400: var(--link);
+  --color-teal-500: var(--link);
+  --color-teal-600: var(--primary);
+  --color-teal-700: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-teal-800: color-mix(in srgb, var(--primary) 80%, #000);
+  --color-teal-900: var(--muted);
+}
+
+/* Match New-UI surfaces without bringing over its layout changes. */
+:root[data-theme="vega"] .purchase-summary-card { background-color: var(--card); }
+:root[data-theme="vega"] .purchase-summary-card:hover { background-color: var(--accent); }
+:root[data-theme="vega"] .purchase-detail-drawer { background-color: var(--popover); }
+:root[data-theme="vega"] .purchase-detail-header,
+:root[data-theme="vega"] .purchase-summary-facts,
+:root[data-theme="vega"] .purchase-item-surface,
+:root[data-theme="vega"] .purchase-item-note { background-color: transparent; }
+:root[data-theme="vega"] .purchase-item-surface input { background-color: transparent; }
+:root.dark[data-theme="vega"] .purchase-item-surface input {
+  background-color: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+/* Legacy text utilities follow the active surface in both display modes. */
+:root[data-theme="vega"] :is(.text-zinc-100, .text-zinc-200, .text-white, .text-slate-100) { color: var(--foreground); }
+:root[data-theme="vega"] :is(.text-zinc-300, .text-zinc-400) { color: var(--muted-foreground); }
+:root[data-theme="vega"] [data-slot="badge"]:not(.status-badge) { background-color: var(--secondary); color: var(--foreground); }
+
+/* Native select and close controls use the same readable surfaces. */
+:root[data-theme="vega"] :is([data-slot="select-trigger"], [data-slot="dialog-close"], [data-slot="drawer-close"]) {
+  color: var(--foreground);
+  background-color: var(--secondary);
+  border-color: var(--control-border);
+  min-width: 24px;
+  min-height: 24px;
+}
+:root[data-theme="vega"] [data-slot="avatar-fallback"] { background-color: var(--secondary); color: var(--foreground); }
+
+/* Shared button variants own their color pairs, including legacy callers. */
+:root[data-theme="vega"] [data-slot="button"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--control-border);
+  min-height: 24px;
+  min-width: 24px;
+}
+:root[data-theme="vega"] [data-slot="button"]:hover {
+  background-color: var(--primary-hover, var(--primary));
+  color: var(--primary-hover-foreground, var(--primary-foreground));
+}
+:root[data-theme="vega"] [data-slot="button"]:is([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]),
+:root[data-theme="vega"] .nav-button {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--control-border);
+}
+:root[data-theme="vega"] [data-slot="button"]:is([data-variant="secondary"], [data-variant="outline"], [data-variant="ghost"]):hover,
+:root[data-theme="vega"] .nav-button:hover {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+:root[data-theme="vega"] .nav-button[aria-current="page"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+:root[data-theme="vega"] [data-slot="button"][data-variant="destructive"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+:root[data-theme="vega"] [data-slot="button"][data-variant="destructive"]:hover { background-color: var(--primary-hover, var(--primary)); color: var(--primary-hover-foreground, var(--primary-foreground)); }
+:root[data-theme="vega"] [data-slot="button"][data-variant="link"] {
+  background-color: transparent;
+  color: var(--link);
+  border-color: transparent;
+  text-decoration: underline;
+}
+:root[data-theme="vega"] :is([data-slot="toggle"], [data-slot="toggle-group-item"]) {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-color: var(--control-border);
+  min-height: 24px;
+  min-width: 24px;
+}
+:root[data-theme="vega"] :is([data-slot="toggle"], [data-slot="toggle-group-item"]):hover { background-color: var(--secondary); }
+:root[data-theme="vega"] :is([data-slot="toggle"], [data-slot="toggle-group-item"])[aria-pressed="true"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700;
+}
+:root[data-theme="vega"] :is(button, [role="button"], [role="menuitem"], input, select, textarea):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 
 @layer base {
