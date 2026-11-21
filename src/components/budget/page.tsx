@@ -193,7 +193,7 @@ function NewCatagory({ currentUser, onCreate }: { currentUser: UserData | null; 
                     <div className="min-h-0 flex-1 overflow-y-auto p-6">
                         <Field>
                             <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Input aria-label="Category name" value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="New Budget Category Name"  />
+                            <Input aria-label="Category name" value={name} onChange={(event) => handleNameChange(event.currentTarget.value)} id="name" autoComplete="off" placeholder="New Budget Category Name"  />
                             {fieldErrors.name && <p className="text-destructive text-xs mt-1">{fieldErrors.name}</p>}
                         </Field>
                         <Field className="mt-3">
@@ -212,7 +212,7 @@ function NewCatagory({ currentUser, onCreate }: { currentUser: UserData | null; 
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
-                            <Input aria-label="Category budget" value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget"  />
+                            <Input aria-label="Category budget" value={budgetInput} onChange={(event) => handleBudgetChange(event.currentTarget.value)} id="budget" autoComplete="off" placeholder="New Category Total Budget"  />
                             {fieldErrors.budget && <p className="text-destructive text-xs mt-1">{fieldErrors.budget}</p>}
                         </Field>
                         <Field className="mt-3">
@@ -347,7 +347,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                     <div className="min-h-0 flex-1 overflow-y-auto p-6">
                         <Field>
                             <FieldLabel>Category Name: <span className="text-destructive">*</span></FieldLabel>
-                            <Input aria-label="Category name" value={name} onValueChange={(value) => handleNameChange(value)} id="name" autoComplete="off" placeholder="New Budget Category Name"  />
+                            <Input aria-label="Category name" value={name} onChange={(event) => handleNameChange(event.currentTarget.value)} id="name" autoComplete="off" placeholder="New Budget Category Name"  />
                             {fieldErrors.name && <p className="text-destructive text-xs mt-1">{fieldErrors.name}</p>}
                         </Field>
                         <Field className="mt-3">
@@ -366,7 +366,7 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
                         </Field>
                         <Field className="mt-3">
                             <FieldLabel>Category Budget: <span className="text-destructive">*</span></FieldLabel>
-                            <Input aria-label="Category budget" value={budgetInput} onValueChange={(value) => handleBudgetChange(value)} id="budget" autoComplete="off" placeholder="New Category Total Budget"  />
+                            <Input aria-label="Category budget" value={budgetInput} onChange={(event) => handleBudgetChange(event.currentTarget.value)} id="budget" autoComplete="off" placeholder="New Category Total Budget"  />
                             {fieldErrors.budget && <p className="text-destructive text-xs mt-1">{fieldErrors.budget}</p>}
                         </Field>
                         <Field className="mt-3">
