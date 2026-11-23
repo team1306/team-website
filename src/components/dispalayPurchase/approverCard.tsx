@@ -2,140 +2,38 @@
 
 import { Card, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { useState } from "react";
 
 interface approvalInfo {
     approverName: string;
     approverPicture: string;
-    approverID?: string;
     requiredRole: string;
     approved: boolean;
-    user: UserData;
-    rejected?: boolean
-    onApproved?: () => void;
-    onWithdrawn?: () => void;
-    itemID: string;
-    disable?: boolean;
-    disableWithdraw?: boolean;
-    tierTwo?: boolean;
+    rejected?: boolean;
 }
 
-interface UserData {
-    id: string;
-    name: string;
-    role: string;
-    profilePicture: string;
+export function approvalRoleLabel(requiredRole: string) {
+    switch (requiredRole) {
+        case "mentorLead":
+            return "Lead Mentor";
+        case "studentLead":
+            return "Student Lead";
+        case "mentor":
+            return "Mentor";
+        case "president":
+            return "President";
+        case "nProgramDirector":
+            return "Expedite (Program Director)";
+        case "programDirector":
+            return "Program Director";
+    }
 }
 
-export default function Approver({ approverName, approverPicture, approverID, requiredRole, approved, user, rejected, onApproved, onWithdrawn, itemID, disable, disableWithdraw, tierTwo }: approvalInfo) {
-    const [withdrawing, setWithdrawing] = useState(false);
-
-    const userCanApprove = () => {
-        if (requiredRole == "mentor" && (user.role == "mentor" || user.role == "mentorLead" || user.role == "programDirector")) {
-            return (true);
-        }
-        if (requiredRole == "mentorLead" && (user.role == "mentorLead" || user.role == "programDirector")) {
-            return (true);
-        }
-        if (requiredRole == "studentLead" && (user.role == "studentLead" || user.role == "president") && !tierTwo) {
-            return (true);
-        }
-        if (requiredRole == "studentLead" && user.role == "studentLead" && tierTwo) {
-            return (true);
-        }
-        if (requiredRole == "president" && user.role == "president") {
-            return (true);
-        }
-        if (user.role == "teamAdministrator" && requiredRole != "nProgramDirector") {
-            return (true);
-        }
-        else {
-            return (false);
-        }
-    }
-
-    async function approve() {
-        const res = await fetch('/api/order/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                itemID: itemID,
-                approvalRole: requiredRole,
-            })
-        });
-
-        if (res.ok && onApproved) { onApproved(); }
-    }
-
-    async function withdraw() {
-        if (withdrawing) { return; }
-        setWithdrawing(true);
-        try {
-            const res = await fetch('/api/order/withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    itemID: itemID,
-                    approvalRole: requiredRole,
-                })
-            });
-
-            if (res.ok && onWithdrawn) { onWithdrawn(); }
-        } finally {
-            setWithdrawing(false);
-        }
-    }
-
-    const cleanuser = () => {
-        switch (requiredRole) {
-            case "mentorLead":
-                return ("Lead Mentor");
-            case "studentLead":
-                return ("Student Lead");
-            case "mentor":
-                return ("Mentor");
-            case "president":
-                return ("President");
-            case "nProgramDirector":
-                return ("Expedite (Program Director)");
-            case "programDirector":
-                return ("Program Director");
-        }
-    }
-
-    if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && !disable) {
+export default function Approver({ approverName, approverPicture, requiredRole, approved, rejected }: approvalInfo) {
+    const roleLabel = approvalRoleLabel(requiredRole);
+    if (!approved && !rejected) {
         return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && userCanApprove() && user.role != "nProgramDirector" && !rejected && disable) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="flex items-center justify-start">
-                    <div>
-                        <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                        <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    </div>
-                    <Button disabled onClick={approve} className="cursor-pointer text-base ml-auto bg-green-900 text-zinc-100 hover:bg-green-950 p-3 mr-2">Approve</Button>
-                </div>
-            </Card>
-        );
-    }
-    else if (!approved && !userCanApprove() && !rejected) {
-        return (
-            <Card className="bg-yellow-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
-                </div>
+            <Card className="bg-yellow-900 h-fit gap-0 p-2 mb-2">
+                <CardTitle className="text-base font-bold text-zinc-100">{roleLabel}</CardTitle>
             </Card>
         );
     }
@@ -143,24 +41,21 @@ export default function Approver({ approverName, approverPicture, approverID, re
         return (
             <Card className="bg-red-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
                 <div className="">
-                    <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
+                    <CardTitle className="text-base font-bold text-zinc-100">{roleLabel}</CardTitle>
                 </div>
             </Card>
         );
     }
     else {
         return (
-            <Card className="bg-green-900 h-fit gap-0 pl-2 pt-2 pb-2 mb-2">
-                <CardTitle className="text-base font-bold text-zinc-100">{cleanuser()}</CardTitle>
+            <Card className="bg-green-900 h-fit gap-0 p-2 mb-2">
+                <CardTitle className="text-base font-bold text-zinc-100">{roleLabel}</CardTitle>
                 <div className="flex items-center justify-start">
                     <Avatar className="size-10">
                         <AvatarImage src={approverPicture} />
                         <AvatarFallback>!</AvatarFallback>
                     </Avatar>
                     <CardDescription className="font-heading text-xl font-bold text-zinc-100 ml-2">{approverName}</CardDescription>
-                    {!!approverID && approverID === user.id && !disable && !disableWithdraw && (
-                        <Button disabled={withdrawing} onClick={withdraw} className="cursor-pointer text-base ml-auto bg-red-700 text-zinc-100 hover:bg-red-800 p-3 mr-2">Withdraw</Button>
-                    )}
                 </div>
             </Card>
         );
