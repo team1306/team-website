@@ -1,7 +1,9 @@
+import { isAmazonVendor } from "@/lib/orderPolicy";
 import { after, NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from "next/headers";
 import { currency, getCost, buildSlackBlocks, updateSlackMessage } from "@/lib/slack";
+import { purchaserSlackID } from "@/lib/constants";
 
 export interface Approver {
     approved: boolean;
@@ -21,8 +23,6 @@ interface ItemData {
     ItemQuantity: number;
     ItemLink: string;
 }
-
-const FINAL_APPROVAL_RECIPIENT = "@Andrew";
 
 function escapeSlack(text: string): string {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -186,8 +186,10 @@ export async function POST(request: NextRequest) {
             if (allApproved) {
                 const isExpidited = purchase.expidited === "approved";
 
-                const finalMessage = isExpidited
-                    ? `This order has been expedited and can be ordered now ${FINAL_APPROVAL_RECIPIENT}`
+                const finalMessage = isAmazonVendor(String(purchase.vendor ?? ""))
+                    ? `This order has been approved and can be ordered now, <@${purchaserSlackID}>`
+                    : isExpidited
+                    ? `This order has been expedited and can be ordered now <@${purchaserSlackID}>`
                     : `This order has been approved, It can be ordered on ${getNextPurchaseDate()}`;
 
                 await postSlackThreadReply(finalMessage, threadTs);

@@ -1,3 +1,4 @@
+import { isAmazonVendor } from "@/lib/orderPolicy";
 export interface SlackItemData {
     id: string;
     ItemName: string;
@@ -69,11 +70,15 @@ function nextOrderingDate(now: Date): string {
     return `${mm}/${dd}/${yy}`;
 }
 
-function labelsForBlocks(status: string, expidited: string): { status: string; ordering: string } {
+function labelsForBlocks(status: string, expidited: string, vendor: string): { status: string; ordering: string } {
     const base = STATUS_LABELS[status] || { status: "Unknown Status", ordering: "Unknown" };
 
     if (status !== "approved") {
         return base;
+    }
+
+    if (isAmazonVendor(vendor)) {
+        return { status: base.status, ordering: "Ready to Order" };
     }
 
     if (expidited === "approved") {
@@ -101,7 +106,7 @@ export function buildSlackBlocks(params: {
 }) {
 
     const { title, requesterMention, requestedDate, items, totalCost, vendor, category, status, expidited } = params;
-    const { status: statusLabel, ordering: orderingLabel } = labelsForBlocks(status, expidited);
+    const { status: statusLabel, ordering: orderingLabel } = labelsForBlocks(status, expidited, vendor);
 
     const shownItems = items.slice(0, MAX_ITEM_ROWS);
     const hiddenCount = items.length - shownItems.length;
