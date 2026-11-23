@@ -3,6 +3,7 @@ import { createClient } from "../../../../../utils/supabase/server";
 import { cookies } from 'next/headers'
 import { recalculateCategorySpent } from "@/lib/budget";
 import { currency, escapeSlack, getCost, buildSlackBlocks, updateSlackMessage, postSlackThreadReply } from "@/lib/slack";
+import { purchaserSlackID } from "@/lib/constants";
 
 interface ItemData {
   id: string;
@@ -254,7 +255,7 @@ export async function PATCH(request: NextRequest) {
 
       if (expiditeTransition === "requested") {
         const mention = await getEditorMention();
-        await postSlackThreadReply(`${mention} has requested this order to be expedited <@U07CRE78LKC>.`, threadTs);
+        await postSlackThreadReply(`${mention} has requested this order to be expedited <@${purchaserSlackID}>.`, threadTs);
       } else if (expiditeTransition === "approved") {
         const mention = await getEditorMention();
         await postSlackThreadReply(`${mention} has expedited this order.`, threadTs);
