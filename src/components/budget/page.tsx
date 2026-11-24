@@ -237,7 +237,7 @@ function NewCatagory({ currentUser, onCreate }: { currentUser: UserData | null; 
         <div>
             <Button onClick={() => { setFieldErrors({}); setError(""); setOpen(true); }} className="cursor-pointer text-base w-fit p-3"><StickyNotePlus className="mr-1" />New Category</Button>
             <Drawer open={open} onOpenChange={setOpen} swipeDirection="right" modal={false}>
-                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
+                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-full sm:w-2/3 md:w-1/3">
                     <div className="bg-mist-700 w-full p-2">
                         <DrawerTitle className="text-zinc-100 text-xl font-jetbrains font-bold">New Budget Category</DrawerTitle>
                     </div>
@@ -396,19 +396,19 @@ function BudgetCategory({ categoryID, categoryName, categoryPhase, categoryBudge
 
     return (
         <Card className={genCardCSS()}>
-            <div className="flex items-center">
-                <div className="gap-0">
+            <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
+                <div className="min-w-0 gap-0">
                     <CardTitle className="text-zinc-100 text-xl m-0 font-bold">{categoryName}</CardTitle>
                 </div>
-                <div className="ml-4 p-2 rounded-md" style={budgetFill()}>
-                    <h1 className="text-lg font-bold text-zinc-100">{formatMoney(categorySpent)}<span className="mx-2">/</span>{formatMoney(categoryBudget)}</h1>
+                <div className="p-2 rounded-md sm:ml-1" style={budgetFill()}>
+                    <h1 className="text-sm font-bold text-zinc-100 sm:text-lg">{formatMoney(categorySpent)}<span className="mx-1 sm:mx-2">/</span>{formatMoney(categoryBudget)}</h1>
                 </div>
                 {canManageBudget(currentUser) && (
                     <EllipsisVertical onClick={() => { resetFields(); setOpen(true); }} className="text-zinc-100 ml-auto size-5 self-start hover:text-zinc-200 cursor-pointer" />
                 )}
             </div>
             <Drawer open={open} onOpenChange={(next) => { if (!next) resetFields(); setOpen(next); }} swipeDirection="right" modal={false}>
-                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-1/3">
+                <DrawerContent className="bg-mist-600 border-0 text-zinc-100 rounded-tr-none rounded-br-none m-0 w-full sm:w-2/3 md:w-1/3">
                     <div className="bg-mist-700 w-full p-2">
                         <DrawerTitle className="text-zinc-100 text-xl font-jetbrains font-bold">Edit Category</DrawerTitle>
                     </div>
