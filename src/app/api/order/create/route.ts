@@ -19,20 +19,24 @@ export interface PurchaseCreate {
   vendor: string;
 }
 
-function generateApprovers(items: ItemData[]) {
-  if (getCost(items) > 250) {
-    return ([
-      { approved: false, approver: "", requiredRole: "studentLead" },
-      { approved: false, approver: "", requiredRole: "mentorLead" },
-      { approved: false, approver: "", requiredRole: "president" },
-    ]);
+function generateApprovers(totalCost: number, requestorId: string, requestorRole: string | null) {
+  const isTierTwo = totalCost > 250;
+  const mentorRole = isTierTwo ? "mentorLead" : "mentor";
+  const requiredRoles = isTierTwo
+    ? ["studentLead", mentorRole, "president"]
+    : ["studentLead", mentorRole];
+
+  let approvalRole = requestorRole;
+  if (requestorRole === "president" && !isTierTwo) {
+    approvalRole = "studentLead";
+  } else if (requestorRole === "mentorLead" || requestorRole === "programDirector") {
+    approvalRole = mentorRole;
   }
-  else {
-    return ([
-      { approved: false, approver: "", requiredRole: "studentLead" },
-      { approved: false, approver: "", requiredRole: "mentor" },
-    ]);
-  }
+
+  return requiredRoles.map((requiredRole) => {
+    const approved = requiredRole === approvalRole;
+    return { approved, approver: approved ? requestorId : "", requiredRole };
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -46,6 +50,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid Input' }, { status: 400 });
   }
 
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const requestorId = authData?.user?.id;
+  if (authError || !requestorId) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+  if (requestor !== requestorId) {
+    return NextResponse.json({ error: 'Requestor must match the signed-in user' }, { status: 403 });
+  }
+
+  const { data: userRow, error: userError } = await supabase
+    .from('users')
+    .select('role, name, slack_userid')
+    .eq('user_id', requestorId)
+    .maybeSingle();
+
+  if (userError) {
+    console.error("Failed to look up requestor:", userError.message);
+    return NextResponse.json({ error: 'Failed to look up requestor' }, { status: 500 });
+  }
+
   const purchaseID = Math.floor(Date.now() / 1000);
   const totalCost = getCost(items);
 
@@ -53,11 +77,11 @@ export async function POST(request: NextRequest) {
     purchaseID: purchaseID,
     requestName: title,
     cost: totalCost,
-    requestor: requestor,
+    requestor: requestorId,
     catagory: category,
     status: 'needsAproval',
     items: items,
-    approvers: generateApprovers(items),
+    approvers: generateApprovers(totalCost, requestorId, userRow?.role ?? null),
     vendor: vendor,
     reason: "",
   })
@@ -70,16 +94,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { data: userRow, error: userError } = await supabase
-      .from('users')
-      .select('name, slack_userid')
-      .eq('user_id', requestor)
-      .maybeSingle();
-
-    if (userError) {
-      console.error("Failed to look up requestor:", userError.message);
-    }
-
     const requesterMention = userRow?.slack_userid
       ? `<@${userRow.slack_userid.trim()}>`
       : escapeSlack(userRow?.name ?? "Unknown user");
