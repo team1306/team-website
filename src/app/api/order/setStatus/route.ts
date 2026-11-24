@@ -60,15 +60,15 @@ export async function POST(request: NextRequest) {
           ? Number(purchase.cost)
           : getCost(items);
 
-        const { data: userRow } = await supabase
+        const { data: requesterRow } = await supabase
           .from('users')
           .select('name, slack_userid')
           .eq('user_id', purchase.requestor)
           .maybeSingle();
 
-        const requesterMention = userRow?.slack_userid
-          ? `<@${userRow.slack_userid.trim()}>`
-          : escapeSlack(userRow?.name ?? "Unknown user");
+        const requesterMention = requesterRow?.slack_userid
+          ? `<@${requesterRow.slack_userid.trim()}>`
+          : escapeSlack(requesterRow?.name ?? "Unknown user");
 
         const requestedDate = new Date(Number(id) * 1000).toLocaleDateString("en-US", {
           timeZone: "America/Chicago",
@@ -93,8 +93,25 @@ export async function POST(request: NextRequest) {
         );
 
         if (status === "selfPurchased") {
+          const { data: authData } = await supabase.auth.getUser();
+          const purchaserUserId = authData?.user?.id;
+
+          let purchaserMention = "Someone";
+
+          if (purchaserUserId) {
+            const { data: purchaserRow } = await supabase
+              .from('users')
+              .select('name, slack_userid')
+              .eq('user_id', purchaserUserId)
+              .maybeSingle();
+
+            purchaserMention = purchaserRow?.slack_userid
+              ? `<@${purchaserRow.slack_userid.trim()}>`
+              : escapeSlack(purchaserRow?.name ?? "Someone");
+          }
+
           await postSlackThreadReply(
-            `${requesterMention} has marked the order as self purchased.`,
+            `${purchaserMention} has marked the order as self purchased.`,
             threadTs
           );
         }
