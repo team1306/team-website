@@ -8,6 +8,9 @@ interface ItemData {
   ItemCost: number;
   ItemQuantity: number;
   ItemLink: string;
+  comments?: string;
+  ordered?: boolean;
+  userRole?: string;
 }
 
 interface Approver {
@@ -33,8 +36,15 @@ interface PurchaseData {
   expidited: string;
 }
 
+interface RawApprover { approved: boolean; approver?: string; requiredRole: string; }
+interface RawPurchase {
+  purchaseID: string; requestName: string; cost: number; requestor: string;
+  catagory: string; expidited: string; requestedDate?: string; status: string;
+  items: ItemData[]; vendor: string; reason?: string; approvers: RawApprover[];
+}
+
 function parsePurchases(
-  rawPurchases: any[] | null,
+  rawPurchases: RawPurchase[] | null,
   userNames: Map<string, string>,
   userPictures: Map<string, string>
 ): PurchaseData[] {
@@ -48,21 +58,24 @@ function parsePurchases(
     expidited: row.expidited,
     requestedDate: new Date(Number(row.purchaseID) * 1000).toISOString(),
     status: row.status,
-    items: row.items.map((item: any) => ({
+    items: row.items.map((item) => ({
       id: item.id,
       ItemName: item.ItemName,
       ItemCost: item.ItemCost,
       ItemQuantity: item.ItemQuantity,
       ItemLink: item.ItemLink,
+      comments: item.comments ?? "",
+      ordered: item.ordered ?? false,
+      userRole: item.userRole,
     })),
     vendor: row.vendor,
     reason: row.reason ?? "",
-    approvers: row.approvers.map((approver: any) => {
+    approvers: row.approvers.map((approver) => {
       const approverId = approver.approver ? String(approver.approver).trim() : "";
       return {
         approved: approver.approved,
         approverID: approverId,
-        approverName: approverId ? userNames.get(approverId) ?? approver.approver : "",
+        approverName: approverId ? userNames.get(approverId) ?? approver.approver ?? "" : "",
         requiredRole: approver.requiredRole,
         approverPicture: approverId ? userPictures.get(approverId) ?? "" : "",
       };
@@ -94,7 +107,7 @@ export async function GET() {
     (usersRes.data ?? []).map((u) => [String(u.user_id), u.picture ?? ""])
   );
 
-  const parsed: PurchaseData[] = parsePurchases(purchasesRes.data, userNames, userPictures);
+  const parsed: PurchaseData[] = parsePurchases(purchasesRes.data as unknown as RawPurchase[] | null, userNames, userPictures);
 
   return NextResponse.json({ parsed }, { status: 200 });
 }
